@@ -368,9 +368,7 @@ function showScoreResults() {
   const upside = calcRevenueUpside(total);
   const band = getScoreBand(total);
 
-  // Hide the right column (mockup/scan states) so results span full width
-  document.getElementById('scoreRightPanel').style.display = 'none';
-  document.getElementById('scanFrame').style.display = 'none';
+  // Keep right panel + scanFrame visible — score badge will overlay the screenshot
   document.getElementById('scanStatusPanel').style.display = 'none';
   document.getElementById('generatingMsg').style.display = 'none';
 
@@ -380,9 +378,11 @@ function showScoreResults() {
   resetBtn.style.alignItems = 'center';
   resetBtn.style.justifyContent = 'center';
 
-  // Populate result browser URL bar
-  const resultUrlEl = document.getElementById('resultUrl');
-  if (resultUrlEl) resultUrlEl.textContent = url;
+  // Repurpose scan overlay: show score badge over the store screenshot
+  const scanOvEl = document.getElementById('scanOverlay');
+  scanOvEl.style.background = 'rgba(5,10,20,.72)';
+  scanOvEl.style.backdropFilter = 'blur(2px)';
+  scanOvEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px"><div class="score-number" id="scoreNumber" style="font-family:\'Roboto\',sans-serif;font-size:4rem;font-weight:900;line-height:1">0</div><div style="font-size:.85rem;color:rgba(248,249,255,.6);margin-top:2px">out of 100</div><div class="score-band" id="scoreBand">—</div></div>';
 
   const resultsEl = document.getElementById('scoreResults');
   resultsEl.style.display = 'block';
@@ -404,7 +404,7 @@ function showScoreResults() {
   bandEl.textContent = band.label;
 
   // Radar
-  setTimeout(() => drawRadar('scoreRadar', scores, OWLEYE_INDUSTRY_AVG, 260), 300);
+  setTimeout(() => drawRadar('scoreRadar', scores, OWLEYE_INDUSTRY_AVG, 360), 300);
 
   // Pillar bars
   const barsEl = document.getElementById('pillarBars');
@@ -448,8 +448,6 @@ function resetScan() {
   document.getElementById('scoreUrl').value = '';
   document.getElementById('scoreBtn').disabled = false;
   document.getElementById('urlError').style.display = 'none';
-  // Restore the right column (mockup panel) back to 2-column layout
-  document.getElementById('scoreRightPanel').style.display = '';
   // Reset right panel to empty state
   document.getElementById('screenshotPlaceholder').style.display = 'flex';
   document.getElementById('scanFrame').style.display = 'none';
@@ -460,6 +458,13 @@ function resetScan() {
   document.getElementById('paramScanWrap').innerHTML = '';
   // Clear screenshot src to avoid stale image on next run
   document.getElementById('scanScreenshot').src = '';
+  // Reset scan overlay back to initial "Fetching screenshot…" state
+  const scanOvEl = document.getElementById('scanOverlay');
+  if (scanOvEl) {
+    scanOvEl.style.background = 'rgba(5,10,20,.93)';
+    scanOvEl.style.backdropFilter = '';
+    scanOvEl.innerHTML = '<div style="width:36px;height:36px;border:3px solid rgba(255,79,46,.3);border-top-color:var(--coral);border-radius:50%;animation:spin .8s linear infinite"></div><div style="font-size:.76rem;color:var(--coral);font-weight:700" id="scanStatusText">Fetching screenshot…</div>';
+  }
   // Hide refresh button until next scan completes
   document.getElementById('resetScanBtn').style.display = 'none';
   // Focus URL input for quick re-entry
