@@ -337,50 +337,16 @@
       <!-- Full-width results — outside the 2-column grid -->
       <div id="scoreResults" class="score-results-panel">
 
-        <!-- Title -->
+        <!-- Title (full width) -->
         <h3 class="score-results-title">OwlEye Score Summary</h3>
 
-        <!-- Row 1: Score badge + Spider web, centered -->
-        <div class="score-top-row">
-          <div class="score-mockup-wrap">
-            <div class="browser-mockup">
-              <div class="browser-bar">
-                <div style="display:flex;gap:5px">
-                  <div style="width:10px;height:10px;border-radius:50%;background:#ef4444"></div>
-                  <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b"></div>
-                  <div style="width:10px;height:10px;border-radius:50%;background:#22c55e"></div>
-                </div>
-                <div id="resultUrl"
-                  style="font-size:.72rem;color:var(--muted);flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-                </div>
-              </div>
-              <div class="browser-body result-browser-body">
-                <div class="fake-page-lines">
-                  <div class="fpl fpl-hero"></div>
-                  <div class="fpl-row">
-                    <div class="fpl fpl-sm"></div>
-                    <div class="fpl fpl-sm"></div>
-                    <div class="fpl fpl-sm"></div>
-                  </div>
-                  <div class="fpl fpl-md"></div>
-                  <div class="fpl-row">
-                    <div class="fpl fpl-lg"></div>
-                    <div class="fpl fpl-lg"></div>
-                  </div>
-                </div>
-                <div class="score-badge-overlay">
-                  <div class="score-number" id="scoreNumber">0</div>
-                  <div class="score-badge-sub" style="font-size:.85rem;color:rgba(248,249,255,.6);margin-top:2px">out of 100</div>
-                  <div class="score-band" id="scoreBand">—</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="radar-result-wrap"><canvas id="scoreRadar"></canvas></div>
+        <!-- Radar row (centered, full width) -->
+        <div class="score-radar-row">
+          <canvas id="scoreRadar"></canvas>
         </div>
 
-        <!-- Row 2: Report Summary | Revenue Upside, side by side -->
-        <div class="score-mid-row">
+        <!-- 3-col row: Report Summary | Revenue Upside | Top 3 Wins -->
+        <div class="score-three-col">
           <div class="score-panel-card">
             <div class="report-summary-title">📊 Report Summary</div>
             <div class="pillar-scores" id="pillarBars"></div>
@@ -396,20 +362,18 @@
                   class="upside-label">Annual upside</span></div>
             </div>
           </div>
+          <div class="score-panel-card top-fixes" id="topFixes"></div>
         </div>
 
-        <!-- Row 3: Top 3 Quick Wins | Get Full Report, side by side -->
-        <div class="score-bot-row">
-          <div class="score-panel-card top-fixes" id="topFixes"></div>
-          <div class="gate-prompt" id="gatePrompt">
-            <p>🔒 <strong style="color:var(--white)">Get your full report</strong><br>All 9 parameter scores + fix
-              recommendations</p>
-            <div class="gate-form">
-              <input type="text" placeholder="Your name" id="gateName">
-              <input type="email" placeholder="Work email" id="gateEmail">
-              <button class="btn btn-coral" style="width:100%;justify-content:center"
-                onclick="unlockFullReport()">Send Me the Full Report →</button>
-            </div>
+        <!-- Full-width Get Full Report -->
+        <div class="gate-prompt" id="gatePrompt" style="max-width:520px;margin:20px auto 0">
+          <p>🔒 <strong style="color:var(--white)">Get your full report</strong><br>All 9 parameter scores + fix
+            recommendations</p>
+          <div class="gate-form">
+            <input type="text" placeholder="Your name" id="gateName">
+            <input type="email" placeholder="Work email" id="gateEmail">
+            <button class="btn btn-coral" style="width:100%;justify-content:center"
+              onclick="unlockFullReport()">Send Me the Full Report →</button>
           </div>
         </div>
 
