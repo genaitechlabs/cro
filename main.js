@@ -430,8 +430,8 @@ function showScoreResults() {
   document.getElementById('revenueUpside').style.display = 'block';
   document.getElementById('upsideExplainer').innerHTML =
     `Improving your <span class="owleye-brand">OwlEye Score™</span><sup style="font-size:.6em;font-weight:700;background:rgba(255,79,46,.18);color:#FF4F2E;border-radius:4px;padding:1px 5px;margin-left:2px;font-family:Roboto,sans-serif">Beta</sup> from <strong style="color:var(--white)">${total}</strong> to <strong style="color:var(--lime)">100</strong> is a <strong style="color:var(--white)">+${upside.scoreGap} point gain</strong> — estimated to drive <strong style="color:var(--coral)">+${upside.cvrLiftPct}% incremental conversion</strong> (${upside.extraOrders.toLocaleString()} additional orders/month at ₹1,200 AOV).`;
-  document.getElementById('upsideMonthly').textContent = '₹' + formatNum(upside.monthlyUpside);
-  document.getElementById('upsideAnnual').textContent = '₹' + formatNum(upside.annualUpside);
+  document.getElementById('upsideMonthly').innerHTML = '<span style="color:var(--lime);font-weight:900">↑</span> ₹' + formatNum(upside.monthlyUpside);
+  document.getElementById('upsideAnnual').innerHTML = '<span style="color:var(--lime);font-weight:900">↑</span> ₹' + formatNum(upside.annualUpside);
 
   // Top 3 fixes
   const sorted = scores.map((s, i) => ({ s, i })).sort((a, b) => a.s - b.s).slice(0, 3);
