@@ -9,7 +9,7 @@
 const OWLEYE_BENCHMARKS = {
   industry_avg_cvr: 1.8,          // % — Indian ecommerce average
   industry_avg_score: 58,         // out of 100
-  cvr_lift_per_point: 0.08,       // % CVR lift per OwlEye point gained
+  cvr_lift_per_point: 0.125,      // % order lift per OwlEye point gained
   score_to_cvr_map: {
     40:  0.9,   // Critical → ~0.9% CVR
     55:  1.4,
@@ -226,10 +226,10 @@ function calcOwleyeTotal(paramScores) {
 /**
  * Calculate estimated revenue upside from score improvement
  */
-function calcRevenueUpside(currentScore, visitors = 50000, aov = 1200) {
+function calcRevenueUpside(currentScore, base_orders = 10000, aov = 1200) {
   const scoreGap = 100 - currentScore;
   const cvrLiftPct = +(scoreGap * OWLEYE_BENCHMARKS.cvr_lift_per_point).toFixed(1);
-  const extraOrders = Math.round(visitors * (cvrLiftPct / 100));
+  const extraOrders = Math.round(base_orders * (cvrLiftPct / 100));
   const monthlyUpside = extraOrders * aov;
   return {
     scoreGap,
