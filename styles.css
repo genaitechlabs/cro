@@ -156,6 +156,20 @@ h1.hero-h1{font-family:'Roboto',sans-serif;font-size:clamp(2.2rem,4.5vw,3.8rem);
 .browser-bar{background:rgba(255,255,255,.04);padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);min-height:36px}
 .browser-body{position:relative;min-height:200px;background:var(--ink2);overflow:hidden}
 
+/* Result browser body — score centered */
+.result-browser-body{display:flex;align-items:center;justify-content:center;min-height:240px}
+.fake-page-lines{position:absolute;inset:0;padding:16px;opacity:.25;pointer-events:none}
+.fpl{height:8px;background:rgba(255,255,255,.15);border-radius:4px;margin-bottom:10px}
+.fpl-hero{height:36px}
+.fpl-sm{flex:1}
+.fpl-md{width:60%}
+.fpl-lg{flex:1;height:52px;border-radius:6px}
+.fpl-row{display:flex;gap:10px;margin-bottom:10px}
+.score-badge-overlay{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px}
+
+/* Full-width scan status panel */
+#scanStatusPanel{max-width:580px;margin-left:auto;margin-right:auto;text-align:center}
+
 /* Param scan rows */
 .param-scan-row{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid transparent;transition:background .3s,border-color .3s;margin-bottom:6px}
 .param-scan-row.active{background:rgba(255,79,46,.06);border-color:rgba(255,79,46,.2)}
