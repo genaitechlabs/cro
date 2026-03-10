@@ -261,7 +261,9 @@
       <div class="score-layout reveal">
 
         <!-- LEFT: URL input only -->
-        <div class="score-input-panel">
+        <div class="score-input-panel" style="position:relative">
+          <button id="resetScanBtn" onclick="resetScan()" title="Start new analysis"
+            style="display:none;position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.12);border-radius:50%;width:34px;height:34px;cursor:pointer;color:rgba(255,255,255,.7);font-size:1.1rem;line-height:34px;text-align:center;transition:background .2s,transform .3s">↻</button>
           <h3>Analyse Your Store</h3>
           <p style="margin-bottom:20px;font-size:.84rem">Free instant score. No sign-up needed.</p>
           <div class="url-input-wrap">
@@ -288,48 +290,34 @@
             <div style="font-size:.74rem;opacity:.55">Enter your URL and click Analyse to begin</div>
           </div>
 
-          <!-- 2. Scan state: browser mockup (left) + param scan list (right), side by side -->
-          <div id="scanFrame" style="display:none" class="analysis-row">
-
-            <div class="analysis-mockup-col">
-              <div class="browser-mockup">
-                <div class="browser-bar">
-                  <div style="display:flex;gap:5px">
-                    <div style="width:10px;height:10px;border-radius:50%;background:#ef4444"></div>
-                    <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b"></div>
-                    <div style="width:10px;height:10px;border-radius:50%;background:#22c55e"></div>
-                  </div>
-                  <div id="screenshotUrl"
-                    style="font-size:.72rem;color:var(--muted);flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-                  </div>
+          <!-- 2. Scan state: browser mockup only -->
+          <div id="scanFrame" style="display:none">
+            <div class="browser-mockup">
+              <div class="browser-bar">
+                <div style="display:flex;gap:5px">
+                  <div style="width:10px;height:10px;border-radius:50%;background:#ef4444"></div>
+                  <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b"></div>
+                  <div style="width:10px;height:10px;border-radius:50%;background:#22c55e"></div>
                 </div>
-                <div class="browser-body">
-                  <img id="scanScreenshot" src="" alt=""
-                    style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;display:none">
-                  <div id="scanOverlay"
-                    style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;background:rgba(5,10,20,.93)">
-                    <div
-                      style="width:36px;height:36px;border:3px solid rgba(255,79,46,.3);border-top-color:var(--coral);border-radius:50%;animation:spin .8s linear infinite">
-                    </div>
-                    <div style="font-size:.76rem;color:var(--coral);font-weight:700" id="scanStatusText">Fetching screenshot…
-                    </div>
+                <div id="screenshotUrl"
+                  style="font-size:.72rem;color:var(--muted);flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                </div>
+              </div>
+              <div class="browser-body">
+                <img id="scanScreenshot" src="" alt=""
+                  style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;display:none">
+                <div id="scanOverlay"
+                  style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;background:rgba(5,10,20,.93)">
+                  <div
+                    style="width:36px;height:36px;border:3px solid rgba(255,79,46,.3);border-top-color:var(--coral);border-radius:50%;animation:spin .8s linear infinite">
+                  </div>
+                  <div style="font-size:.76rem;color:var(--coral);font-weight:700" id="scanStatusText">Fetching screenshot…
                   </div>
                 </div>
               </div>
-              <div id="currentParamLabel"
-                style="font-size:.74rem;color:var(--muted);text-align:center;min-height:18px;margin:6px 0 0"></div>
             </div>
-
-            <div class="analysis-detail-col">
-              <div id="paramScanWrap"></div>
-              <div id="generatingMsg"
-                style="display:none;text-align:center;padding:14px;background:rgba(255,79,46,.06);border:1px solid rgba(255,79,46,.2);border-radius:10px;margin-top:12px">
-                <div style="font-size:.82rem;color:var(--coral);font-weight:700;margin-bottom:3px">✦ Generating your
-                  report…</div>
-                <div style="font-size:.76rem;color:var(--muted)">Compiling findings and recommendations</div>
-              </div>
-            </div>
-
+            <div id="currentParamLabel"
+              style="font-size:.74rem;color:var(--muted);text-align:center;min-height:18px;margin:6px 0 0"></div>
           </div>
 
           <!-- 3. Results state: score-over-mockup (left) + report summary (right), side by side -->
@@ -363,7 +351,7 @@
                   </div>
                   <div class="score-badge-overlay">
                     <div class="score-number" id="scoreNumber">0</div>
-                    <div class="score-badge-sub">out of 100</div>
+                    <div class="score-badge-sub" style="font-size:.85rem;color:rgba(248,249,255,.6);margin-top:2px">out of 100</div>
                     <div class="score-band" id="scoreBand">—</div>
                   </div>
                 </div>
@@ -406,6 +394,17 @@
         </div>
 
       </div>
+
+      <!-- Full-width scan status — centered below both columns -->
+      <div id="scanStatusPanel" style="display:none;margin-top:24px">
+        <div id="paramScanWrap"></div>
+        <div id="generatingMsg"
+          style="display:none;text-align:center;padding:14px;background:rgba(255,79,46,.06);border:1px solid rgba(255,79,46,.2);border-radius:10px;margin-top:12px">
+          <div style="font-size:.82rem;color:var(--coral);font-weight:700;margin-bottom:3px">✦ Generating your report…</div>
+          <div style="font-size:.76rem;color:var(--muted)">Compiling findings and recommendations</div>
+        </div>
+      </div>
+
     </div>
   </section>
 

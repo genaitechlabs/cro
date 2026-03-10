@@ -235,8 +235,9 @@ function runScoreAnalysis() {
   document.getElementById('scoreResults').classList.remove('show');
   document.getElementById('scoreResults').style.display = 'none';
 
-  // Show scan frame
-  document.getElementById('scanFrame').style.display = 'grid';
+  // Show scan frame (mockup only) + full-width status panel below
+  document.getElementById('scanFrame').style.display = 'block';
+  document.getElementById('scanStatusPanel').style.display = 'block';
   document.getElementById('screenshotUrl').textContent = url;
 
   // Overlay starts opaque with "Fetching screenshot…" while img loads
@@ -253,25 +254,25 @@ function runScoreAnalysis() {
       transition:opacity 0.35s ease;
       background:rgba(255,255,255,0.04);
       border:1px solid rgba(255,255,255,0.08);
-      border-radius:12px;
-      padding:16px 18px;
+      border-radius:14px;
+      padding:20px 24px;
       display:flex;
       align-items:center;
-      gap:14px;
+      gap:18px;
     ">
-      <div id="scanRowIcon" style="font-size:1.6rem;flex-shrink:0;width:36px;text-align:center"></div>
+      <div id="scanRowIcon" style="font-size:2rem;flex-shrink:0;width:42px;text-align:center"></div>
       <div style="flex:1;min-width:0">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-          <div id="scanRowName" style="font-size:.9rem;font-weight:700;color:var(--white)"></div>
-          <div id="scanRowPct" style="font-size:.82rem;font-weight:700;color:var(--coral);min-width:38px;text-align:right">0%</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div id="scanRowName" style="font-size:1.05rem;font-weight:700;color:var(--white)"></div>
+          <div id="scanRowPct" style="font-size:.95rem;font-weight:700;color:var(--coral);min-width:44px;text-align:right">0%</div>
         </div>
-        <div id="scanRowMsg" style="font-size:.74rem;color:var(--muted);margin-bottom:8px;min-height:16px"></div>
-        <div style="background:rgba(255,255,255,0.07);border-radius:99px;height:5px;overflow:hidden">
+        <div id="scanRowMsg" style="font-size:.86rem;color:var(--muted);margin-bottom:10px;min-height:18px"></div>
+        <div style="background:rgba(255,255,255,0.07);border-radius:99px;height:6px;overflow:hidden">
           <div id="scanRowBar" style="height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,var(--coral),#ff8c6b);transition:none"></div>
         </div>
       </div>
     </div>
-    <div id="scanCounterLabel" style="text-align:center;margin-top:10px;font-size:.72rem;color:rgba(248,249,255,.3)">
+    <div id="scanCounterLabel" style="text-align:center;margin-top:12px;font-size:.82rem;color:rgba(248,249,255,.3)">
       Parameter 1 of ${SCAN_PARAMS.length}
     </div>`;
 
@@ -367,9 +368,16 @@ function showScoreResults() {
   const upside = calcRevenueUpside(total);
   const band = getScoreBand(total);
 
-  // Hide scan frame, show results frame (both are side-by-side grids)
+  // Hide scan frame + status panel, show results
   document.getElementById('scanFrame').style.display = 'none';
+  document.getElementById('scanStatusPanel').style.display = 'none';
   document.getElementById('generatingMsg').style.display = 'none';
+
+  // Show refresh button now that scan is complete
+  const resetBtn = document.getElementById('resetScanBtn');
+  resetBtn.style.display = 'flex';
+  resetBtn.style.alignItems = 'center';
+  resetBtn.style.justifyContent = 'center';
 
   // Populate result browser URL bar
   const resultUrlEl = document.getElementById('resultUrl');
@@ -432,6 +440,27 @@ function showScoreResults() {
     const fix = FIXES_DB[item.i];
     fixesEl.innerHTML += `<div class="fix-item"><strong>#${rank + 1} ${fix.param}</strong>${fix.fix}</div>`;
   });
+}
+
+function resetScan() {
+  // Re-enable input and button
+  document.getElementById('scoreUrl').value = '';
+  document.getElementById('scoreBtn').disabled = false;
+  document.getElementById('urlError').style.display = 'none';
+  // Reset right panel to empty state
+  document.getElementById('screenshotPlaceholder').style.display = 'flex';
+  document.getElementById('scanFrame').style.display = 'none';
+  document.getElementById('scanStatusPanel').style.display = 'none';
+  document.getElementById('scoreResults').classList.remove('show');
+  document.getElementById('scoreResults').style.display = 'none';
+  document.getElementById('generatingMsg').style.display = 'none';
+  document.getElementById('paramScanWrap').innerHTML = '';
+  // Clear screenshot src to avoid stale image on next run
+  document.getElementById('scanScreenshot').src = '';
+  // Hide refresh button until next scan completes
+  document.getElementById('resetScanBtn').style.display = 'none';
+  // Focus URL input for quick re-entry
+  document.getElementById('scoreUrl').focus();
 }
 
 function unlockFullReport() {
