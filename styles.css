@@ -233,8 +233,8 @@ h1.hero-h1{font-family:'Roboto',sans-serif;font-size:clamp(2.2rem,4.5vw,3.8rem);
 /* ════ REVENUE CALCULATOR ════ */
 #calculator{background:var(--ink2)}
 .calc-layout{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;margin-top:48px}
-.calc-inputs{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:32px}
-.calc-inputs h3{font-size:1.1rem;margin-bottom:20px}
+.calc-inputs{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:32px;position:relative}
+.calc-inputs h3{font-size:1.1rem;margin-bottom:20px;padding-right:44px}
 .input-group{margin-bottom:20px}
 .input-group label{display:block;font-size:.78rem;font-weight:700;color:rgba(248,249,255,.55);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em}
 .input-group input{width:100%;background:rgba(255,255,255,.05);border:1.5px solid var(--border);border-radius:9px;padding:12px 16px;color:var(--white);font-family:'Roboto',sans-serif;font-size:1rem;outline:none;transition:border-color .2s}
