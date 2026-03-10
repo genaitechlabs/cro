@@ -512,39 +512,63 @@ let lastUpside = 0;
 let calcAnimated = false;
 
 function updateCalc() {
-  const v = +document.getElementById('calcVisitors').value || 0;
-  const cvr = +document.getElementById('calcCVR').value || 0;
-  const aov = +document.getElementById('calcAOV').value || 0;
-  const pts = +document.getElementById('croSlider').value || 20;
+  const v    = +document.getElementById('calcVisitors').value || 0;
+  const cvr  = +document.getElementById('calcCVR').value || 0;
+  const aov  = +document.getElementById('calcAOV').value || 0;
+  const lift = +document.getElementById('croSlider').value;   // direct CVR lift %
 
-  // Update slider display
-  const impliedCvrLift = (pts * 0.08).toFixed(1);
-  document.getElementById('sliderVal').textContent = '+' + pts + ' pts  (+' + impliedCvrLift + '% CVR)';
-  document.getElementById('sliderCVRNote').textContent =
-    `Each 10-point improvement ≈ +0.8% CVR lift`;
+  // Update slider label — CVR only, no points
+  document.getElementById('sliderVal').textContent =
+    '+' + (lift % 1 === 0 ? lift : lift.toFixed(1)) + '% Incremental CVR';
 
-  if (!v || !cvr || !aov) return;
+  // Current revenue always updates when inputs are filled
+  if (v && cvr && aov) {
+    const currentRev = v * (cvr / 100) * aov;
+    document.getElementById('calcLiveRevVal').textContent = fmtRupee(currentRev) + '/mo';
+    document.getElementById('calcCurrentRev').textContent = fmtRupee(currentRev);
+    document.getElementById('calcCurrentSub').textContent =
+      `${v.toLocaleString()} visitors × ${cvr}% CVR × ₹${aov.toLocaleString()}`;
 
-  const currentRev = v * (cvr / 100) * aov;
-  document.getElementById('calcLiveRevVal').textContent = fmtRupee(currentRev) + '/mo';
+    if (lift > 0) {
+      const liftedCVR = cvr + lift;
+      const optRev    = v * (liftedCVR / 100) * aov;
+      const monthly   = optRev - currentRev;
 
-  const liftedCVR = cvr + parseFloat(impliedCvrLift);
-  const optRev = v * (liftedCVR / 100) * aov;
-  const monthly = optRev - currentRev;
+      document.getElementById('calcOptRev').textContent    = fmtRupee(optRev);
+      document.getElementById('calcCVRNote').textContent   = `CVR: ${cvr}% → ${liftedCVR.toFixed(1)}% (+${lift}%)`;
+      document.getElementById('calcMonthlyUpside').textContent = fmtRupee(monthly);
+      document.getElementById('calcAnnualUpside').textContent  = fmtRupee(monthly * 12);
 
-  document.getElementById('calcCurrentRev').textContent = fmtRupee(currentRev);
-  document.getElementById('calcCurrentSub').textContent = `${v.toLocaleString()} visitors × ${cvr}% CVR × ₹${aov.toLocaleString()}`;
-  document.getElementById('calcOptRev').textContent = fmtRupee(optRev);
-  document.getElementById('calcCVRNote').textContent = `CVR improved: ${cvr}% → ${liftedCVR.toFixed(1)}% (+${impliedCvrLift}%)`;
-  document.getElementById('calcMonthlyUpside').textContent = fmtRupee(monthly);
-  document.getElementById('calcAnnualUpside').textContent = fmtRupee(monthly * 12);
-
-  // Confetti on first meaningful upside generation
-  if (monthly > 0 && !calcAnimated) {
-    calcAnimated = true;
-    setTimeout(() => launchConfetti(), 200);
+      // Confetti on first meaningful upside
+      if (monthly > 0 && !calcAnimated) {
+        calcAnimated = true;
+        setTimeout(() => launchConfetti(), 200);
+      }
+      lastUpside = monthly;
+    } else {
+      // Slider at 0 — clear uplift cards
+      document.getElementById('calcOptRev').textContent        = '₹ —';
+      document.getElementById('calcCVRNote').textContent       = 'Move the slider to see potential';
+      document.getElementById('calcMonthlyUpside').textContent = '₹ —';
+      document.getElementById('calcAnnualUpside').textContent  = '₹ —';
+    }
   }
-  lastUpside = monthly;
+}
+
+function resetCalc() {
+  document.getElementById('calcVisitors').value = '';
+  document.getElementById('calcCVR').value      = '';
+  document.getElementById('calcAOV').value      = '';
+  document.getElementById('croSlider').value    = '0';
+  document.getElementById('calcLiveRevVal').textContent    = '—';
+  document.getElementById('calcCurrentRev').textContent   = '₹ —';
+  document.getElementById('calcCurrentSub').textContent   = 'Enter your numbers to calculate';
+  document.getElementById('calcOptRev').textContent       = '₹ —';
+  document.getElementById('calcCVRNote').textContent      = 'With improved CVR';
+  document.getElementById('calcMonthlyUpside').textContent = '₹ —';
+  document.getElementById('calcAnnualUpside').textContent  = '₹ —';
+  document.getElementById('sliderVal').textContent         = '+0% Incremental CVR';
+  calcAnimated = false;
 }
 
 // ─────────────────────────────────────────
