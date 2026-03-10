@@ -156,8 +156,6 @@
           <div class="pillar-num">Pillar 01</div>
           <span class="pillar-emoji">🛒</span>
           <h3>Purchase Flow</h3>
-          <div class="pillar-pts-badge"
-            style="background:rgba(255,79,46,.12);color:#FF4F2E;border:1px solid rgba(255,79,46,.25)">30 pts</div>
           <p>The #1 revenue lever. A broken checkout kills sales instantly. We map every step from "Add to Cart" to
             "Order Confirmed" and remove friction.</p>
           <div class="pillar-params">
@@ -171,8 +169,6 @@
           <div class="pillar-num">Pillar 02</div>
           <span class="pillar-emoji">📄</span>
           <h3>Page Experience</h3>
-          <div class="pillar-pts-badge"
-            style="background:rgba(14,165,233,.12);color:#0EA5E9;border:1px solid rgba(14,165,233,.25)">25 pts</div>
           <p>Your pages should do the selling before a visitor reaches checkout. We score above-fold clarity, product
             page persuasion, and search quality.</p>
           <div class="pillar-params">
@@ -185,8 +181,6 @@
           <div class="pillar-num">Pillar 03</div>
           <span class="pillar-emoji">🤝</span>
           <h3>Trust & Conversion</h3>
-          <div class="pillar-pts-badge"
-            style="background:rgba(168,229,53,.1);color:#A8E535;border:1px solid rgba(168,229,53,.22)">20 pts</div>
           <p>Buyers need to trust you before they pay. Reviews, guarantees, social proof, and clear return policies are
             not nice-to-haves — they're conversion assets.</p>
           <div class="pillar-params">
@@ -199,8 +193,6 @@
           <div class="pillar-num">Pillar 04</div>
           <span class="pillar-emoji">⚡</span>
           <h3>Engagement & Retention</h3>
-          <div class="pillar-pts-badge"
-            style="background:rgba(245,197,24,.1);color:#F5C518;border:1px solid rgba(245,197,24,.22)">15 pts</div>
           <p>Every visitor who buys once is a candidate to buy again. We score cross-sell, upsell, and re-engagement
             flows that compound revenue over time.</p>
           <div class="pillar-params">
@@ -213,8 +205,6 @@
           <div class="pillar-num">Pillar 05</div>
           <span class="pillar-emoji">📱</span>
           <h3>Technical Foundation</h3>
-          <div class="pillar-pts-badge"
-            style="background:rgba(168,85,247,.1);color:#A855F7;border:1px solid rgba(168,85,247,.22)">10 pts</div>
           <p>Speed and mobile experience are table stakes. A 1-second delay reduces conversion by 7%. We check Core Web
             Vitals, mobile UX, and navigation structure.</p>
           <div class="pillar-params">
@@ -262,14 +252,11 @@
   <section id="score-tool">
     <div class="container">
       <div class="reveal" style="text-align:center;max-width:600px;margin:0 auto">
-        <div class="section-label"
-          style="font-family:'Georgia',serif;font-style:italic;text-transform:none;letter-spacing:0;font-size:.9rem">
-          OwlEye Score™ <sup
-            style="font-size:.6em;font-weight:700;background:rgba(255,79,46,.18);color:var(--coral);border-radius:4px;padding:1px 5px;font-style:normal;font-family:'Roboto',sans-serif">Beta</sup>
-        </div>
-        <h2>See what buyers see</h2>
-        <p>Paste your store URL — our AI analyses 9 conversion parameters across 5 pillars and scores your store out of
-          100.</p>
+        <div class="section-label" style="color:var(--coral);font-size:1.1rem;font-weight:700;text-transform:none;letter-spacing:0">See what buyers see</div>
+        <h2 style="color:var(--white)">OwlEye Score™ <sup
+            style="font-size:.55em;font-weight:700;background:rgba(255,79,46,.18);color:var(--coral);border-radius:4px;padding:1px 5px;font-style:normal;font-family:'Roboto',sans-serif">Beta</sup>
+        </h2>
+        <p>Our Proprietary AI Algo analyses multiple parameters across 5 core pillars and generate a <span class="owleye-brand">OwlEye Score™</span></p>
       </div>
       <div class="score-layout reveal">
 
@@ -278,9 +265,10 @@
           <h3>Analyse Your Store</h3>
           <p style="margin-bottom:20px;font-size:.84rem">Free instant score. No sign-up needed.</p>
           <div class="url-input-wrap">
-            <input type="url" id="scoreUrl" placeholder="https://yourstore.com">
+            <input type="url" id="scoreUrl" placeholder="https://yourstore.com" oninput="document.getElementById('urlError').style.display='none'">
             <button class="btn btn-coral" id="scoreBtn" onclick="runScoreAnalysis()">Analyse →</button>
           </div>
+          <p id="urlError" style="display:none;margin-top:8px;font-size:.8rem;color:var(--coral)">A valid url will help you optimize your revenue.</p>
           <p style="margin-top:10px;font-size:.72rem;color:rgba(248,249,255,.35);line-height:1.5">*OwlEye Score is in
             beta and may not show accurate results. We recommend <a href="#" onclick="openModal();return false"
               style="color:rgba(255,79,46,.7);text-decoration:underline;text-decoration-style:dotted">booking a full

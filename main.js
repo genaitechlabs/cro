@@ -214,7 +214,15 @@ const FIXES_DB = [
 
 function runScoreAnalysis() {
   const url = document.getElementById('scoreUrl').value.trim();
-  if (!url) { alert('Please enter your store URL'); return; }
+  const urlError = document.getElementById('urlError');
+  let valid = false;
+  try { valid = /^https?:\/\/.+\..+/.test(new URL(url).href); } catch(e) {}
+  if (!url || !valid) {
+    urlError.style.display = 'block';
+    document.getElementById('scoreUrl').focus();
+    return;
+  }
+  urlError.style.display = 'none';
   document.getElementById('scoreBtn').disabled = true;
   document.getElementById('screenshotPlaceholder').style.display = 'none';
   document.getElementById('scoreResults').classList.remove('show');
