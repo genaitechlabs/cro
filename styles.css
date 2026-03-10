@@ -143,8 +143,8 @@ h1.hero-h1{font-family:'Roboto',sans-serif;font-size:clamp(2.2rem,4.5vw,3.8rem);
 
 /* ════ OWLEYE SCORE TOOL ════ */
 #score-tool{background:var(--card)}
-.score-layout{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start;margin-top:48px}
-.score-input-panel{background:var(--ink2);border:1.5px solid var(--border);border-radius:var(--radius);padding:32px}
+.score-layout{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:stretch;margin-top:48px}
+.score-input-panel{background:var(--ink2);border:1.5px solid var(--border);border-radius:var(--radius);padding:32px;height:100%}
 .url-input-wrap{display:flex;gap:10px;margin-bottom:16px}
 .url-input-wrap input{flex:1;background:rgba(255,255,255,.05);border:1.5px solid var(--border);border-radius:9px;padding:13px 16px;color:var(--white);font-family:'Roboto',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s}
 .url-input-wrap input:focus{border-color:rgba(255,79,46,.5)}

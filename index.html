@@ -267,7 +267,7 @@
           <h3>Analyse Your Store</h3>
           <p style="margin-bottom:20px;font-size:.84rem">Free instant score. No sign-up needed.</p>
           <div class="url-input-wrap">
-            <input type="url" id="scoreUrl" placeholder="https://yourstore.com" oninput="document.getElementById('urlError').style.display='none'">
+            <input type="url" id="scoreUrl" placeholder="https://yourstore.com" oninput="document.getElementById('urlError').style.display='none'" onkeydown="if(event.key==='Enter')runScoreAnalysis()">
             <button class="btn btn-coral" id="scoreBtn" onclick="runScoreAnalysis()">Analyse →</button>
           </div>
           <p id="urlError" style="display:none;margin-top:8px;font-size:.8rem;color:var(--coral)">A valid url will help you optimize your revenue.</p>
