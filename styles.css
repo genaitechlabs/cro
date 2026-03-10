@@ -144,7 +144,9 @@ h1.hero-h1{font-family:'Roboto',sans-serif;font-size:clamp(2.2rem,4.5vw,3.8rem);
 /* ════ OWLEYE SCORE TOOL ════ */
 #score-tool{background:var(--card)}
 .score-layout{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:stretch;margin-top:48px}
-.score-input-panel{background:var(--ink2);border:1.5px solid var(--border);border-radius:var(--radius);padding:32px;height:100%}
+.score-input-panel{background:var(--ink2);border:1.5px solid var(--border);border-radius:var(--radius);padding:32px;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;box-sizing:border-box}
+.score-input-panel h3{font-size:1.5rem;margin-bottom:10px}
+.score-input-panel .url-input-wrap{width:100%}
 .url-input-wrap{display:flex;gap:10px;margin-bottom:16px}
 .url-input-wrap input{flex:1;background:rgba(255,255,255,.05);border:1.5px solid var(--border);border-radius:9px;padding:13px 16px;color:var(--white);font-family:'Roboto',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s}
 .url-input-wrap input:focus{border-color:rgba(255,79,46,.5)}
@@ -232,7 +234,7 @@ h1.hero-h1{font-family:'Roboto',sans-serif;font-size:clamp(2.2rem,4.5vw,3.8rem);
 
 /* ════ REVENUE CALCULATOR ════ */
 #calculator{background:var(--ink2)}
-.calc-layout{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;margin-top:48px}
+.calc-layout{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:stretch;margin-top:48px}
 .calc-inputs{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:32px;position:relative}
 .calc-inputs h3{font-size:1.1rem;margin-bottom:20px;padding-right:44px}
 .input-group{margin-bottom:20px}
@@ -252,7 +254,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--coral);cursor:pointer;border:none}
 .slider-track-labels{display:flex;justify-content:space-between;font-size:.66rem;color:rgba(248,249,255,.25);margin-top:5px}
 
-.calc-results{display:flex;flex-direction:column;gap:14px}
+.calc-results{display:flex;flex-direction:column;gap:14px;justify-content:space-between;height:100%}
 .calc-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:22px}
 .calc-card.highlight{border-color:rgba(168,229,53,.3);background:rgba(168,229,53,.05)}
 .calc-card-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}
