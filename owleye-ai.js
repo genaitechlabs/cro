@@ -226,10 +226,10 @@ function calcOwleyeTotal(paramScores) {
 /**
  * Calculate estimated revenue upside from score improvement
  */
-function calcRevenueUpside(currentScore, base_orders = 10000, aov = 1200) {
+function calcRevenueUpside(currentScore, visitors = 100000, aov = 1200) {
   const scoreGap = 100 - currentScore;
   const cvrLiftPct = +(scoreGap * OWLEYE_BENCHMARKS.cvr_lift_per_point).toFixed(1);
-  const extraOrders = Math.round(base_orders * (cvrLiftPct / 100));
+  const extraOrders = Math.round(visitors * (cvrLiftPct / 100));
   const monthlyUpside = extraOrders * aov;
   return {
     scoreGap,
