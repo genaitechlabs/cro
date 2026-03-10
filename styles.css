@@ -88,7 +88,7 @@ h1.hero-h1{font-family:'Roboto',sans-serif;font-size:clamp(2.2rem,4.5vw,3.8rem);
 
 /* ════ METRICS BAR ════ */
 #metrics{padding:0;background:var(--ink2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-.metrics-inner{display:grid;grid-template-columns:repeat(4,1fr);max-width:1100px;margin:0 auto}
+.metrics-inner{display:grid;grid-template-columns:repeat(3,1fr);max-width:900px;margin:0 auto}
 .metric{padding:36px 5%;border-right:1px solid var(--border);text-align:center}
 .metric:last-child{border-right:none}
 .metric-val{font-family:'Roboto',sans-serif;font-size:2.4rem;font-weight:900;color:var(--coral);line-height:1;margin-bottom:6px;display:block}
