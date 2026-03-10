@@ -320,71 +320,81 @@
               style="font-size:.74rem;color:var(--muted);text-align:center;min-height:18px;margin:6px 0 0"></div>
           </div>
 
-          <!-- 3. Results state: score-over-mockup (left) + report summary (right), side by side -->
-          <div id="scoreResults" class="score-results-panel analysis-row">
+          <!-- 3. Results state — full-width multi-row layout -->
+          <div id="scoreResults" class="score-results-panel">
 
-            <div class="analysis-mockup-col">
-              <div class="browser-mockup">
-                <div class="browser-bar">
-                  <div style="display:flex;gap:5px">
-                    <div style="width:10px;height:10px;border-radius:50%;background:#ef4444"></div>
-                    <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b"></div>
-                    <div style="width:10px;height:10px;border-radius:50%;background:#22c55e"></div>
-                  </div>
-                  <div id="resultUrl"
-                    style="font-size:.72rem;color:var(--muted);flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-                  </div>
-                </div>
-                <div class="browser-body result-browser-body">
-                  <div class="fake-page-lines">
-                    <div class="fpl fpl-hero"></div>
-                    <div class="fpl-row">
-                      <div class="fpl fpl-sm"></div>
-                      <div class="fpl fpl-sm"></div>
-                      <div class="fpl fpl-sm"></div>
+            <!-- Title -->
+            <h3 class="score-results-title">OwlEye Score Summary</h3>
+
+            <!-- Row 1: Score badge + Spider web, centered -->
+            <div class="score-top-row">
+              <div class="score-mockup-wrap">
+                <div class="browser-mockup">
+                  <div class="browser-bar">
+                    <div style="display:flex;gap:5px">
+                      <div style="width:10px;height:10px;border-radius:50%;background:#ef4444"></div>
+                      <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b"></div>
+                      <div style="width:10px;height:10px;border-radius:50%;background:#22c55e"></div>
                     </div>
-                    <div class="fpl fpl-md"></div>
-                    <div class="fpl-row">
-                      <div class="fpl fpl-lg"></div>
-                      <div class="fpl fpl-lg"></div>
+                    <div id="resultUrl"
+                      style="font-size:.72rem;color:var(--muted);flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
                     </div>
                   </div>
-                  <div class="score-badge-overlay">
-                    <div class="score-number" id="scoreNumber">0</div>
-                    <div class="score-badge-sub" style="font-size:.85rem;color:rgba(248,249,255,.6);margin-top:2px">out of 100</div>
-                    <div class="score-band" id="scoreBand">—</div>
+                  <div class="browser-body result-browser-body">
+                    <div class="fake-page-lines">
+                      <div class="fpl fpl-hero"></div>
+                      <div class="fpl-row">
+                        <div class="fpl fpl-sm"></div>
+                        <div class="fpl fpl-sm"></div>
+                        <div class="fpl fpl-sm"></div>
+                      </div>
+                      <div class="fpl fpl-md"></div>
+                      <div class="fpl-row">
+                        <div class="fpl fpl-lg"></div>
+                        <div class="fpl fpl-lg"></div>
+                      </div>
+                    </div>
+                    <div class="score-badge-overlay">
+                      <div class="score-number" id="scoreNumber">0</div>
+                      <div class="score-badge-sub" style="font-size:.85rem;color:rgba(248,249,255,.6);margin-top:2px">out of 100</div>
+                      <div class="score-band" id="scoreBand">—</div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <!-- Radar under the mockup in left col -->
               <div class="radar-result-wrap"><canvas id="scoreRadar"></canvas></div>
             </div>
 
-            <div class="analysis-detail-col">
-              <div class="report-summary">
+            <!-- Row 2: Report Summary | Revenue Upside, side by side -->
+            <div class="score-mid-row">
+              <div class="score-panel-card">
                 <div class="report-summary-title">📊 Report Summary</div>
                 <div class="pillar-scores" id="pillarBars"></div>
-                <div class="revenue-upside" id="revenueUpside" style="display:none">
-                  <h4>💰 Potential Revenue Upside</h4>
-                  <div id="upsideExplainer"
-                    style="font-size:.76rem;color:var(--muted);margin-bottom:10px;line-height:1.6"></div>
-                  <div class="upside-grid">
-                    <div class="upside-stat"><span class="upside-val" id="upsideMonthly">—</span><span
-                        class="upside-label">Monthly upside</span></div>
-                    <div class="upside-stat"><span class="upside-val" id="upsideAnnual">—</span><span
-                        class="upside-label">Annual upside</span></div>
-                  </div>
+              </div>
+              <div class="revenue-upside" id="revenueUpside" style="display:none">
+                <h4>💰 Potential Revenue Upside</h4>
+                <div id="upsideExplainer"
+                  style="font-size:.76rem;color:var(--muted);margin-bottom:10px;line-height:1.6"></div>
+                <div class="upside-grid">
+                  <div class="upside-stat"><span class="upside-val" id="upsideMonthly">—</span><span
+                      class="upside-label">Monthly upside</span></div>
+                  <div class="upside-stat"><span class="upside-val" id="upsideAnnual">—</span><span
+                      class="upside-label">Annual upside</span></div>
                 </div>
-                <div class="top-fixes" id="topFixes"></div>
-                <div class="gate-prompt" id="gatePrompt">
-                  <p>🔒 <strong style="color:var(--white)">Get your full report</strong><br>All 9 parameter scores + fix
-                    recommendations + PDF</p>
-                  <div class="gate-form">
-                    <input type="text" placeholder="Your name" id="gateName">
-                    <input type="email" placeholder="Work email" id="gateEmail">
-                    <button class="btn btn-coral" style="width:100%;justify-content:center"
-                      onclick="unlockFullReport()">Send Me the Full Report →</button>
-                  </div>
+              </div>
+            </div>
+
+            <!-- Row 3: Top 3 Quick Wins | Get Full Report, side by side -->
+            <div class="score-bot-row">
+              <div class="score-panel-card top-fixes" id="topFixes"></div>
+              <div class="gate-prompt" id="gatePrompt">
+                <p>🔒 <strong style="color:var(--white)">Get your full report</strong><br>All 9 parameter scores + fix
+                  recommendations</p>
+                <div class="gate-form">
+                  <input type="text" placeholder="Your name" id="gateName">
+                  <input type="email" placeholder="Work email" id="gateEmail">
+                  <button class="btn btn-coral" style="width:100%;justify-content:center"
+                    onclick="unlockFullReport()">Send Me the Full Report →</button>
                 </div>
               </div>
             </div>
@@ -544,25 +554,7 @@
         <p>Pick a slot that works for you. We'll review your store before the call so every minute is useful.</p>
       </div>
       <div class="calendly-embed-wrap reveal">
-        <!-- Replace the placeholder below with actual Calendly embed script -->
-        <div class="cal-placeholder">
-          <span class="cal-icon">📅</span>
-          <h3 style="font-size:1.1rem;margin-bottom:6px">Calendly Booking Widget</h3>
-          <p>To embed your Calendly calendar, add this script tag:<br>
-            <code
-              style="font-size:.72rem;background:rgba(255,255,255,.06);padding:6px 10px;border-radius:6px;display:inline-block;margin-top:8px;color:var(--lime)">
-          &lt;script src="https://assets.calendly.com/assets/external/widget.js"&gt;&lt;/script&gt;
-        </code>
-          </p>
-          <p style="margin-top:10px">And replace this div with:<br>
-            <code
-              style="font-size:.72rem;background:rgba(255,255,255,.06);padding:6px 10px;border-radius:6px;display:inline-block;margin-top:8px;color:var(--sky)">
-          &lt;div class="calendly-inline-widget" data-url="https://calendly.com/amitguptaz/catch-up" style="min-width:320px;height:700px;"&gt;&lt;/div&gt;
-        </code>
-          </p>
-          <a href="https://calendly.com/amitguptaz/catch-up" target="_blank" class="btn btn-coral"
-            style="margin-top:20px">Open Calendly →</a>
-        </div>
+        <div class="calendly-inline-widget" data-url="https://calendly.com/amitguptaz/catch-up" style="min-width:320px;height:700px;"></div>
       </div>
     </div>
   </section>
@@ -691,6 +683,7 @@
 
   <script src="owleye-ai.js"></script>
   <script src="main.js"></script>
+  <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
 </body>
 
 </html>
