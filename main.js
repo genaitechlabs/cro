@@ -177,23 +177,49 @@ function getHeroRadarSize() {
   return window.innerWidth <= 900 ? Math.min(300, Math.max(220, available - 16)) : 380;
 }
 
+function drawHeroRadars(scores, avg, size) {
+  drawRadar('heroRadar', scores, avg, size);
+  const mobileCanvas = document.getElementById('heroRadarMobile');
+  if (mobileCanvas) {
+    const mSize = Math.min(280, window.innerWidth - 64);
+    drawRadar('heroRadarMobile', scores, avg, mSize);
+  }
+}
+
 function animateHeroRadar() {
   heroAnimPct = Math.min(heroAnimPct + 2, 100);
   const t = 1 - Math.pow(1 - heroAnimPct / 100, 3);
-  drawRadar('heroRadar', lerp(heroFrom, heroTo, t), HERO_AVG, getHeroRadarSize());
+  drawHeroRadars(lerp(heroFrom, heroTo, t), HERO_AVG, getHeroRadarSize());
   if (heroAnimPct < 100) heroRaf = requestAnimationFrame(animateHeroRadar);
 }
 animateHeroRadar();
 
-// Redraw hero radar on resize (debounced)
+// Redraw hero radars on resize (debounced)
 let heroResizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(heroResizeTimer);
   heroResizeTimer = setTimeout(() => {
-    const t = 1;
-    drawRadar('heroRadar', lerp(heroFrom, heroTo, t), HERO_AVG, getHeroRadarSize());
+    drawHeroRadars(lerp(heroFrom, heroTo, 1), HERO_AVG, getHeroRadarSize());
   }, 150);
 });
+
+// ─────────────────────────────────────────
+// HAMBURGER NAV
+// ─────────────────────────────────────────
+function toggleNav() {
+  const nav = document.getElementById('navLinks');
+  const btn = document.getElementById('hamburger');
+  const isOpen = nav.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  btn.setAttribute('aria-expanded', isOpen);
+}
+function closeNav() {
+  const nav = document.getElementById('navLinks');
+  const btn = document.getElementById('hamburger');
+  nav.classList.remove('open');
+  btn.classList.remove('open');
+  btn.setAttribute('aria-expanded', 'false');
+}
 
 setInterval(() => {
   heroFrom = lerp(heroFrom, heroTo, 1);

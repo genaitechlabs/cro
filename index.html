@@ -18,14 +18,17 @@
   <!-- ════ NAV ════ -->
   <nav>
     <a class="logo" href="#hero"><img src="genai-logo.png" class="logo-icon" alt="GenAI Tech Labs logo">GenAI Tech Labs</a>
-    <div class="nav-links">
-      <a href="#services">Services</a>
-      <a href="#pillars">Our Framework</a>
-      <a href="#score-tool">OwlEye Score™ <sup
+    <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="#services" onclick="closeNav()">Services</a>
+      <a href="#pillars" onclick="closeNav()">Our Framework</a>
+      <a href="#score-tool" onclick="closeNav()">OwlEye Score™ <sup
           style="font-size:.6em;font-weight:700;background:rgba(255,79,46,.18);color:var(--coral);border-radius:4px;padding:1px 5px;font-style:normal;font-family:'Roboto',sans-serif">Beta</sup></a>
-      <a href="#calculator">Calculator</a>
-      <a href="#faq">FAQ</a>
-      <a href="#" class="btn btn-coral" onclick="openModal();return false">Book Free Audit</a>
+      <a href="#calculator" onclick="closeNav()">Calculator</a>
+      <a href="#faq" onclick="closeNav()">FAQ</a>
+      <a href="#" class="btn btn-coral" onclick="openModal();closeNav();return false">Book Free Audit</a>
     </div>
   </nav>
 
@@ -42,6 +45,14 @@
         </h1>
         <p class="hero-sub">We find exactly why visitors leave without buying — and fix it. More revenue from the
           traffic you're already paying for, on Shopify and WooCommerce.</p>
+        <!-- Mobile-only radar — shown between subtext and CTAs on small screens -->
+        <div class="hero-radar-mobile-wrap">
+          <canvas id="heroRadarMobile"></canvas>
+          <div class="radar-legend" style="justify-content:center;gap:20px;margin-top:10px">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--coral)"></div>Your Store</div>
+            <div class="legend-item"><div class="legend-dot" style="background:rgba(14,165,233,.7)"></div>Industry Avg.</div>
+          </div>
+        </div>
         <div class="hero-ctas">
           <a href="#" class="btn btn-coral" onclick="openModal();return false">Book Free Audit →</a>
           <a href="#score-tool" class="btn btn-ghost">Get <span class="owleye-brand">OwlEye Score™</span><sup
