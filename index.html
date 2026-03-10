@@ -1,542 +1,706 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Owl Co — CRO Agency for Indian Ecommerce</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Owl Co — CRO Agency for Indian Ecommerce</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,700;0,900;1,400&display=swap">
+  <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
-<!-- ════ NAV ════ -->
-<nav>
-  <a class="logo" href="#hero"><span class="logo-icon">🦉</span>The Owl Co</a>
-  <div class="nav-links">
-    <a href="#services">Services</a>
-    <a href="#pillars">Our Framework</a>
-    <a href="#score-tool">OwlEye Score™</a>
-    <a href="#calculator">Calculator</a>
-    <a href="#faq">FAQ</a>
-    <a href="#" class="btn btn-coral" onclick="openModal();return false">Book Free Audit</a>
-  </div>
-</nav>
-
-<!-- ════ HERO ════ -->
-<section id="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-grid-bg"></div>
-  <div class="hero-layout">
-    <div class="hero-left">
-      <h1 class="hero-h1">
-        Your traffic is
-        <span class="flip-wrap"><span class="flip-word" id="flip-word">browsing.</span></span>
-        <span class="hero-line2">We help them <em style="color:var(--coral)">buy.</em></span>
-      </h1>
-      <p class="hero-sub">We find exactly why visitors leave without buying — and fix it. More revenue from the traffic you're already paying for, on Shopify and WooCommerce.</p>
-      <div class="hero-ctas">
-        <a href="#" class="btn btn-coral" onclick="openModal();return false">Book Free Audit →</a>
-        <a href="#score-tool" class="btn btn-ghost">Get <span class="owleye-brand">OwlEye Score™</span></a>
-      </div>
-      <!-- Trust micro-stats (no screenshot) -->
-      <div class="hero-stats">
-        <div class="hstat"><span class="hstat-val">54%</span><span class="hstat-label">Avg. conv. lift</span></div>
-        <div class="hstat"><span class="hstat-val">68+</span><span class="hstat-label">Stores optimised</span></div>
-        <div class="hstat"><span class="hstat-val">₹4Cr+</span><span class="hstat-label">Revenue unlocked</span></div>
-        <div class="hstat"><span class="hstat-val">5 days</span><span class="hstat-label">Audit turnaround</span></div>
-      </div>
-    </div>
-    <div class="hero-right">
-      <div class="radar-title">
-        <h4 class="owleye-brand">OwlEye Score™</h4>
-        <p>9 parameters · 5 pillars · 100 points</p>
-      </div>
-      <canvas id="heroRadar"></canvas>
-      <div class="radar-legend">
-        <div class="legend-item"><div class="legend-dot" style="background:var(--coral)"></div>Your Store</div>
-        <div class="legend-item"><div class="legend-dot" style="background:rgba(14,165,233,.7)"></div>Industry Avg.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ════ METRICS BAR ════ -->
-<div id="metrics">
-  <div class="metrics-inner">
-    <div class="metric reveal">
-      <span class="metric-val" data-target="54" data-suffix="%">54%</span>
-      <span class="metric-label">Average conversion lift</span>
-    </div>
-    <div class="metric reveal">
-      <span class="metric-val" data-target="68" data-suffix="+">68+</span>
-      <span class="metric-label">Ecommerce stores optimised</span>
-    </div>
-    <div class="metric reveal">
-      <span class="metric-val" data-target="20" data-suffix="%">20%</span>
-      <span class="metric-label">Additional revenue generated</span>
-    </div>
-    <div class="metric reveal" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
-      <div class="ai-badge">🤖 AI + Human Loop</div>
-      <span class="metric-label" style="margin-top:8px">Powered by AI with human expertise</span>
-    </div>
-  </div>
-</div>
-
-<!-- ════ SERVICES ════ -->
-<section id="services">
-  <div class="container">
-    <div class="reveal">
-      <div class="section-label">⚡ What We Do</div>
-      <h2>CRO that moves the revenue needle</h2>
-      <p style="max-width:480px">Four focused services — start with the free audit and we'll tell you exactly which ones you need.</p>
-    </div>
-    <div class="services-grid">
-      <div class="svc-card featured reveal">
-        <span class="svc-badge">Start Here — Free</span>
-        <span class="svc-icon">🔍</span>
-        <h3>CRO Audit</h3>
-        <p>A full diagnostic of your checkout funnel, page speed, mobile UX, and landing pages. Delivered as a written report with prioritised fixes and estimated revenue impact — within 5 working days.</p>
-        <a href="#" class="btn btn-coral" style="margin-top:20px;font-size:.82rem;padding:10px 20px" onclick="openModal();return false">Book Free Audit →</a>
-      </div>
-      <div class="svc-card reveal">
-        <span class="svc-icon">🧪</span>
-        <h3>A/B Testing</h3>
-        <p>Structured experiments on your highest-traffic pages — headlines, CTAs, layouts, pricing displays. We handle hypothesis, design, implementation and analysis. No guessing, only data.</p>
-      </div>
-      <div class="svc-card reveal">
-        <span class="svc-icon">🛒</span>
-        <h3>Checkout Optimisation</h3>
-        <p>Reducing drop-off at the most expensive step. We optimise your cart, checkout flow, payment options, and post-purchase experience to recover revenue that's already in your funnel.</p>
-      </div>
-      <div class="svc-card reveal">
-        <span class="svc-icon">📄</span>
-        <h3>Landing Page Optimisation</h3>
-        <p>Ad landing pages and product pages rebuilt around conversion principles — above-fold clarity, trust signals, urgency, and mobile-first layouts that match buyer intent.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ════ 5 PILLARS PHILOSOPHY ════ -->
-<section id="pillars">
-  <div class="container">
-    <div class="reveal" style="text-align:center;max-width:620px;margin:0 auto">
-      <div class="section-label">🧠 Our Framework</div>
-      <h2>The 5-Pillar CRO Philosophy</h2>
-      <p>Every <span class="owleye-brand">OwlEye Score™</span> audit is built on five interconnected pillars. Fix them in order — Purchase Flow first, Technical last — and watch conversions compound.</p>
-    </div>
-    <div class="pillars-grid">
-
-      <div class="pillar-card p1 reveal">
-        <div class="pillar-num">Pillar 01</div>
-        <span class="pillar-emoji">🛒</span>
-        <h3>Purchase Flow</h3>
-        <div class="pillar-pts-badge" style="background:rgba(255,79,46,.12);color:#FF4F2E;border:1px solid rgba(255,79,46,.25)">30 pts</div>
-        <p>The #1 revenue lever. A broken checkout kills sales instantly. We map every step from "Add to Cart" to "Order Confirmed" and remove friction.</p>
-        <div class="pillar-params">
-          <div class="pillar-param">Checkout Flow</div>
-          <div class="pillar-param">Payment Options (UPI/COD)</div>
-          <div class="pillar-param">Cart & Abandonment Recovery</div>
-        </div>
-      </div>
-
-      <div class="pillar-card p2 reveal">
-        <div class="pillar-num">Pillar 02</div>
-        <span class="pillar-emoji">📄</span>
-        <h3>Page Experience</h3>
-        <div class="pillar-pts-badge" style="background:rgba(14,165,233,.12);color:#0EA5E9;border:1px solid rgba(14,165,233,.25)">25 pts</div>
-        <p>Your pages should do the selling before a visitor reaches checkout. We score above-fold clarity, product page persuasion, and search quality.</p>
-        <div class="pillar-params">
-          <div class="pillar-param">Landing Page & Above-fold</div>
-          <div class="pillar-param">Product Page Quality</div>
-        </div>
-      </div>
-
-      <div class="pillar-card p3 reveal">
-        <div class="pillar-num">Pillar 03</div>
-        <span class="pillar-emoji">🤝</span>
-        <h3>Trust & Conversion</h3>
-        <div class="pillar-pts-badge" style="background:rgba(168,229,53,.1);color:#A8E535;border:1px solid rgba(168,229,53,.22)">20 pts</div>
-        <p>Buyers need to trust you before they pay. Reviews, guarantees, social proof, and clear return policies are not nice-to-haves — they're conversion assets.</p>
-        <div class="pillar-params">
-          <div class="pillar-param">Trust & Credibility Signals</div>
-          <div class="pillar-param">Returns & Refund Policy</div>
-        </div>
-      </div>
-
-      <div class="pillar-card p4 reveal">
-        <div class="pillar-num">Pillar 04</div>
-        <span class="pillar-emoji">⚡</span>
-        <h3>Engagement & Retention</h3>
-        <div class="pillar-pts-badge" style="background:rgba(245,197,24,.1);color:#F5C518;border:1px solid rgba(245,197,24,.22)">15 pts</div>
-        <p>Every visitor who buys once is a candidate to buy again. We score cross-sell, upsell, and re-engagement flows that compound revenue over time.</p>
-        <div class="pillar-params">
-          <div class="pillar-param">Cross-sell & Upsell</div>
-          <div class="pillar-param">Post-purchase Experience</div>
-        </div>
-      </div>
-
-      <div class="pillar-card p5 reveal">
-        <div class="pillar-num">Pillar 05</div>
-        <span class="pillar-emoji">📱</span>
-        <h3>Technical Foundation</h3>
-        <div class="pillar-pts-badge" style="background:rgba(168,85,247,.1);color:#A855F7;border:1px solid rgba(168,85,247,.22)">10 pts</div>
-        <p>Speed and mobile experience are table stakes. A 1-second delay reduces conversion by 7%. We check Core Web Vitals, mobile UX, and navigation structure.</p>
-        <div class="pillar-params">
-          <div class="pillar-param">Mobile UX</div>
-          <div class="pillar-param">Page Speed & Core Web Vitals</div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- ════ HOW IT WORKS ════ -->
-<section id="how">
-  <div class="container">
-    <div class="reveal" style="text-align:center;max-width:560px;margin:0 auto">
-      <div class="section-label">📋 Our Process</div>
-      <h2>Three steps to consistent revenue growth</h2>
-      <p>No retainer lock-in until we've proven there's value. Start with a free audit, every time.</p>
-    </div>
-    <div class="steps">
-      <div class="step reveal">
-        <div class="step-num">01</div>
-        <h3>Audit</h3>
-        <p>We analyse your full funnel — checkout, pages, speed, mobile — and deliver a prioritised report with specific fixes and revenue estimates within 5 days.</p>
-      </div>
-      <div class="step reveal">
-        <div class="step-num">02</div>
-        <h3>Experiment</h3>
-        <p>We run structured A/B tests on your biggest drop-off points. Every test has a clear hypothesis, success metric, and sample size before we call a winner.</p>
-      </div>
-      <div class="step reveal">
-        <div class="step-num">03</div>
-        <h3>Scale</h3>
-        <p>Winning variants get implemented. We build a testing roadmap to keep compounding gains — month on month, not a one-time spike.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ════ OWLEYE SCORE TOOL ════ -->
-<section id="score-tool">
-  <div class="container">
-    <div class="reveal" style="text-align:center;max-width:600px;margin:0 auto">
-      <div class="section-label" style="font-family:'Georgia',serif;font-style:italic;text-transform:none;letter-spacing:0;font-size:.9rem">OwlEye Score™</div>
-      <h2>See what buyers see</h2>
-      <p>Paste your store URL — our AI analyses 9 conversion parameters across 5 pillars and scores your store out of 100.</p>
-    </div>
-    <div class="score-layout reveal">
-
-      <!-- LEFT: Input + scanning progress -->
-      <div class="score-input-panel">
-        <h3>Analyse Your Store</h3>
-        <p style="margin-bottom:20px;font-size:.84rem">Free instant score. No sign-up needed.</p>
-        <div class="url-input-wrap">
-          <input type="url" id="scoreUrl" placeholder="https://yourstore.com">
-          <button class="btn btn-coral" id="scoreBtn" onclick="runScoreAnalysis()">Analyse →</button>
-        </div>
-        <div id="paramScanWrap" style="display:none;margin-top:20px">
-          <div id="paramScanList"></div>
-          <div id="generatingMsg" style="display:none;text-align:center;margin-top:16px;padding:14px;background:rgba(255,79,46,.06);border:1px solid rgba(255,79,46,.2);border-radius:10px">
-            <div style="font-size:.82rem;color:var(--coral);font-weight:700;margin-bottom:3px">✦ Generating your report…</div>
-            <div style="font-size:.76rem;color:var(--muted)">Compiling findings and recommendations</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- RIGHT: Placeholder → Results -->
-      <div id="scoreRightPanel">
-        <div id="screenshotPlaceholder" style="min-height:340px;background:var(--ink2);border:1.5px dashed var(--border);border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);text-align:center;padding:40px">
-          <div style="font-size:2.5rem;opacity:.25">🔍</div>
-          <div style="font-size:.86rem;color:var(--white)">Your <span class="owleye-brand">OwlEye Score™</span> will appear here</div>
-          <div style="font-size:.74rem;opacity:.55">Enter your URL and click Analyse to begin</div>
-        </div>
-
-        <!-- Browser mockup during scan -->
-        <div id="screenshotFrame" style="display:none">
-          <div style="border-radius:12px;overflow:hidden;border:1.5px solid var(--border);margin-bottom:14px;position:relative">
-            <div style="background:#1a2235;padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)">
-              <div style="display:flex;gap:5px">
-                <div style="width:10px;height:10px;border-radius:50%;background:#ef4444"></div>
-                <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b"></div>
-                <div style="width:10px;height:10px;border-radius:50%;background:#22c55e"></div>
-              </div>
-              <div id="screenshotUrl" style="font-size:.72rem;color:var(--muted);flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
-            </div>
-            <div style="height:180px;background:var(--ink2);display:flex;align-items:center;justify-content:center;position:relative">
-              <div id="scanOverlay" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px">
-                <div style="width:36px;height:36px;border:3px solid rgba(255,79,46,.3);border-top-color:var(--coral);border-radius:50%;animation:spin .8s linear infinite"></div>
-                <div style="font-size:.76rem;color:var(--coral);font-weight:700" id="scanStatusText">Connecting…</div>
-              </div>
-            </div>
-          </div>
-          <div id="currentParamLabel" style="font-size:.74rem;color:var(--muted);text-align:center;min-height:18px;margin-bottom:4px"></div>
-        </div>
-
-        <!-- Results -->
-        <div class="score-results-panel" id="scoreResults">
-          <div class="score-gauge">
-            <div class="score-number" id="scoreNumber" style="color:var(--coral)">0</div>
-            <div style="font-size:.8rem;color:var(--muted);margin:3px 0">out of 100</div>
-            <div class="score-band" id="scoreBand">—</div>
-          </div>
-          <div class="radar-result-wrap"><canvas id="scoreRadar"></canvas></div>
-          <div class="pillar-scores" id="pillarBars"></div>
-          <div class="revenue-upside" id="revenueUpside" style="display:none">
-            <h4>💰 Potential Revenue Upside</h4>
-            <div id="upsideExplainer" style="font-size:.76rem;color:var(--muted);margin-bottom:10px;line-height:1.6"></div>
-            <div class="upside-grid">
-              <div class="upside-stat"><span class="upside-val" id="upsideMonthly">—</span><span class="upside-label">Monthly upside</span></div>
-              <div class="upside-stat"><span class="upside-val" id="upsideAnnual">—</span><span class="upside-label">Annual upside</span></div>
-            </div>
-          </div>
-          <div class="top-fixes" id="topFixes"></div>
-          <div class="gate-prompt" id="gatePrompt">
-            <p>🔒 <strong style="color:var(--white)">Get your full report</strong><br>All 9 parameter scores + fix recommendations + PDF</p>
-            <div class="gate-form">
-              <input type="text" placeholder="Your name" id="gateName">
-              <input type="email" placeholder="Work email" id="gateEmail">
-              <button class="btn btn-coral" style="width:100%;justify-content:center" onclick="unlockFullReport()">Send Me the Full Report →</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<!-- ════ REVENUE CALCULATOR ════ -->
-<section id="calculator">
-  <div class="container">
-    <div class="reveal" style="text-align:center;max-width:560px;margin:0 auto">
-      <div class="section-label">💰 Revenue Calculator</div>
-      <h2>How much are you leaving on the table?</h2>
-      <p>Enter your numbers, drag the CRO improvement slider, and see your revenue potential.</p>
-    </div>
-    <div class="calc-layout reveal">
-
-      <!-- LEFT: Inputs + slider -->
-      <div class="calc-inputs">
-        <h3>Your Current Numbers</h3>
-        <div class="input-group">
-          <label>Monthly Visitors</label>
-          <input type="number" id="calcVisitors" placeholder="50,000" oninput="updateCalc()">
-        </div>
-        <div class="input-group">
-          <label>Current CVR %</label>
-          <input type="number" id="calcCVR" placeholder="1.8" step="0.1" oninput="updateCalc()">
-        </div>
-        <div class="input-group">
-          <label>Average Order Value (₹)</label>
-          <input type="number" id="calcAOV" placeholder="1,200" oninput="updateCalc()">
-          <div class="calc-live-rev" id="calcLiveRev">Monthly revenue: <span id="calcLiveRevVal">—</span></div>
-        </div>
-
-        <!-- CRO Improvement Slider -->
-        <div class="slider-section">
-          <div class="slider-label">
-            <span>CRO Score Improvement</span>
-            <strong id="sliderVal">+20 pts</strong>
-          </div>
-          <input type="range" id="croSlider" min="5" max="60" value="20" oninput="updateCalc()">
-          <div class="slider-track-labels">
-            <span>+5 pts (Quick wins)</span>
-            <span>+60 pts (Full optimisation)</span>
-          </div>
-          <div style="margin-top:10px;font-size:.76rem;color:var(--muted)" id="sliderCVRNote">Each 10-point improvement ≈ +0.8% CVR lift</div>
-        </div>
-      </div>
-
-      <!-- RIGHT: Result cards -->
-      <div class="calc-results">
-        <div class="calc-card">
-          <div class="calc-card-label">Current Monthly Revenue</div>
-          <div class="calc-card-val" id="calcCurrentRev">₹ —</div>
-          <div class="calc-card-sub" id="calcCurrentSub">Enter your numbers to calculate</div>
-        </div>
-        <div class="calc-arrow">↓</div>
-        <div class="calc-card highlight">
-          <div class="calc-card-label">Optimised Potential</div>
-          <div class="calc-card-val" id="calcOptRev">₹ —</div>
-          <div class="calc-card-sub" id="calcCVRNote">With improved CVR</div>
-        </div>
-        <div class="calc-card" style="border-color:rgba(255,79,46,.2);background:rgba(255,79,46,.04)">
-          <div class="calc-card-label">Monthly Upside</div>
-          <div class="calc-card-val" style="color:var(--coral)" id="calcMonthlyUpside">₹ —</div>
-          <div class="calc-card-sub"><span id="calcAnnualUpside" style="color:var(--white);font-weight:700">₹ —</span> per year</div>
-        </div>
-      </div>
-
-    </div>
-    <!-- CTA outside both columns -->
-    <div class="calc-cta-wrap reveal">
-      <p style="margin-bottom:16px;font-size:.88rem">Ready to claim this revenue? Book your free audit and we'll show you exactly how to get there.</p>
-      <a href="#" class="btn btn-coral" style="font-size:.95rem;padding:15px 32px" onclick="openModal();return false">Claim This Revenue →</a>
-    </div>
-  </div>
-</section>
-
-<!-- ════ FAQ ════ -->
-<section id="faq">
-  <div class="container">
-    <div class="reveal" style="text-align:center;max-width:520px;margin:0 auto">
-      <div class="section-label">❓ FAQ</div>
-      <h2>Questions we get every week</h2>
-    </div>
-    <div class="faq-list reveal">
-      <div class="faq-item">
-        <div class="faq-q">What's included in the free audit?<span class="faq-icon">+</span></div>
-        <div class="faq-a">The free audit covers your full checkout funnel, page speed and Core Web Vitals, mobile UX review, and your key ad landing pages. You'll receive a written report with prioritised fixes ranked by estimated revenue impact — delivered within 5 working days.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">How long before I see results?<span class="faq-icon">+</span></div>
-        <div class="faq-a">Quick-win fixes from the audit can go live in the first week. Meaningful conversion lifts from A/B testing typically show within 30–60 days, depending on your traffic volume. We share clear timelines before we start.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">Do you work with Shopify and WooCommerce?<span class="faq-icon">+</span></div>
-        <div class="faq-a">Yes — both. We also work with Shopify Plus and custom ecommerce stacks. Our process is platform-agnostic; we adapt our testing tools and implementation to your specific setup.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">How does the retainer work?<span class="faq-icon">+</span></div>
-        <div class="faq-a">After the audit, we offer monthly CRO retainers where we manage the full testing roadmap — hypothesis, design, dev, analysis and reporting. No lock-in contracts; we work month-to-month.</div>
-      </div>
-      <div class="faq-item">
-        <div class="faq-q">Who is this for?<span class="faq-icon">+</span></div>
-        <div class="faq-a">We work best with stores doing ₹15L+ monthly revenue. Below that, traffic may be too low for A/B tests to reach statistical significance quickly. Book anyway — if the timing isn't right, we'll tell you honestly.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ════ CTA BANNER ════ -->
-<div id="cta-banner">
-  <div class="cta-inner reveal">
-    <div>
-      <h2>Ready to accelerate your CRO Journey?</h2>
-      <p>Book your free audit — we'll diagnose exactly where your funnel is leaking and how much it's costing you.</p>
-    </div>
-    <a href="#" class="btn btn-coral" style="font-size:.95rem;padding:15px 30px;flex-shrink:0" onclick="openModal();return false">Book Free Audit →</a>
-  </div>
-</div>
-
-<!-- ════ CALENDLY SECTION ════ -->
-<section id="book-call">
-  <div class="calendly-section-inner">
-    <div class="reveal" style="text-align:center;max-width:520px;margin:0 auto">
-      <div class="section-label">📅 Book a Call</div>
-      <h2>Schedule your free strategy call</h2>
-      <p>Pick a slot that works for you. We'll review your store before the call so every minute is useful.</p>
-    </div>
-    <div class="calendly-embed-wrap reveal">
-      <!-- Replace the placeholder below with actual Calendly embed script -->
-      <div class="cal-placeholder">
-        <span class="cal-icon">📅</span>
-        <h3 style="font-size:1.1rem;margin-bottom:6px">Calendly Booking Widget</h3>
-        <p>To embed your Calendly calendar, add this script tag:<br>
-        <code style="font-size:.72rem;background:rgba(255,255,255,.06);padding:6px 10px;border-radius:6px;display:inline-block;margin-top:8px;color:var(--lime)">
-          &lt;script src="https://assets.calendly.com/assets/external/widget.js"&gt;&lt;/script&gt;
-        </code></p>
-        <p style="margin-top:10px">And replace this div with:<br>
-        <code style="font-size:.72rem;background:rgba(255,255,255,.06);padding:6px 10px;border-radius:6px;display:inline-block;margin-top:8px;color:var(--sky)">
-          &lt;div class="calendly-inline-widget" data-url="https://calendly.com/amitguptaz/catch-up" style="min-width:320px;height:700px;"&gt;&lt;/div&gt;
-        </code></p>
-        <a href="https://calendly.com/amitguptaz/catch-up" target="_blank" class="btn btn-coral" style="margin-top:20px">Open Calendly →</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ════ FOOTER ════ -->
-<footer>
-  <div class="footer-inner">
-    <div class="footer-left">
-      <a class="logo" href="#hero"><span class="logo-icon">🦉</span>The Owl Co</a>
-      <p>CRO for Indian ecommerce.<br>More revenue from the traffic you already have.</p>
-      <div class="footer-love">
-        Made for Indian Ecommerce with <span class="heart">❤️</span>
-      </div>
-      <div class="footer-contact">
-        <a href="mailto:hi@theowlco.in">hi@theowlco.in</a>
-        <a href="tel:+919911090091">+91 9911 090 091</a>
-      </div>
-    </div>
-    <div class="footer-links">
+  <!-- ════ NAV ════ -->
+  <nav>
+    <a class="logo" href="#hero"><span class="logo-icon">🦉</span>The Owl Co</a>
+    <div class="nav-links">
       <a href="#services">Services</a>
-      <a href="#pillars">Framework</a>
-      <a href="#score-tool">OwlEye Score™</a>
+      <a href="#pillars">Our Framework</a>
+      <a href="#score-tool">OwlEye Score™ <sup
+          style="font-size:.6em;font-weight:700;background:rgba(255,79,46,.18);color:var(--coral);border-radius:4px;padding:1px 5px;font-style:normal;font-family:'Roboto',sans-serif">Beta</sup></a>
       <a href="#calculator">Calculator</a>
       <a href="#faq">FAQ</a>
-      <a href="#book-call">Book a Call</a>
+      <a href="#" class="btn btn-coral" onclick="openModal();return false">Book Free Audit</a>
     </div>
-  </div>
-  <div class="footer-bottom">
-    <span>© 2025 The Owl Co. All rights reserved.</span>
-    <span>Built for Indian ecommerce 🇮🇳</span>
-  </div>
-</footer>
+  </nav>
 
-<!-- ════ CONFETTI CANVAS ════ -->
-<canvas id="confettiCanvas"></canvas>
-
-<!-- ════ BOOKING MODAL ════ -->
-<div class="modal-overlay" id="modal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModal()">✕</button>
-    <div class="modal-step active" id="mstep1">
-      <div class="step-progress"><div class="step-dot done"></div><div class="step-dot"></div><div class="step-dot"></div></div>
-      <h3 style="margin-bottom:6px">Book your free CRO audit</h3>
-      <p style="font-size:.84rem;margin-bottom:24px">Tell us about your store — takes 60 seconds.</p>
-      <div class="form-row">
-        <div class="form-group"><label>First name</label><input type="text" placeholder="Priya"></div>
-        <div class="form-group"><label>Last name</label><input type="text" placeholder="Sharma"></div>
-      </div>
-      <div class="form-group"><label>Work email</label><input type="email" placeholder="priya@brand.com"></div>
-      <div class="form-group"><label>Store URL</label><input type="url" placeholder="https://yourstore.com"></div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Monthly revenue</label>
-          <select><option value="">Select range</option><option>Under ₹5L</option><option>₹5L – ₹15L</option><option>₹15L – ₹50L</option><option>₹50L – ₹1Cr</option><option>₹1Cr+</option></select>
+  <!-- ════ HERO ════ -->
+  <section id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid-bg"></div>
+    <div class="hero-layout">
+      <div class="hero-left">
+        <h1 class="hero-h1">
+          Your traffic is
+          <span class="flip-wrap"><span class="flip-word" id="flip-word">browsing.</span></span>
+          <span class="hero-line2">We help them <em style="color:var(--coral)">buy.</em></span>
+        </h1>
+        <p class="hero-sub">We find exactly why visitors leave without buying — and fix it. More revenue from the
+          traffic you're already paying for, on Shopify and WooCommerce.</p>
+        <div class="hero-ctas">
+          <a href="#" class="btn btn-coral" onclick="openModal();return false">Book Free Audit →</a>
+          <a href="#score-tool" class="btn btn-ghost">Get <span class="owleye-brand">OwlEye Score™</span><sup
+              style="font-size:.6em;font-weight:700;background:rgba(255,79,46,.18);color:var(--coral);border-radius:4px;padding:1px 5px;margin-left:3px;font-style:normal;font-family:\'Roboto\',sans-serif;letter-spacing:.03em">Beta</sup></a>
         </div>
-        <div class="form-group">
-          <label>Monthly visitors</label>
-          <select><option value="">Select range</option><option>Under 5K</option><option>5K – 20K</option><option>20K – 100K</option><option>100K+</option></select>
+        <!-- Trust micro-stats (no screenshot) -->
+        <div class="hero-stats">
+          <div class="hstat"><span class="hstat-val">54%</span><span class="hstat-label">Avg. conv. lift</span></div>
+          <div class="hstat"><span class="hstat-val">68+</span><span class="hstat-label">Stores optimised</span></div>
+          <div class="hstat"><span class="hstat-val">₹4Cr+</span><span class="hstat-label">Revenue unlocked</span></div>
+          <div class="hstat"><span class="hstat-val">5 days</span><span class="hstat-label">Audit turnaround</span>
+          </div>
         </div>
       </div>
-      <div class="form-group">
-        <label>Platform</label>
-        <select><option value="">Select platform</option><option>Shopify</option><option>Shopify Plus</option><option>WooCommerce</option><option>Custom</option></select>
+      <div class="hero-right">
+        <div class="radar-title">
+          <h4 class="owleye-brand">OwlEye Score™ <sup
+              style="font-size:.55em;font-weight:700;background:rgba(255,79,46,.18);color:var(--coral);border-radius:4px;padding:1px 5px;font-style:normal;font-family:'Roboto',sans-serif">Beta</sup>
+          </h4>
+          <p>9 parameters · 5 pillars · 100 points</p>
+        </div>
+        <canvas id="heroRadar"></canvas>
+        <div class="radar-legend">
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--coral)"></div>Your Store
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:rgba(14,165,233,.7)"></div>Industry Avg.
+          </div>
+        </div>
       </div>
-      <button class="btn btn-coral" style="width:100%;justify-content:center" onclick="goStep(2)">Continue → Pick a Time</button>
     </div>
-    <div class="modal-step" id="mstep2">
-      <div class="step-progress"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot"></div></div>
-      <h3 style="margin-bottom:6px">Pick a time that works</h3>
-      <p style="font-size:.84rem;margin-bottom:20px">30-minute call — we'll review your store before we meet.</p>
-      <div class="cal-wrap-modal">
-        <span style="font-size:2rem">📅</span>
-        <span>Calendly booking widget</span>
-        <a href="https://calendly.com/amitguptaz/catch-up" target="_blank" class="btn btn-coral" style="margin-top:8px;font-size:.84rem" onclick="setTimeout(()=>goStep(3),600)">Open Calendly →</a>
+  </section>
+
+  <!-- ════ METRICS BAR ════ -->
+  <div id="metrics">
+    <div class="metrics-inner">
+      <div class="metric reveal">
+        <span class="metric-val" data-target="54" data-suffix="%">54%</span>
+        <span class="metric-label">Average conversion lift</span>
       </div>
-      <button class="btn btn-ghost" style="width:100%;justify-content:center;font-size:.84rem" onclick="goStep(1)">← Back</button>
-    </div>
-    <div class="modal-step" id="mstep3">
-      <div class="step-progress"><div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot done"></div></div>
-      <div style="text-align:center;padding:28px 0">
-        <div style="font-size:3rem;margin-bottom:16px">✅</div>
-        <h3 style="font-size:1.6rem;margin-bottom:10px">You're all set!</h3>
-        <p style="max-width:340px;margin:0 auto 24px">Check your email for a calendar invite. We'll review your store before the call so we hit the ground running.</p>
-        <button class="btn btn-coral" style="margin:0 auto" onclick="closeModal()">Close</button>
+      <div class="metric reveal">
+        <span class="metric-val" data-target="68" data-suffix="+">68+</span>
+        <span class="metric-label">Ecommerce stores optimised</span>
+      </div>
+      <div class="metric reveal">
+        <span class="metric-val" data-target="20" data-suffix="%">20%</span>
+        <span class="metric-label">Additional revenue generated</span>
+      </div>
+      <div class="metric reveal" style="display:flex;flex-direction:column;align-items:center;justify-content:center">
+        <div class="ai-badge">🤖 AI + Human Loop</div>
+        <span class="metric-label" style="margin-top:8px">Powered by AI with human expertise</span>
       </div>
     </div>
   </div>
-</div>
 
-<script src="owleye-ai.js"></script>
-<script src="main.js"></script>
+  <!-- ════ SERVICES ════ -->
+  <section id="services">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label">⚡ What We Do</div>
+        <h2>CRO that moves the revenue needle</h2>
+        <p style="max-width:480px">Four focused services — start with the free audit and we'll tell you exactly which
+          ones you need.</p>
+      </div>
+      <div class="services-grid">
+        <div class="svc-card featured reveal">
+          <span class="svc-badge">Start Here — Free</span>
+          <span class="svc-icon">🔍</span>
+          <h3>CRO Audit</h3>
+          <p>A full diagnostic of your checkout funnel, page speed, mobile UX, and landing pages. Delivered as a written
+            report with prioritised fixes and estimated revenue impact — within 5 working days.</p>
+          <a href="#" class="btn btn-coral" style="margin-top:20px;font-size:.82rem;padding:10px 20px"
+            onclick="openModal();return false">Book Free Audit →</a>
+        </div>
+        <div class="svc-card reveal">
+          <span class="svc-icon">🧪</span>
+          <h3>A/B Testing</h3>
+          <p>Structured experiments on your highest-traffic pages — headlines, CTAs, layouts, pricing displays. We
+            handle hypothesis, design, implementation and analysis. No guessing, only data.</p>
+        </div>
+        <div class="svc-card reveal">
+          <span class="svc-icon">🛒</span>
+          <h3>Checkout Optimisation</h3>
+          <p>Reducing drop-off at the most expensive step. We optimise your cart, checkout flow, payment options, and
+            post-purchase experience to recover revenue that's already in your funnel.</p>
+        </div>
+        <div class="svc-card reveal">
+          <span class="svc-icon">📄</span>
+          <h3>Landing Page Optimisation</h3>
+          <p>Ad landing pages and product pages rebuilt around conversion principles — above-fold clarity, trust
+            signals, urgency, and mobile-first layouts that match buyer intent.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ 5 PILLARS PHILOSOPHY ════ -->
+  <section id="pillars">
+    <div class="container">
+      <div class="reveal" style="text-align:center;max-width:620px;margin:0 auto">
+        <div class="section-label">🧠 Our Framework</div>
+        <h2>The 5-Pillar CRO Philosophy</h2>
+        <p>Every <span class="owleye-brand">OwlEye Score™</span><sup
+            style="font-size:.6em;font-weight:700;background:rgba(255,79,46,.18);color:var(--coral);border-radius:4px;padding:1px 5px;margin-left:3px;font-style:normal;font-family:\'Roboto\',sans-serif;letter-spacing:.03em">Beta</sup>
+          audit is built on five interconnected pillars. Fix them in order — Purchase Flow first, Technical last — and
+          watch conversions compound.</p>
+      </div>
+      <div class="pillars-grid">
+
+        <div class="pillar-card p1 reveal">
+          <div class="pillar-num">Pillar 01</div>
+          <span class="pillar-emoji">🛒</span>
+          <h3>Purchase Flow</h3>
+          <div class="pillar-pts-badge"
+            style="background:rgba(255,79,46,.12);color:#FF4F2E;border:1px solid rgba(255,79,46,.25)">30 pts</div>
+          <p>The #1 revenue lever. A broken checkout kills sales instantly. We map every step from "Add to Cart" to
+            "Order Confirmed" and remove friction.</p>
+          <div class="pillar-params">
+            <div class="pillar-param">Checkout Flow</div>
+            <div class="pillar-param">Payment Options (UPI/COD)</div>
+            <div class="pillar-param">Cart & Abandonment Recovery</div>
+          </div>
+        </div>
+
+        <div class="pillar-card p2 reveal">
+          <div class="pillar-num">Pillar 02</div>
+          <span class="pillar-emoji">📄</span>
+          <h3>Page Experience</h3>
+          <div class="pillar-pts-badge"
+            style="background:rgba(14,165,233,.12);color:#0EA5E9;border:1px solid rgba(14,165,233,.25)">25 pts</div>
+          <p>Your pages should do the selling before a visitor reaches checkout. We score above-fold clarity, product
+            page persuasion, and search quality.</p>
+          <div class="pillar-params">
+            <div class="pillar-param">Landing Page & Above-fold</div>
+            <div class="pillar-param">Product Page Quality</div>
+          </div>
+        </div>
+
+        <div class="pillar-card p3 reveal">
+          <div class="pillar-num">Pillar 03</div>
+          <span class="pillar-emoji">🤝</span>
+          <h3>Trust & Conversion</h3>
+          <div class="pillar-pts-badge"
+            style="background:rgba(168,229,53,.1);color:#A8E535;border:1px solid rgba(168,229,53,.22)">20 pts</div>
+          <p>Buyers need to trust you before they pay. Reviews, guarantees, social proof, and clear return policies are
+            not nice-to-haves — they're conversion assets.</p>
+          <div class="pillar-params">
+            <div class="pillar-param">Trust & Credibility Signals</div>
+            <div class="pillar-param">Returns & Refund Policy</div>
+          </div>
+        </div>
+
+        <div class="pillar-card p4 reveal">
+          <div class="pillar-num">Pillar 04</div>
+          <span class="pillar-emoji">⚡</span>
+          <h3>Engagement & Retention</h3>
+          <div class="pillar-pts-badge"
+            style="background:rgba(245,197,24,.1);color:#F5C518;border:1px solid rgba(245,197,24,.22)">15 pts</div>
+          <p>Every visitor who buys once is a candidate to buy again. We score cross-sell, upsell, and re-engagement
+            flows that compound revenue over time.</p>
+          <div class="pillar-params">
+            <div class="pillar-param">Cross-sell & Upsell</div>
+            <div class="pillar-param">Post-purchase Experience</div>
+          </div>
+        </div>
+
+        <div class="pillar-card p5 reveal">
+          <div class="pillar-num">Pillar 05</div>
+          <span class="pillar-emoji">📱</span>
+          <h3>Technical Foundation</h3>
+          <div class="pillar-pts-badge"
+            style="background:rgba(168,85,247,.1);color:#A855F7;border:1px solid rgba(168,85,247,.22)">10 pts</div>
+          <p>Speed and mobile experience are table stakes. A 1-second delay reduces conversion by 7%. We check Core Web
+            Vitals, mobile UX, and navigation structure.</p>
+          <div class="pillar-params">
+            <div class="pillar-param">Mobile UX</div>
+            <div class="pillar-param">Page Speed & Core Web Vitals</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ HOW IT WORKS ════ -->
+  <section id="how">
+    <div class="container">
+      <div class="reveal" style="text-align:center;max-width:560px;margin:0 auto">
+        <div class="section-label">📋 Our Process</div>
+        <h2>Three steps to consistent revenue growth</h2>
+        <p>No retainer lock-in until we've proven there's value. Start with a free audit, every time.</p>
+      </div>
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-num">01</div>
+          <h3>Audit</h3>
+          <p>We analyse your full funnel — checkout, pages, speed, mobile — and deliver a prioritised report with
+            specific fixes and revenue estimates within 5 days.</p>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">02</div>
+          <h3>Experiment</h3>
+          <p>We run structured A/B tests on your biggest drop-off points. Every test has a clear hypothesis, success
+            metric, and sample size before we call a winner.</p>
+        </div>
+        <div class="step reveal">
+          <div class="step-num">03</div>
+          <h3>Scale</h3>
+          <p>Winning variants get implemented. We build a testing roadmap to keep compounding gains — month on month,
+            not a one-time spike.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ OWLEYE SCORE TOOL ════ -->
+  <section id="score-tool">
+    <div class="container">
+      <div class="reveal" style="text-align:center;max-width:600px;margin:0 auto">
+        <div class="section-label"
+          style="font-family:'Georgia',serif;font-style:italic;text-transform:none;letter-spacing:0;font-size:.9rem">
+          OwlEye Score™ <sup
+            style="font-size:.6em;font-weight:700;background:rgba(255,79,46,.18);color:var(--coral);border-radius:4px;padding:1px 5px;font-style:normal;font-family:'Roboto',sans-serif">Beta</sup>
+        </div>
+        <h2>See what buyers see</h2>
+        <p>Paste your store URL — our AI analyses 9 conversion parameters across 5 pillars and scores your store out of
+          100.</p>
+      </div>
+      <div class="score-layout reveal">
+
+        <!-- LEFT: URL input only -->
+        <div class="score-input-panel">
+          <h3>Analyse Your Store</h3>
+          <p style="margin-bottom:20px;font-size:.84rem">Free instant score. No sign-up needed.</p>
+          <div class="url-input-wrap">
+            <input type="url" id="scoreUrl" placeholder="https://yourstore.com">
+            <button class="btn btn-coral" id="scoreBtn" onclick="runScoreAnalysis()">Analyse →</button>
+          </div>
+          <p style="margin-top:10px;font-size:.72rem;color:rgba(248,249,255,.35);line-height:1.5">*OwlEye Score is in
+            beta and may not show accurate results. We recommend <a href="#" onclick="openModal();return false"
+              style="color:rgba(255,79,46,.7);text-decoration:underline;text-decoration-style:dotted">booking a full
+              audit</a> for comprehensive analysis and recommendations.</p>
+        </div>
+
+        <!-- RIGHT: All dynamic states -->
+        <div id="scoreRightPanel">
+
+          <!-- 1. Empty state -->
+          <div id="screenshotPlaceholder"
+            style="min-height:340px;background:var(--ink2);border:1.5px dashed var(--border);border-radius:var(--radius);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted);text-align:center;padding:40px">
+            <div style="font-size:2.5rem;opacity:.25">🔍</div>
+            <div style="font-size:.86rem;color:var(--white)">Your <span class="owleye-brand">OwlEye Score™</span><sup
+                style="font-size:.6em;font-weight:700;background:rgba(255,79,46,.18);color:var(--coral);border-radius:4px;padding:1px 5px;margin-left:3px;font-style:normal;font-family:\'Roboto\',sans-serif;letter-spacing:.03em">Beta</sup>
+              will appear here</div>
+            <div style="font-size:.74rem;opacity:.55">Enter your URL and click Analyse to begin</div>
+          </div>
+
+          <!-- 2. Scan state: browser mockup (left) + param scan list (right), side by side -->
+          <div id="scanFrame" style="display:none" class="analysis-row">
+
+            <div class="analysis-mockup-col">
+              <div class="browser-mockup">
+                <div class="browser-bar">
+                  <div style="display:flex;gap:5px">
+                    <div style="width:10px;height:10px;border-radius:50%;background:#ef4444"></div>
+                    <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b"></div>
+                    <div style="width:10px;height:10px;border-radius:50%;background:#22c55e"></div>
+                  </div>
+                  <div id="screenshotUrl"
+                    style="font-size:.72rem;color:var(--muted);flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                  </div>
+                </div>
+                <div class="browser-body">
+                  <div id="scanOverlay"
+                    style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px">
+                    <div
+                      style="width:36px;height:36px;border:3px solid rgba(255,79,46,.3);border-top-color:var(--coral);border-radius:50%;animation:spin .8s linear infinite">
+                    </div>
+                    <div style="font-size:.76rem;color:var(--coral);font-weight:700" id="scanStatusText">Connecting…
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div id="currentParamLabel"
+                style="font-size:.74rem;color:var(--muted);text-align:center;min-height:18px;margin:6px 0 0"></div>
+            </div>
+
+            <div class="analysis-detail-col">
+              <div id="paramScanWrap"></div>
+              <div id="generatingMsg"
+                style="display:none;text-align:center;padding:14px;background:rgba(255,79,46,.06);border:1px solid rgba(255,79,46,.2);border-radius:10px;margin-top:12px">
+                <div style="font-size:.82rem;color:var(--coral);font-weight:700;margin-bottom:3px">✦ Generating your
+                  report…</div>
+                <div style="font-size:.76rem;color:var(--muted)">Compiling findings and recommendations</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 3. Results state: score-over-mockup (left) + report summary (right), side by side -->
+          <div id="scoreResults" class="score-results-panel analysis-row">
+
+            <div class="analysis-mockup-col">
+              <div class="browser-mockup">
+                <div class="browser-bar">
+                  <div style="display:flex;gap:5px">
+                    <div style="width:10px;height:10px;border-radius:50%;background:#ef4444"></div>
+                    <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b"></div>
+                    <div style="width:10px;height:10px;border-radius:50%;background:#22c55e"></div>
+                  </div>
+                  <div id="resultUrl"
+                    style="font-size:.72rem;color:var(--muted);flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                  </div>
+                </div>
+                <div class="browser-body result-browser-body">
+                  <div class="fake-page-lines">
+                    <div class="fpl fpl-hero"></div>
+                    <div class="fpl-row">
+                      <div class="fpl fpl-sm"></div>
+                      <div class="fpl fpl-sm"></div>
+                      <div class="fpl fpl-sm"></div>
+                    </div>
+                    <div class="fpl fpl-md"></div>
+                    <div class="fpl-row">
+                      <div class="fpl fpl-lg"></div>
+                      <div class="fpl fpl-lg"></div>
+                    </div>
+                  </div>
+                  <div class="score-badge-overlay">
+                    <div class="score-number" id="scoreNumber">0</div>
+                    <div class="score-badge-sub">out of 100</div>
+                    <div class="score-band" id="scoreBand">—</div>
+                  </div>
+                </div>
+              </div>
+              <!-- Radar under the mockup in left col -->
+              <div class="radar-result-wrap"><canvas id="scoreRadar"></canvas></div>
+            </div>
+
+            <div class="analysis-detail-col">
+              <div class="report-summary">
+                <div class="report-summary-title">📊 Report Summary</div>
+                <div class="pillar-scores" id="pillarBars"></div>
+                <div class="revenue-upside" id="revenueUpside" style="display:none">
+                  <h4>💰 Potential Revenue Upside</h4>
+                  <div id="upsideExplainer"
+                    style="font-size:.76rem;color:var(--muted);margin-bottom:10px;line-height:1.6"></div>
+                  <div class="upside-grid">
+                    <div class="upside-stat"><span class="upside-val" id="upsideMonthly">—</span><span
+                        class="upside-label">Monthly upside</span></div>
+                    <div class="upside-stat"><span class="upside-val" id="upsideAnnual">—</span><span
+                        class="upside-label">Annual upside</span></div>
+                  </div>
+                </div>
+                <div class="top-fixes" id="topFixes"></div>
+                <div class="gate-prompt" id="gatePrompt">
+                  <p>🔒 <strong style="color:var(--white)">Get your full report</strong><br>All 9 parameter scores + fix
+                    recommendations + PDF</p>
+                  <div class="gate-form">
+                    <input type="text" placeholder="Your name" id="gateName">
+                    <input type="email" placeholder="Work email" id="gateEmail">
+                    <button class="btn btn-coral" style="width:100%;justify-content:center"
+                      onclick="unlockFullReport()">Send Me the Full Report →</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ REVENUE CALCULATOR ════ -->
+  <section id="calculator">
+    <div class="container">
+      <div class="reveal" style="text-align:center;max-width:560px;margin:0 auto">
+        <div class="section-label">💰 Revenue Calculator</div>
+        <h2>How much are you leaving on the table?</h2>
+        <p>Enter your numbers, drag the CRO improvement slider, and see your revenue potential.</p>
+      </div>
+      <div class="calc-layout reveal">
+
+        <!-- LEFT: Inputs + slider -->
+        <div class="calc-inputs">
+          <h3>Your Current Numbers</h3>
+          <div class="input-group">
+            <label>Monthly Visitors</label>
+            <input type="number" id="calcVisitors" placeholder="50,000" oninput="updateCalc()">
+          </div>
+          <div class="input-group">
+            <label>Current CVR %</label>
+            <input type="number" id="calcCVR" placeholder="1.8" step="0.1" oninput="updateCalc()">
+          </div>
+          <div class="input-group">
+            <label>Average Order Value (₹)</label>
+            <input type="number" id="calcAOV" placeholder="1,200" oninput="updateCalc()">
+            <div class="calc-live-rev" id="calcLiveRev">Monthly revenue: <span id="calcLiveRevVal">—</span></div>
+          </div>
+
+          <!-- CRO Improvement Slider -->
+          <div class="slider-section">
+            <div class="slider-label">
+              <span>CRO Score Improvement</span>
+              <strong id="sliderVal">+20 pts</strong>
+            </div>
+            <input type="range" id="croSlider" min="5" max="60" value="20" oninput="updateCalc()">
+            <div class="slider-track-labels">
+              <span>+0.5% CVR (Quick wins)</span>
+              <span>+10% CVR (Comprehensive optimisation)</span>
+            </div>
+            <div style="margin-top:10px;font-size:.76rem;color:var(--muted)" id="sliderCVRNote">Each 10-point
+              improvement ≈ +0.8% CVR lift</div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Result cards -->
+        <div class="calc-results">
+          <div class="calc-card">
+            <div class="calc-card-label">Current Monthly Revenue</div>
+            <div class="calc-card-val" id="calcCurrentRev">₹ —</div>
+            <div class="calc-card-sub" id="calcCurrentSub">Enter your numbers to calculate</div>
+          </div>
+          <div class="calc-arrow">↓</div>
+          <div class="calc-card highlight">
+            <div class="calc-card-label">Optimised Potential</div>
+            <div class="calc-card-val" id="calcOptRev">₹ —</div>
+            <div class="calc-card-sub" id="calcCVRNote">With improved CVR</div>
+          </div>
+          <div class="calc-card" style="border-color:rgba(255,79,46,.2);background:rgba(255,79,46,.04)">
+            <div class="calc-card-label">Monthly Upside</div>
+            <div class="calc-card-val" style="color:var(--coral)" id="calcMonthlyUpside">₹ —</div>
+            <div class="calc-card-sub"><span id="calcAnnualUpside" style="color:var(--white);font-weight:700">₹ —</span>
+              per year</div>
+          </div>
+        </div>
+
+      </div>
+      <!-- CTA outside both columns -->
+      <div class="calc-cta-wrap reveal">
+        <p style="margin-bottom:16px;font-size:.88rem">Ready to claim this revenue? Book your free audit and we'll show
+          you exactly how to get there.</p>
+        <a href="#" class="btn btn-coral" style="font-size:.95rem;padding:15px 32px"
+          onclick="openModal();return false">Claim This Revenue →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ FAQ ════ -->
+  <section id="faq">
+    <div class="container">
+      <div class="reveal" style="text-align:center;max-width:520px;margin:0 auto">
+        <div class="section-label">❓ FAQ</div>
+        <h2>Questions we get every week</h2>
+      </div>
+      <div class="faq-list reveal">
+        <div class="faq-item">
+          <div class="faq-q">What's included in the free audit?<span class="faq-icon">+</span></div>
+          <div class="faq-a">The free audit covers your full checkout funnel, page speed and Core Web Vitals, mobile UX
+            review, and your key ad landing pages. You'll receive a written report with prioritised fixes ranked by
+            estimated revenue impact — delivered within 5 working days.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">How long before I see results?<span class="faq-icon">+</span></div>
+          <div class="faq-a">Quick-win fixes from the audit can go live in the first week. Meaningful conversion lifts
+            from A/B testing typically show within 30–60 days, depending on your traffic volume. We share clear
+            timelines before we start.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Do you work with Shopify and WooCommerce?<span class="faq-icon">+</span></div>
+          <div class="faq-a">Yes — both. We also work with Shopify Plus and custom ecommerce stacks. Our process is
+            platform-agnostic; we adapt our testing tools and implementation to your specific setup.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">How does the retainer work?<span class="faq-icon">+</span></div>
+          <div class="faq-a">After the audit, we offer monthly CRO retainers where we manage the full testing roadmap —
+            hypothesis, design, dev, analysis and reporting. No lock-in contracts; we work month-to-month.</div>
+        </div>
+        <div class="faq-item">
+          <div class="faq-q">Who is this for?<span class="faq-icon">+</span></div>
+          <div class="faq-a">We work best with stores doing ₹15L+ monthly revenue. Below that, traffic may be too low
+            for A/B tests to reach statistical significance quickly. Book anyway — if the timing isn't right, we'll tell
+            you honestly.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ CTA BANNER ════ -->
+  <div id="cta-banner">
+    <div class="cta-inner reveal">
+      <div>
+        <h2>Ready to accelerate your CRO Journey?</h2>
+        <p>Book your free audit — we'll diagnose exactly where your funnel is leaking and how much it's costing you.</p>
+      </div>
+      <a href="#" class="btn btn-coral" style="font-size:.95rem;padding:15px 30px;flex-shrink:0"
+        onclick="openModal();return false">Book Free Audit →</a>
+    </div>
+  </div>
+
+  <!-- ════ CALENDLY SECTION ════ -->
+  <section id="book-call">
+    <div class="calendly-section-inner">
+      <div class="reveal" style="text-align:center;max-width:520px;margin:0 auto">
+        <div class="section-label">📅 Book a Call</div>
+        <h2>Schedule your free strategy call</h2>
+        <p>Pick a slot that works for you. We'll review your store before the call so every minute is useful.</p>
+      </div>
+      <div class="calendly-embed-wrap reveal">
+        <!-- Replace the placeholder below with actual Calendly embed script -->
+        <div class="cal-placeholder">
+          <span class="cal-icon">📅</span>
+          <h3 style="font-size:1.1rem;margin-bottom:6px">Calendly Booking Widget</h3>
+          <p>To embed your Calendly calendar, add this script tag:<br>
+            <code
+              style="font-size:.72rem;background:rgba(255,255,255,.06);padding:6px 10px;border-radius:6px;display:inline-block;margin-top:8px;color:var(--lime)">
+          &lt;script src="https://assets.calendly.com/assets/external/widget.js"&gt;&lt;/script&gt;
+        </code>
+          </p>
+          <p style="margin-top:10px">And replace this div with:<br>
+            <code
+              style="font-size:.72rem;background:rgba(255,255,255,.06);padding:6px 10px;border-radius:6px;display:inline-block;margin-top:8px;color:var(--sky)">
+          &lt;div class="calendly-inline-widget" data-url="https://calendly.com/amitguptaz/catch-up" style="min-width:320px;height:700px;"&gt;&lt;/div&gt;
+        </code>
+          </p>
+          <a href="https://calendly.com/amitguptaz/catch-up" target="_blank" class="btn btn-coral"
+            style="margin-top:20px">Open Calendly →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════ FOOTER ════ -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-left">
+        <a class="logo" href="#hero"><span class="logo-icon">🦉</span>The Owl Co</a>
+        <p>CRO for Indian ecommerce. More revenue from the traffic you already have.</p>
+        <div class="footer-love-contact">
+          <span>Made for Indian Ecommerce with <span class="heart">❤️</span></span>
+          <span class="footer-divider">·</span>
+          <a href="/cdn-cgi/l/email-protection#b6dedff6c2ded3d9c1dad5d998dfd8"><span class="__cf_email__"
+              data-cfemail="016968417569646e766d626e2f686f">[email&#160;protected]</span></a>
+          <span class="footer-divider">·</span>
+          <a href="tel:+919911090091">+91 9911 090 091</a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <a href="#services">Services</a>
+        <a href="#pillars">Framework</a>
+        <a href="#score-tool">OwlEye Score™ <sup
+            style="font-size:.6em;font-weight:700;background:rgba(255,79,46,.18);color:var(--coral);border-radius:4px;padding:1px 5px;font-style:normal;font-family:'Roboto',sans-serif">Beta</sup></a>
+        <a href="#calculator">Calculator</a>
+        <a href="#faq">FAQ</a>
+        <a href="#book-call">Book a Call</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 The Owl Co. All rights reserved.</span>
+      <span>Built for Indian ecommerce 🇮🇳</span>
+    </div>
+  </footer>
+
+  <!-- ════ CONFETTI CANVAS ════ -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- ════ BOOKING MODAL ════ -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-step active" id="mstep1">
+        <div class="step-progress">
+          <div class="step-dot done"></div>
+          <div class="step-dot"></div>
+          <div class="step-dot"></div>
+        </div>
+        <h3 style="margin-bottom:6px">Book your free CRO audit</h3>
+        <p style="font-size:.84rem;margin-bottom:24px">Tell us about your store — takes 60 seconds.</p>
+        <div class="form-row">
+          <div class="form-group"><label>First name</label><input type="text" placeholder="Priya"></div>
+          <div class="form-group"><label>Last name</label><input type="text" placeholder="Sharma"></div>
+        </div>
+        <div class="form-group"><label>Work email</label><input type="email" placeholder="priya@brand.com"></div>
+        <div class="form-group"><label>Store URL</label><input type="url" placeholder="https://yourstore.com"></div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Monthly revenue</label>
+            <select>
+              <option value="">Select range</option>
+              <option>Under ₹5L</option>
+              <option>₹5L – ₹15L</option>
+              <option>₹15L – ₹50L</option>
+              <option>₹50L – ₹1Cr</option>
+              <option>₹1Cr+</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Monthly visitors</label>
+            <select>
+              <option value="">Select range</option>
+              <option>Under 5K</option>
+              <option>5K – 20K</option>
+              <option>20K – 100K</option>
+              <option>100K+</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Platform</label>
+          <select>
+            <option value="">Select platform</option>
+            <option>Shopify</option>
+            <option>Shopify Plus</option>
+            <option>WooCommerce</option>
+            <option>Custom</option>
+          </select>
+        </div>
+        <button class="btn btn-coral" style="width:100%;justify-content:center" onclick="goStep(2)">Continue → Pick a
+          Time</button>
+      </div>
+      <div class="modal-step" id="mstep2">
+        <div class="step-progress">
+          <div class="step-dot done"></div>
+          <div class="step-dot done"></div>
+          <div class="step-dot"></div>
+        </div>
+        <h3 style="margin-bottom:6px">Pick a time that works</h3>
+        <p style="font-size:.84rem;margin-bottom:20px">30-minute call — we'll review your store before we meet.</p>
+        <div class="cal-wrap-modal">
+          <span style="font-size:2rem">📅</span>
+          <span>Calendly booking widget</span>
+          <a href="https://calendly.com/amitguptaz/catch-up" target="_blank" class="btn btn-coral"
+            style="margin-top:8px;font-size:.84rem" onclick="setTimeout(()=>goStep(3),600)">Open Calendly →</a>
+        </div>
+        <button class="btn btn-ghost" style="width:100%;justify-content:center;font-size:.84rem" onclick="goStep(1)">←
+          Back</button>
+      </div>
+      <div class="modal-step" id="mstep3">
+        <div class="step-progress">
+          <div class="step-dot done"></div>
+          <div class="step-dot done"></div>
+          <div class="step-dot done"></div>
+        </div>
+        <div style="text-align:center;padding:28px 0">
+          <div style="font-size:3rem;margin-bottom:16px">✅</div>
+          <h3 style="font-size:1.6rem;margin-bottom:10px">You're all set!</h3>
+          <p style="font-size:.88rem;color:var(--muted);margin-bottom:20px">We'll review your store before the call so
+            every minute counts. Check your email for a calendar invite.</p>
+          <a href="#" class="btn btn-ghost" style="font-size:.84rem" onclick="closeModal()">Close ✕</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="owleye-ai.js"></script>
+  <script src="main.js"></script>
 </body>
+
 </html>

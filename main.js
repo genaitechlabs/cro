@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────
 // FLIP HEADLINE
 // ─────────────────────────────────────────
-const FLIP_WORDS = ['browsing.','comparing.','hesitating.','abandoning.','distracted.','price-checking.','stuck.','just looking.'];
+const FLIP_WORDS = ['browsing.', 'comparing.', 'hesitating.', 'abandoning.', 'distracted.', 'price-checking.', 'stuck.', 'just looking.'];
 let flipIdx = 0;
 const flipEl = document.getElementById('flip-word');
 
@@ -155,16 +155,16 @@ function drawRadar(canvasId, yourScores, avgScores, size) {
 
 // Hero radar — cycles every 3s with lerp animation
 const HERO_SCENARIOS = [
-  [58,65,72,55,68,60,75,50,62],
-  [72,48,85,62,55,78,42,68,58],
-  [45,80,60,75,42,55,88,52,70],
-  [88,62,50,45,78,65,58,75,42],
-  [55,72,68,82,50,70,48,60,85],
+  [58, 65, 72, 55, 68, 60, 75, 50, 62],
+  [72, 48, 85, 62, 55, 78, 42, 68, 58],
+  [45, 80, 60, 75, 42, 55, 88, 52, 70],
+  [88, 62, 50, 45, 78, 65, 58, 75, 42],
+  [55, 72, 68, 82, 50, 70, 48, 60, 85],
 ];
-const HERO_AVG = [70,68,65,72,70,68,72,66,70];
+const HERO_AVG = [70, 68, 65, 72, 70, 68, 72, 66, 70];
 let heroSceneIdx = 0, heroAnimPct = 0, heroRaf = null;
 let heroFrom = [...HERO_SCENARIOS[0]];
-let heroTo   = [...HERO_SCENARIOS[0]];
+let heroTo = [...HERO_SCENARIOS[0]];
 
 function lerp(a, b, t) { return a.map((v, i) => v + (b[i] - v) * t); }
 
@@ -189,27 +189,27 @@ setInterval(() => {
 // OWLEYE SCORE TOOL
 // ─────────────────────────────────────────
 const SCAN_PARAMS = [
-  { name:'Checkout Flow',    icon:'🛒', msgs:['Mapping checkout steps…','Counting form fields…','Checking progress indicators…'] },
-  { name:'Payment Options',  icon:'💳', msgs:['Detecting payment methods…','Checking UPI/COD support…','Validating payment UX…'] },
-  { name:'Cart Recovery',    icon:'🔄', msgs:['Scanning cart behaviour…','Checking abandonment triggers…','Analysing recovery flows…'] },
-  { name:'Landing Page',     icon:'📄', msgs:['Reading above-fold content…','Scoring CTA placement…','Evaluating headline clarity…'] },
-  { name:'Product Pages',    icon:'🖼️', msgs:['Inspecting product images…','Checking reviews section…','Analysing buy-button area…'] },
-  { name:'Trust Signals',    icon:'🤝', msgs:['Looking for trust badges…','Scanning social proof…','Checking security indicators…'] },
-  { name:'Returns Policy',   icon:'📋', msgs:['Locating returns policy…','Evaluating visibility…','Scoring policy clarity…'] },
-  { name:'Cross-sell',       icon:'⚡', msgs:['Detecting upsell modules…','Checking bundle offers…','Scoring AOV optimisation…'] },
-  { name:'Mobile UX',        icon:'📱', msgs:['Simulating mobile viewport…','Checking tap targets…','Measuring scroll depth…'] },
+  { name: 'Checkout Flow', icon: '🛒', msgs: ['Mapping checkout steps…', 'Counting form fields…', 'Checking progress indicators…'] },
+  { name: 'Payment Options', icon: '💳', msgs: ['Detecting payment methods…', 'Checking UPI/COD support…', 'Validating payment UX…'] },
+  { name: 'Cart Recovery', icon: '🔄', msgs: ['Scanning cart behaviour…', 'Checking abandonment triggers…', 'Analysing recovery flows…'] },
+  { name: 'Landing Page', icon: '📄', msgs: ['Reading above-fold content…', 'Scoring CTA placement…', 'Evaluating headline clarity…'] },
+  { name: 'Product Pages', icon: '🖼️', msgs: ['Inspecting product images…', 'Checking reviews section…', 'Analysing buy-button area…'] },
+  { name: 'Trust Signals', icon: '🤝', msgs: ['Looking for trust badges…', 'Scanning social proof…', 'Checking security indicators…'] },
+  { name: 'Returns Policy', icon: '📋', msgs: ['Locating returns policy…', 'Evaluating visibility…', 'Scoring policy clarity…'] },
+  { name: 'Cross-sell', icon: '⚡', msgs: ['Detecting upsell modules…', 'Checking bundle offers…', 'Scoring AOV optimisation…'] },
+  { name: 'Mobile UX', icon: '📱', msgs: ['Simulating mobile viewport…', 'Checking tap targets…', 'Measuring scroll depth…'] },
 ];
 
 const FIXES_DB = [
-  { param:'Checkout Flow',   fix:'Add a progress indicator — reduces abandonment by up to 18%.' },
-  { param:'Payment Options', fix:'Add UPI and COD — 62% of Indian shoppers abandon without preferred payment.' },
-  { param:'Cart Recovery',   fix:'Set up exit-intent popup + 3-email abandoned cart sequence (1h/24h/72h).' },
-  { param:'Landing Page',    fix:'Move primary CTA above the fold with a benefit-led headline.' },
-  { param:'Product Pages',   fix:'Add 4+ images, a video, and size guide — lifts conversion by 24%.' },
-  { param:'Trust Signals',   fix:'Display verified photo reviews and trust badges near the buy button.' },
-  { param:'Returns Policy',  fix:'Show "30-day easy returns" prominently near CTA — removes #1 objection.' },
-  { param:'Cross-sell',      fix:'Add "Frequently bought together" bundles — 12–18% AOV uplift.' },
-  { param:'Mobile UX',       fix:'Reduce mobile checkout to 2 screens. 67% of Indian traffic is mobile.' },
+  { param: 'Checkout Flow', fix: 'Add a progress indicator — reduces abandonment by up to 18%.' },
+  { param: 'Payment Options', fix: 'Add UPI and COD — 62% of Indian shoppers abandon without preferred payment.' },
+  { param: 'Cart Recovery', fix: 'Set up exit-intent popup + 3-email abandoned cart sequence (1h/24h/72h).' },
+  { param: 'Landing Page', fix: 'Move primary CTA above the fold with a benefit-led headline.' },
+  { param: 'Product Pages', fix: 'Add 4+ images, a video, and size guide — lifts conversion by 24%.' },
+  { param: 'Trust Signals', fix: 'Display verified photo reviews and trust badges near the buy button.' },
+  { param: 'Returns Policy', fix: 'Show "30-day easy returns" prominently near CTA — removes #1 objection.' },
+  { param: 'Cross-sell', fix: 'Add "Frequently bought together" bundles — 12–18% AOV uplift.' },
+  { param: 'Mobile UX', fix: 'Reduce mobile checkout to 2 screens. 67% of Indian traffic is mobile.' },
 ];
 
 function runScoreAnalysis() {
@@ -220,68 +220,111 @@ function runScoreAnalysis() {
   document.getElementById('scoreResults').classList.remove('show');
   document.getElementById('scoreResults').style.display = 'none';
 
-  // Show browser mockup
-  const frame = document.getElementById('screenshotFrame');
-  frame.style.display = 'block';
+  // Show scan frame (browser mockup + param scan side by side)
+  document.getElementById('scanFrame').style.display = 'grid';
   document.getElementById('screenshotUrl').textContent = url;
   document.getElementById('scanStatusText').textContent = 'Connecting…';
 
-  // Build param rows
-  document.getElementById('paramScanWrap').style.display = 'block';
-  const scanList = document.getElementById('paramScanList');
-  scanList.innerHTML = '';
-  SCAN_PARAMS.forEach((p, i) => {
-    scanList.innerHTML += `
-      <div class="param-scan-row" id="prow${i}">
-        <div class="param-scan-icon">${p.icon}</div>
-        <div class="param-scan-body">
-          <div class="param-scan-name">${p.name}</div>
-          <div class="param-scan-msg" id="pmsg${i}">Waiting…</div>
-          <div class="param-scan-bar-wrap"><div class="param-scan-bar" id="pbar${i}" style="width:0%"></div></div>
+  // Reset scan overlay to spinner
+  const scanOvEl = document.getElementById('scanOverlay');
+  scanOvEl.innerHTML = '<div style="width:36px;height:36px;border:3px solid rgba(255,79,46,.3);border-top-color:var(--coral);border-radius:50%;animation:spin .8s linear infinite"></div><div style="font-size:.76rem;color:var(--coral);font-weight:700" id="scanStatusText">Connecting…</div>';
+  scanOvEl.style.background = '';
+
+  // Single-row scan: one param at a time, fades out before next fades in
+  const scanList = document.getElementById('paramScanWrap');
+  scanList.innerHTML = `
+    <div id="scanSingleRow" style="
+      opacity:0;
+      transition:opacity 0.35s ease;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:12px;
+      padding:16px 18px;
+      display:flex;
+      align-items:center;
+      gap:14px;
+    ">
+      <div id="scanRowIcon" style="font-size:1.6rem;flex-shrink:0;width:36px;text-align:center"></div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+          <div id="scanRowName" style="font-size:.9rem;font-weight:700;color:var(--white)"></div>
+          <div id="scanRowPct" style="font-size:.82rem;font-weight:700;color:var(--coral);min-width:38px;text-align:right">0%</div>
         </div>
-        <div class="param-scan-pct" id="ppct${i}">—</div>
-      </div>`;
-  });
+        <div id="scanRowMsg" style="font-size:.74rem;color:var(--muted);margin-bottom:8px;min-height:16px"></div>
+        <div style="background:rgba(255,255,255,0.07);border-radius:99px;height:5px;overflow:hidden">
+          <div id="scanRowBar" style="height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,var(--coral),#ff8c6b);transition:none"></div>
+        </div>
+      </div>
+    </div>
+    <div id="scanCounterLabel" style="text-align:center;margin-top:10px;font-size:.72rem;color:rgba(248,249,255,.3)">
+      Parameter 1 of ${SCAN_PARAMS.length}
+    </div>`;
 
   let paramIdx = 0;
+  const rowEl = document.getElementById('scanSingleRow');
+  const iconEl = document.getElementById('scanRowIcon');
+  const nameEl = document.getElementById('scanRowName');
+  const msgEl = document.getElementById('scanRowMsg');
+  const barEl = document.getElementById('scanRowBar');
+  const pctEl = document.getElementById('scanRowPct');
+  const ctrEl = document.getElementById('scanCounterLabel');
+
   function scanNext() {
     if (paramIdx >= SCAN_PARAMS.length) {
-      document.getElementById('scanOverlay').style.display = 'none';
-      document.getElementById('generatingMsg').style.display = 'block';
-      document.getElementById('currentParamLabel').textContent = '';
-      setTimeout(showScoreResults, 1800);
+      // Fade out last row, show generating msg
+      rowEl.style.opacity = '0';
+      setTimeout(() => {
+        document.getElementById('paramScanWrap').innerHTML = '';
+        document.getElementById('generatingMsg').style.display = 'block';
+        document.getElementById('currentParamLabel').textContent = '';
+        setTimeout(showScoreResults, 1600);
+      }, 380);
       return;
     }
+
     const p = SCAN_PARAMS[paramIdx];
-    const rowEl = document.getElementById('prow' + paramIdx);
-    rowEl.classList.add('active');
     document.getElementById('scanStatusText').textContent = 'Scanning ' + p.name + '…';
     document.getElementById('currentParamLabel').textContent = 'Analysing: ' + p.name;
+    ctrEl.textContent = `Parameter ${paramIdx + 1} of ${SCAN_PARAMS.length}`;
 
-    let msgIdx = 0, pct = 0;
-    const msgEl  = document.getElementById('pmsg' + paramIdx);
-    const barEl  = document.getElementById('pbar' + paramIdx);
-    const pctEl  = document.getElementById('ppct' + paramIdx);
+    // Reset row content while invisible
+    iconEl.textContent = p.icon;
+    nameEl.textContent = p.name;
+    msgEl.textContent = p.msgs[0];
+    barEl.style.width = '0%';
+    pctEl.textContent = '0%';
+    pctEl.style.color = 'var(--coral)';
 
+    // Fade in
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { rowEl.style.opacity = '1'; });
+    });
+
+    let msgIdx = 1, pct = 0;
     const msgTimer = setInterval(() => {
       if (msgIdx < p.msgs.length) msgEl.textContent = p.msgs[msgIdx++];
     }, 700);
 
-    // ~2.2s per parameter (slow scan feel)
     const barTimer = setInterval(() => {
       pct = Math.min(pct + 2, 100);
       barEl.style.width = pct + '%';
       pctEl.textContent = pct + '%';
       if (pct >= 100) {
-        clearInterval(barTimer); clearInterval(msgTimer);
-        msgEl.textContent = 'Done ✓';
+        clearInterval(barTimer);
+        clearInterval(msgTimer);
+        msgEl.textContent = '✓ Done';
         pctEl.style.color = 'var(--lime)';
-        rowEl.classList.remove('active'); rowEl.classList.add('done');
+        pctEl.textContent = '100%';
         paramIdx++;
-        setTimeout(scanNext, 250);
+        // Pause at 100%, then fade out before next
+        setTimeout(() => {
+          rowEl.style.opacity = '0';
+          setTimeout(scanNext, 360);
+        }, 500);
       }
     }, 44);
   }
+
   setTimeout(scanNext, 900);
 }
 
@@ -291,9 +334,17 @@ function showScoreResults() {
 
   // Use owleye-ai.js generateDemoScores
   const scores = generateDemoScores(url);
-  const total  = calcOwleyeTotal(scores);
+  const total = calcOwleyeTotal(scores);
   const upside = calcRevenueUpside(total);
-  const band   = getScoreBand(total);
+  const band = getScoreBand(total);
+
+  // Hide scan frame, show results frame (both are side-by-side grids)
+  document.getElementById('scanFrame').style.display = 'none';
+  document.getElementById('generatingMsg').style.display = 'none';
+
+  // Populate result browser URL bar
+  const resultUrlEl = document.getElementById('resultUrl');
+  if (resultUrlEl) resultUrlEl.textContent = url;
 
   const resultsEl = document.getElementById('scoreResults');
   resultsEl.style.display = 'block';
@@ -340,9 +391,9 @@ function showScoreResults() {
   // Revenue upside
   document.getElementById('revenueUpside').style.display = 'block';
   document.getElementById('upsideExplainer').innerHTML =
-    `Improving your <span class="owleye-brand">OwlEye Score™</span> from <strong style="color:var(--white)">${total}</strong> to <strong style="color:var(--lime)">100</strong> is a <strong style="color:var(--white)">+${upside.scoreGap} point gain</strong> — estimated to drive <strong style="color:var(--coral)">+${upside.cvrLiftPct}% incremental conversion</strong> (${upside.extraOrders.toLocaleString()} additional orders/month at ₹1,200 AOV).`;
+    `Improving your <span class="owleye-brand">OwlEye Score™</span><sup style="font-size:.6em;font-weight:700;background:rgba(255,79,46,.18);color:#FF4F2E;border-radius:4px;padding:1px 5px;margin-left:2px;font-family:Roboto,sans-serif">Beta</sup> from <strong style="color:var(--white)">${total}</strong> to <strong style="color:var(--lime)">100</strong> is a <strong style="color:var(--white)">+${upside.scoreGap} point gain</strong> — estimated to drive <strong style="color:var(--coral)">+${upside.cvrLiftPct}% incremental conversion</strong> (${upside.extraOrders.toLocaleString()} additional orders/month at ₹1,200 AOV).`;
   document.getElementById('upsideMonthly').textContent = '₹' + formatNum(upside.monthlyUpside);
-  document.getElementById('upsideAnnual').textContent  = '₹' + formatNum(upside.annualUpside);
+  document.getElementById('upsideAnnual').textContent = '₹' + formatNum(upside.annualUpside);
 
   // Top 3 fixes
   const sorted = scores.map((s, i) => ({ s, i })).sort((a, b) => a.s - b.s).slice(0, 3);
@@ -355,12 +406,12 @@ function showScoreResults() {
 }
 
 function unlockFullReport() {
-  const name  = document.getElementById('gateName').value.trim();
+  const name = document.getElementById('gateName').value.trim();
   const email = document.getElementById('gateEmail').value.trim();
   if (!name || !email) { alert('Please enter your name and email'); return; }
   document.getElementById('gatePrompt').innerHTML = `
     <p style="color:var(--lime)">✅ <strong style="color:var(--white)">Report on its way!</strong><br>
-    Check ${email} for your full <span class="owleye-brand">OwlEye Score™</span> breakdown.</p>
+    Check ${email} for your full <span class="owleye-brand">OwlEye Score™</span><sup style="font-size:.6em;font-weight:700;background:rgba(255,79,46,.18);color:#FF4F2E;border-radius:4px;padding:1px 5px;margin-left:2px;font-family:Roboto,sans-serif">Beta</sup> breakdown.</p>
     <a href="#" class="btn btn-coral" style="margin-top:12px" onclick="openModal();return false">Book Free Strategy Call →</a>`;
 }
 
@@ -369,8 +420,8 @@ function unlockFullReport() {
 // ─────────────────────────────────────────
 function formatNum(n) {
   if (n >= 10000000) return (n / 10000000).toFixed(1) + 'Cr';
-  if (n >= 100000)   return (n / 100000).toFixed(1) + 'L';
-  if (n >= 1000)     return (n / 1000).toFixed(1) + 'K';
+  if (n >= 100000) return (n / 100000).toFixed(1) + 'L';
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
   return Math.round(n).toString();
 }
 function fmtRupee(n) { return '₹' + formatNum(Math.round(n)); }
@@ -379,16 +430,16 @@ let lastUpside = 0;
 let calcAnimated = false;
 
 function updateCalc() {
-  const v   = +document.getElementById('calcVisitors').value || 0;
+  const v = +document.getElementById('calcVisitors').value || 0;
   const cvr = +document.getElementById('calcCVR').value || 0;
   const aov = +document.getElementById('calcAOV').value || 0;
   const pts = +document.getElementById('croSlider').value || 20;
 
   // Update slider display
-  document.getElementById('sliderVal').textContent = '+' + pts + ' pts';
   const impliedCvrLift = (pts * 0.08).toFixed(1);
+  document.getElementById('sliderVal').textContent = '+' + pts + ' pts  (+' + impliedCvrLift + '% CVR)';
   document.getElementById('sliderCVRNote').textContent =
-    `+${pts} point improvement → estimated +${impliedCvrLift}% CVR lift`;
+    `Each 10-point improvement ≈ +0.8% CVR lift`;
 
   if (!v || !cvr || !aov) return;
 
@@ -396,15 +447,15 @@ function updateCalc() {
   document.getElementById('calcLiveRevVal').textContent = fmtRupee(currentRev) + '/mo';
 
   const liftedCVR = cvr + parseFloat(impliedCvrLift);
-  const optRev    = v * (liftedCVR / 100) * aov;
-  const monthly   = optRev - currentRev;
+  const optRev = v * (liftedCVR / 100) * aov;
+  const monthly = optRev - currentRev;
 
-  document.getElementById('calcCurrentRev').textContent     = fmtRupee(currentRev);
-  document.getElementById('calcCurrentSub').textContent     = `${v.toLocaleString()} visitors × ${cvr}% CVR × ₹${aov.toLocaleString()}`;
-  document.getElementById('calcOptRev').textContent         = fmtRupee(optRev);
-  document.getElementById('calcCVRNote').textContent        = `CVR improved: ${cvr}% → ${liftedCVR.toFixed(1)}% (+${impliedCvrLift}%)`;
-  document.getElementById('calcMonthlyUpside').textContent  = fmtRupee(monthly);
-  document.getElementById('calcAnnualUpside').textContent   = fmtRupee(monthly * 12);
+  document.getElementById('calcCurrentRev').textContent = fmtRupee(currentRev);
+  document.getElementById('calcCurrentSub').textContent = `${v.toLocaleString()} visitors × ${cvr}% CVR × ₹${aov.toLocaleString()}`;
+  document.getElementById('calcOptRev').textContent = fmtRupee(optRev);
+  document.getElementById('calcCVRNote').textContent = `CVR improved: ${cvr}% → ${liftedCVR.toFixed(1)}% (+${impliedCvrLift}%)`;
+  document.getElementById('calcMonthlyUpside').textContent = fmtRupee(monthly);
+  document.getElementById('calcAnnualUpside').textContent = fmtRupee(monthly * 12);
 
   // Confetti on first meaningful upside generation
   if (monthly > 0 && !calcAnimated) {
@@ -419,11 +470,11 @@ function updateCalc() {
 // ─────────────────────────────────────────
 function launchConfetti() {
   const canvas = document.getElementById('confettiCanvas');
-  const ctx    = canvas.getContext('2d');
-  canvas.width  = window.innerWidth;
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  const COLORS = ['#FF4F2E','#0EA5E9','#A8E535','#F5C518','#A855F7','#fff'];
+  const COLORS = ['#FF4F2E', '#0EA5E9', '#A8E535', '#F5C518', '#A855F7', '#fff'];
   const pieces = Array.from({ length: 120 }, () => ({
     x: Math.random() * canvas.width,
     y: -10 - Math.random() * 100,
@@ -461,7 +512,7 @@ function launchConfetti() {
 // ─────────────────────────────────────────
 document.querySelectorAll('.faq-q').forEach(q => {
   q.addEventListener('click', () => {
-    const item    = q.parentElement;
+    const item = q.parentElement;
     const wasOpen = item.classList.contains('open');
     document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
     if (!wasOpen) item.classList.add('open');
@@ -471,11 +522,11 @@ document.querySelectorAll('.faq-q').forEach(q => {
 // ─────────────────────────────────────────
 // MODAL
 // ─────────────────────────────────────────
-function openModal()  { document.getElementById('modal').classList.add('active'); document.body.style.overflow = 'hidden'; }
+function openModal() { document.getElementById('modal').classList.add('active'); document.body.style.overflow = 'hidden'; }
 function closeModal() { document.getElementById('modal').classList.remove('active'); document.body.style.overflow = ''; }
 function goStep(n) {
   document.querySelectorAll('.modal-step').forEach(s => s.classList.remove('active'));
   document.getElementById('mstep' + n).classList.add('active');
 }
-document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+document.getElementById('modal').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
