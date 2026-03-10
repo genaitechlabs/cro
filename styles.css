@@ -134,7 +134,7 @@ h1.hero-h1{font-family:'Roboto',sans-serif;font-size:clamp(2.2rem,4.5vw,3.8rem);
 .pillar-card-left{display:flex;flex-direction:column;align-items:center;flex-shrink:0;gap:6px}
 .pillar-card-right{flex:1;min-width:0;display:flex;flex-direction:column}
 .pillar-icon-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center}
-.pillar-emoji{font-size:4rem;display:block;line-height:1;position:relative;z-index:1}
+.pillar-emoji{font-size:4rem;display:block;line-height:1;position:relative;z-index:1;opacity:.8}
 .pillar-count{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:8rem;font-weight:900;font-family:'Roboto',sans-serif;color:rgba(248,249,255,.18);line-height:1;pointer-events:none;letter-spacing:-.04em;z-index:0;user-select:none;white-space:nowrap}
 .pillar-label{font-size:1.2rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--white);opacity:.55;text-align:center;line-height:1}
 .pillar-card h3{font-size:.98rem;margin-bottom:8px}
