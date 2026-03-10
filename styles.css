@@ -151,6 +151,11 @@ h1.hero-h1{font-family:'Roboto',sans-serif;font-size:clamp(2.2rem,4.5vw,3.8rem);
 .url-input-wrap input::placeholder{color:rgba(255,255,255,.25)}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* Browser mockup chrome */
+.browser-mockup{border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--ink2)}
+.browser-bar{background:rgba(255,255,255,.04);padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);min-height:36px}
+.browser-body{position:relative;min-height:200px;background:var(--ink2);overflow:hidden}
+
 /* Param scan rows */
 .param-scan-row{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:10px;border:1px solid transparent;transition:background .3s,border-color .3s;margin-bottom:6px}
 .param-scan-row.active{background:rgba(255,79,46,.06);border-color:rgba(255,79,46,.2)}

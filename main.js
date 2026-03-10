@@ -213,32 +213,39 @@ const FIXES_DB = [
 ];
 
 function runScoreAnalysis() {
-  const url = document.getElementById('scoreUrl').value.trim();
+  let raw = document.getElementById('scoreUrl').value.trim();
   const urlError = document.getElementById('urlError');
+
+  // Normalize: prepend https:// if no protocol given
+  if (raw && !/^https?:\/\//i.test(raw)) raw = 'https://' + raw;
+  document.getElementById('scoreUrl').value = raw;
+
   let valid = false;
-  try { valid = /^https?:\/\/.+\..+/.test(new URL(url).href); } catch(e) {}
-  if (!url || !valid) {
+  try { valid = /^https?:\/\/.+\..+/.test(new URL(raw).href); } catch(e) {}
+  if (!raw || !valid) {
     urlError.style.display = 'block';
     document.getElementById('scoreUrl').focus();
     return;
   }
   urlError.style.display = 'none';
+
+  const url = raw;
   document.getElementById('scoreBtn').disabled = true;
   document.getElementById('screenshotPlaceholder').style.display = 'none';
   document.getElementById('scoreResults').classList.remove('show');
   document.getElementById('scoreResults').style.display = 'none';
 
-  // Show scan frame (browser mockup + param scan side by side)
+  // Show scan frame
   document.getElementById('scanFrame').style.display = 'grid';
   document.getElementById('screenshotUrl').textContent = url;
-  document.getElementById('scanStatusText').textContent = 'Connecting…';
 
-  // Reset scan overlay to spinner
+  // Overlay starts opaque with "Fetching screenshot…" while img loads
   const scanOvEl = document.getElementById('scanOverlay');
-  scanOvEl.innerHTML = '<div style="width:36px;height:36px;border:3px solid rgba(255,79,46,.3);border-top-color:var(--coral);border-radius:50%;animation:spin .8s linear infinite"></div><div style="font-size:.76rem;color:var(--coral);font-weight:700" id="scanStatusText">Connecting…</div>';
-  scanOvEl.style.background = '';
+  scanOvEl.style.background = 'rgba(5,10,20,.93)';
+  scanOvEl.style.backdropFilter = '';
+  scanOvEl.innerHTML = '<div style="width:36px;height:36px;border:3px solid rgba(255,79,46,.3);border-top-color:var(--coral);border-radius:50%;animation:spin .8s linear infinite"></div><div style="font-size:.76rem;color:var(--coral);font-weight:700" id="scanStatusText">Fetching screenshot…</div>';
 
-  // Single-row scan: one param at a time, fades out before next fades in
+  // Build param scan UI upfront so refs are ready for scanNext closure
   const scanList = document.getElementById('paramScanWrap');
   scanList.innerHTML = `
     <div id="scanSingleRow" style="
@@ -279,7 +286,6 @@ function runScoreAnalysis() {
 
   function scanNext() {
     if (paramIdx >= SCAN_PARAMS.length) {
-      // Fade out last row, show generating msg
       rowEl.style.opacity = '0';
       setTimeout(() => {
         document.getElementById('paramScanWrap').innerHTML = '';
@@ -295,7 +301,6 @@ function runScoreAnalysis() {
     document.getElementById('currentParamLabel').textContent = 'Analysing: ' + p.name;
     ctrEl.textContent = `Parameter ${paramIdx + 1} of ${SCAN_PARAMS.length}`;
 
-    // Reset row content while invisible
     iconEl.textContent = p.icon;
     nameEl.textContent = p.name;
     msgEl.textContent = p.msgs[0];
@@ -303,7 +308,6 @@ function runScoreAnalysis() {
     pctEl.textContent = '0%';
     pctEl.style.color = 'var(--coral)';
 
-    // Fade in
     requestAnimationFrame(() => {
       requestAnimationFrame(() => { rowEl.style.opacity = '1'; });
     });
@@ -324,7 +328,6 @@ function runScoreAnalysis() {
         pctEl.style.color = 'var(--lime)';
         pctEl.textContent = '100%';
         paramIdx++;
-        // Pause at 100%, then fade out before next
         setTimeout(() => {
           rowEl.style.opacity = '0';
           setTimeout(scanNext, 360);
@@ -333,7 +336,25 @@ function runScoreAnalysis() {
     }, 44);
   }
 
-  setTimeout(scanNext, 900);
+  // Once screenshot is ready, make overlay semi-transparent and begin scan
+  let scanStarted = false;
+  function beginScan() {
+    if (scanStarted) return;
+    scanStarted = true;
+    // Transition overlay: screenshot shows through, scan overlay floats on top
+    scanOvEl.style.background = 'rgba(5,10,20,.65)';
+    scanOvEl.style.backdropFilter = 'blur(1px)';
+    scanOvEl.innerHTML = '<div style="width:36px;height:36px;border:3px solid rgba(255,79,46,.3);border-top-color:var(--coral);border-radius:50%;animation:spin .8s linear infinite"></div><div style="font-size:.76rem;color:var(--coral);font-weight:700" id="scanStatusText">Connecting…</div>';
+    setTimeout(scanNext, 400);
+  }
+
+  // Fetch store screenshot via thum.io (free, no API key)
+  const screenshotImg = document.getElementById('scanScreenshot');
+  screenshotImg.style.display = 'none';
+  screenshotImg.onload = () => { screenshotImg.style.display = 'block'; beginScan(); };
+  screenshotImg.onerror = () => setTimeout(beginScan, 300);
+  setTimeout(() => beginScan(), 6000); // max wait fallback
+  screenshotImg.src = 'https://image.thum.io/get/width/800/crop/500/' + url;
 }
 
 function showScoreResults() {
