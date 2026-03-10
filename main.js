@@ -168,13 +168,32 @@ let heroTo = [...HERO_SCENARIOS[0]];
 
 function lerp(a, b, t) { return a.map((v, i) => v + (b[i] - v) * t); }
 
+function getHeroRadarSize() {
+  const canvas = document.getElementById('heroRadar');
+  if (!canvas) return 380;
+  const container = canvas.closest('.hero-right');
+  if (!container) return 380;
+  const available = container.offsetWidth || window.innerWidth - 64;
+  return window.innerWidth <= 900 ? Math.min(300, Math.max(220, available - 16)) : 380;
+}
+
 function animateHeroRadar() {
   heroAnimPct = Math.min(heroAnimPct + 2, 100);
   const t = 1 - Math.pow(1 - heroAnimPct / 100, 3);
-  drawRadar('heroRadar', lerp(heroFrom, heroTo, t), HERO_AVG, 380);
+  drawRadar('heroRadar', lerp(heroFrom, heroTo, t), HERO_AVG, getHeroRadarSize());
   if (heroAnimPct < 100) heroRaf = requestAnimationFrame(animateHeroRadar);
 }
 animateHeroRadar();
+
+// Redraw hero radar on resize (debounced)
+let heroResizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(heroResizeTimer);
+  heroResizeTimer = setTimeout(() => {
+    const t = 1;
+    drawRadar('heroRadar', lerp(heroFrom, heroTo, t), HERO_AVG, getHeroRadarSize());
+  }, 150);
+});
 
 setInterval(() => {
   heroFrom = lerp(heroFrom, heroTo, 1);

@@ -337,7 +337,10 @@ footer{background:var(--ink2);border-top:1px solid var(--border);padding:40px 5%
 @media(max-width:900px){
   #hero{min-height:auto;padding-top:80px;padding-bottom:40px}
   .hero-layout{grid-template-columns:1fr}
-  .hero-right{display:none}
+  .hero-right{display:flex;margin-top:32px}
+  #heroRadar{width:100% !important;height:auto !important;max-width:300px}
+  .radar-title h4{font-size:.9rem}
+  .radar-title p{font-size:.72rem}
   .score-layout,.calc-layout{grid-template-columns:1fr}
   .score-mid-row,.score-bot-row,.score-three-col{grid-template-columns:1fr}
   .score-top-row{flex-direction:column;align-items:stretch}
