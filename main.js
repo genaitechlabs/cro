@@ -368,7 +368,8 @@ function showScoreResults() {
   const upside = calcRevenueUpside(total);
   const band = getScoreBand(total);
 
-  // Hide scan frame + status panel, show results
+  // Hide the right column (mockup/scan states) so results span full width
+  document.getElementById('scoreRightPanel').style.display = 'none';
   document.getElementById('scanFrame').style.display = 'none';
   document.getElementById('scanStatusPanel').style.display = 'none';
   document.getElementById('generatingMsg').style.display = 'none';
@@ -447,6 +448,8 @@ function resetScan() {
   document.getElementById('scoreUrl').value = '';
   document.getElementById('scoreBtn').disabled = false;
   document.getElementById('urlError').style.display = 'none';
+  // Restore the right column (mockup panel) back to 2-column layout
+  document.getElementById('scoreRightPanel').style.display = '';
   // Reset right panel to empty state
   document.getElementById('screenshotPlaceholder').style.display = 'flex';
   document.getElementById('scanFrame').style.display = 'none';
