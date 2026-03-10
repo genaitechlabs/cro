@@ -9,7 +9,7 @@
 const OWLEYE_BENCHMARKS = {
   industry_avg_cvr: 1.8,          // % — Indian ecommerce average
   industry_avg_score: 58,         // out of 100
-  cvr_lift_per_point: 0.08,       // % CVR lift per OwlEye point gained
+  cvr_lift_per_point: 0.125,      // % order lift per OwlEye point gained
   score_to_cvr_map: {
     40:  0.9,   // Critical → ~0.9% CVR
     55:  1.4,
@@ -224,15 +224,30 @@ function calcOwleyeTotal(paramScores) {
 }
 
 /**
- * Calculate estimated revenue upside from score improvement
+ * Slab-based score gain: how many points can realistically be added
+ * based on current score band (returns a float)
  */
-function calcRevenueUpside(currentScore, visitors = 50000, aov = 1200) {
-  const scoreGap = 100 - currentScore;
-  const cvrLiftPct = +(scoreGap * OWLEYE_BENCHMARKS.cvr_lift_per_point).toFixed(1);
+function getSlabGain(score) {
+  if (score >= 100) return 0;
+  if (score >= 95)  return +(score * 0.010).toFixed(2);
+  if (score >= 90)  return +(score * 0.050).toFixed(2);
+  if (score >= 80)  return +(score * 0.075).toFixed(2);
+  if (score >= 70)  return +(score * 0.100).toFixed(2);
+  return               +(score * 0.125).toFixed(2);   // ≤ 69
+}
+
+/**
+ * Calculate estimated revenue upside from slab-based score improvement
+ */
+function calcRevenueUpside(currentScore, visitors = 100000, aov = 1200) {
+  const scoreGain   = getSlabGain(currentScore);
+  const targetScore = +(currentScore + scoreGain).toFixed(1);
+  const cvrLiftPct  = +(scoreGain * OWLEYE_BENCHMARKS.cvr_lift_per_point).toFixed(2);
   const extraOrders = Math.round(visitors * (cvrLiftPct / 100));
   const monthlyUpside = extraOrders * aov;
   return {
-    scoreGap,
+    scoreGain,
+    targetScore,
     cvrLiftPct,
     extraOrders,
     monthlyUpside,
@@ -346,6 +361,7 @@ if (typeof module !== 'undefined') {
     OWLEYE_INDUSTRY_AVG,
     generateDemoScores,
     calcOwleyeTotal,
+    getSlabGain,
     calcRevenueUpside,
     getScoreBand,
     getFixForScore,
