@@ -142,12 +142,22 @@ h1.hero-h1{font-family:'Roboto',sans-serif;font-size:clamp(2.2rem,4.5vw,3.8rem);
 
 /* ════ HOW IT WORKS ════ */
 #how{background:var(--ink)}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:52px;position:relative}
-.steps::before{content:'';position:absolute;top:28px;left:calc(16.66% + 8px);right:calc(16.66% + 8px);height:1px;background:linear-gradient(90deg,var(--coral),var(--sky));z-index:0}
-.step{text-align:center;padding:0 28px;position:relative;z-index:1}
-.step-num{width:56px;height:56px;border-radius:50%;background:var(--card);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'Roboto',sans-serif;font-size:1.3rem;font-weight:900;color:var(--white);margin:0 auto 22px;transition:border-color .3s,background .3s}
-.step:hover .step-num{border-color:var(--coral);background:rgba(255,79,46,.12)}
-.step h3{font-size:1.15rem;margin-bottom:10px}
+.steps{display:flex;flex-direction:column;gap:0;margin-top:52px;max-width:680px;margin-left:auto;margin-right:auto}
+.steps::before{display:none}
+.step{display:grid;align-items:center;gap:20px;padding:36px 0;border-bottom:1px solid var(--border)}
+.step:last-child{border-bottom:none}
+.step-num{font-family:'Roboto',sans-serif;font-size:5.5rem;font-weight:900;color:var(--white);opacity:.12;line-height:1;text-align:center;user-select:none}
+.step-content{display:flex;flex-direction:column}
+.step-content h3{font-size:1.15rem;margin-bottom:10px}
+.step-content p{font-size:.88rem}
+/* Odd steps: ghost number LEFT — text RIGHT-aligned */
+.step:nth-child(odd){grid-template-columns:80px 1fr;grid-template-areas:"num content"}
+.step:nth-child(odd) .step-num{grid-area:num}
+.step:nth-child(odd) .step-content{grid-area:content;text-align:right}
+/* Even steps: text LEFT-aligned — ghost number RIGHT */
+.step:nth-child(even){grid-template-columns:1fr 80px;grid-template-areas:"content num"}
+.step:nth-child(even) .step-num{grid-area:num}
+.step:nth-child(even) .step-content{grid-area:content;text-align:left}
 
 /* ════ OWLEYE SCORE TOOL ════ */
 #score-tool{background:var(--card)}
@@ -353,10 +363,8 @@ footer{background:var(--ink2);border-top:1px solid var(--border);padding:40px 5%
   .score-mid-row,.score-bot-row,.score-three-col{grid-template-columns:1fr}
   .score-top-row{flex-direction:column;align-items:stretch}
   .services-grid{grid-template-columns:1fr}
-  .steps{grid-template-columns:1fr;gap:28px}
-  .steps::before{display:none}
-  .step{text-align:left;padding:0}
-  .step-num{margin:0 0 16px}
+  /* Steps — keep alternating layout on mobile, just scale down number */
+  .step-num{font-size:3.8rem}
   .metrics-inner{grid-template-columns:repeat(2,1fr)}
   .metric{border-bottom:1px solid var(--border)}
   .cta-inner{padding:36px 24px}
@@ -373,6 +381,13 @@ footer{background:var(--ink2);border-top:1px solid var(--border);padding:40px 5%
   /* Mobile radar between text and CTAs */
   .hero-radar-mobile-wrap{display:flex;flex-direction:column;align-items:center;margin:28px 0 8px}
   .hero-right{display:none !important}
+  /* Hero CTAs — both buttons on same row */
+  .hero-ctas{flex-wrap:nowrap}
+  .hero-ctas .btn{flex:1;justify-content:center;padding:12px 14px;font-size:.82rem}
+  /* AI + Human Loop — full-width row, centered, bigger text */
+  .metric:last-child{grid-column:1/-1}
+  .metric:last-child .ai-badge{font-size:.78rem;padding:6px 18px}
+  .metric:last-child .metric-label{font-size:.9rem}
 }
 @media(max-width:500px){
   .pillars-grid{grid-template-columns:1fr}
