@@ -403,8 +403,12 @@ function showScoreResults() {
   bandEl.className = 'score-band ' + band.cls;
   bandEl.textContent = band.label;
 
-  // Radar
-  setTimeout(() => drawRadar('scoreRadar', scores, OWLEYE_INDUSTRY_AVG, 360), 300);
+  // Radar — size adapts to container width so it never overflows on mobile
+  setTimeout(() => {
+    const radarRow = document.querySelector('.score-radar-row');
+    const available = radarRow ? Math.max(220, radarRow.offsetWidth - 20) : 360;
+    drawRadar('scoreRadar', scores, OWLEYE_INDUSTRY_AVG, Math.min(360, available));
+  }, 300);
 
   // Pillar bars
   const barsEl = document.getElementById('pillarBars');
