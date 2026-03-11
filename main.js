@@ -266,9 +266,9 @@ async function fetchRealScores(url) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url }),
     });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    if (data.error && !data.scores) throw new Error(data.error);
+    // Known API error (e.g. not an ecommerce store, rate limit) — surface to user
+    if (data.error && !data.scores) return { apiError: data.error, scores: null };
     const s = data.scores || {};
     // Convert named object → array in PARAM_ORDER (matches generateDemoScores format)
     return {
@@ -279,7 +279,7 @@ async function fetchRealScores(url) {
       pagesScanned:     typeof data.pages_scanned  === 'number'  ? data.pages_scanned   : null,
     };
   } catch (err) {
-    console.warn('[OwlEye] API error, using demo scores:', err.message);
+    console.warn('[OwlEye] Network/parse error, using demo scores:', err.message);
     return { scores: generateDemoScores(url), previousScore: null, verifiedCount: null, unverifiedParams: [], pagesScanned: null };
   }
 }
@@ -517,6 +517,26 @@ async function showScoreResults() {
 
   // Await real AI scores (fetch started at scan begin — should already be resolved)
   const apiData = await (_scoresPromise || Promise.resolve({ scores: generateDemoScores(url), previousScore: null, verifiedCount: null, unverifiedParams: [], pagesScanned: null }));
+
+  // Handle known API errors (non-ecommerce site, rate limit, etc.)
+  if (apiData.apiError) {
+    document.getElementById('scanStatusPanel').style.display = 'none';
+    document.getElementById('generatingMsg').style.display = 'none';
+    document.getElementById('resetScanBtn').style.display = 'flex';
+    document.getElementById('resetScanBtn').style.alignItems = 'center';
+    document.getElementById('resetScanBtn').style.justifyContent = 'center';
+    const scanOvEl = document.getElementById('scanOverlay');
+    scanOvEl.style.background = 'rgba(5,10,20,.88)';
+    scanOvEl.style.backdropFilter = 'blur(4px)';
+    scanOvEl.innerHTML =
+      '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:20px">' +
+      '<div style="font-size:2rem">🦉</div>' +
+      '<div style="font-size:.9rem;font-weight:700;color:var(--coral)">Scan could not complete</div>' +
+      '<div style="font-size:.78rem;color:rgba(248,249,255,.65);max-width:260px;line-height:1.6">' + apiData.apiError + '</div>' +
+      '</div>';
+    return;
+  }
+
   const scores          = apiData.scores;
   const previousScore   = apiData.previousScore;
   const verifiedCount   = apiData.verifiedCount;

@@ -61,6 +61,16 @@ if (defined('RATE_LIMIT_PER_HOUR') && RATE_LIMIT_PER_HOUR > 0 && defined('DB_NAM
 // Fetches home + discovers and fetches product, category, cart pages
 $pages = discoverAndFetchPages($url);
 
+// ── 3b. Ecommerce store check ─────────────────────────────────────
+if (!isEcommerceStore($pages)) {
+    $host = parse_url($url, PHP_URL_HOST) ?? $url;
+    http_response_code(400);
+    echo json_encode([
+        'error' => "{$host} doesn't appear to be an ecommerce store. OwlEye Score™ is designed for online shops with products and a checkout.",
+    ]);
+    exit;
+}
+
 // ── 4. Screenshots (homepage only) ───────────────────────────────
 $desktop = ScreenshotAdapter::capture($url, 'desktop');
 $mobile  = ScreenshotAdapter::capture($url, 'mobile');
@@ -133,6 +143,42 @@ echo json_encode($result);
 // ════════════════════════════════════════════════════════════════
 // Multi-page crawl helpers
 // ════════════════════════════════════════════════════════════════
+
+/**
+ * Detect whether the fetched pages belong to an ecommerce store.
+ * Returns false for portfolios, blogs, SaaS landing pages, etc.
+ */
+function isEcommerceStore(array $pages): bool
+{
+    $html = strtolower(
+        ($pages['home']     ?? '') .
+        ($pages['product']  ?? '') .
+        ($pages['category'] ?? '') .
+        ($pages['cart']     ?? '')
+    );
+
+    // Platform signals — definitive
+    foreach (['shopify', 'woocommerce', 'magento', 'opencart', 'prestashop', 'bigcommerce'] as $p) {
+        if (strpos($html, $p) !== false) return true;
+    }
+
+    // Cart / checkout actions — very strong signals
+    $cartSignals = ['add to cart', 'add-to-cart', 'addtocart', '/cart', '/checkout',
+                    'buy now', 'add to bag', '/basket', 'proceed to checkout'];
+    foreach ($cartSignals as $s) {
+        if (strpos($html, $s) !== false) return true;
+    }
+
+    // Product / price signals — require 2+ to reduce false positives
+    $count = 0;
+    foreach (['₹', 'mrp', '/products/', '/collections/', 'product-page',
+              'free shipping', 'cash on delivery', ' cod ', 'add to wishlist',
+              'out of stock', 'in stock', 'buy', 'shop now'] as $s) {
+        if (strpos($html, $s) !== false && ++$count >= 2) return true;
+    }
+
+    return false;
+}
 
 /**
  * Orchestrate: fetch home → detect platform → discover page URLs → parallel fetch.
