@@ -281,8 +281,9 @@ async function fetchRealScores(url) {
       scanToken:        typeof data.scan_token === 'string'       ? data.scan_token       : null,
     };
   } catch (err) {
-    console.warn('[OwlEye] Network/parse error, using demo scores:', err.message);
-    return { scores: generateDemoScores(url), previousScore: null, verifiedCount: null, unverifiedParams: [], pagesScanned: null, jsRendered: false, scanToken: null };
+    console.warn('[OwlEye] Network/parse error:', err.message);
+    // Surface error to user — never silently show fake demo scores on a real scan
+    return { apiError: 'The scan could not complete — the store may be temporarily unavailable or blocking automated requests. Please try again in a moment.', scores: null };
   }
 }
 
@@ -290,14 +291,15 @@ async function fetchRealScores(url) {
 // OWLEYE SCORE TOOL
 // ─────────────────────────────────────────
 const SCAN_PARAMS = [
-  // Purchase Flow (5)
-  { name: 'Checkout Flow',      icon: '🛒', msgs: ['Mapping checkout steps…',          'Counting form fields…',              'Checking progress indicators…'] },
+  // Page Experience — first impression (scanned first)
+  { name: 'Landing Page',       icon: '📄', msgs: ['Reading above-fold content…',       'Scoring CTA placement…',             'Evaluating headline clarity…'] },
   { name: 'Payment Options',    icon: '💳', msgs: ['Detecting payment methods…',        'Checking UPI/COD support…',          'Validating payment UX…'] },
+  // Purchase Flow (remaining 4)
+  { name: 'Checkout Flow',      icon: '🛒', msgs: ['Mapping checkout steps…',          'Counting form fields…',              'Checking progress indicators…'] },
   { name: 'Cart Recovery',      icon: '🔄', msgs: ['Scanning cart behaviour…',          'Checking abandonment triggers…',     'Analysing recovery flows…'] },
   { name: 'Express Checkout',   icon: '⚡', msgs: ['Checking one-click buy options…',   'Testing guest checkout flow…',       'Scanning express payment presence…'] },
   { name: 'COD Prominence',     icon: '💵', msgs: ['Scanning COD visibility…',          'Checking payment hierarchy…',        'Measuring COD prominence near CTA…'] },
-  // Page Experience (5)
-  { name: 'Landing Page',       icon: '📄', msgs: ['Reading above-fold content…',       'Scoring CTA placement…',             'Evaluating headline clarity…'] },
+  // Page Experience (remaining 4)
   { name: 'Product Pages',      icon: '🖼️', msgs: ['Inspecting product images…',        'Checking reviews section…',          'Analysing buy-button area…'] },
   { name: 'Search UX',          icon: '🔍', msgs: ['Testing site search experience…',   'Checking autocomplete quality…',     'Evaluating search result relevance…'] },
   { name: 'Sticky Add-to-Cart', icon: '📌', msgs: ['Checking sticky add-to-cart…',      'Testing scroll behaviour on mobile…','Evaluating CTA persistence…'] },
