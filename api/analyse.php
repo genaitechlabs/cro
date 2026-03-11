@@ -194,27 +194,45 @@ function isEcommerceStore(array $pages): bool
         if (strpos($html, $p) !== false) return true;
     }
 
-    // Cart / checkout actions — English (very strong signals)
-    $cartSignals = ['add to cart', 'add-to-cart', 'addtocart', '/cart', '/checkout',
-                    'buy now', 'add to bag', '/basket', 'proceed to checkout'];
+    // ── Cart / checkout actions — English (very strong signals) ──────────────
+    // Covers: Shopify, WooCommerce, custom stores, D2C brands, health-tech stores
+    // "shop now" / "buy online" / "order now" — common D2C CTAs (beatoapp, kapiva, etc.)
+    // "/store" — health-tech and D2C brands often have a dedicated /store section
+    $cartSignals = [
+        'add to cart', 'add-to-cart', 'addtocart',
+        '/cart', '/checkout', '/basket',
+        'buy now', 'buy online', 'order now',
+        'shop now', 'shop the range',
+        'add to bag', 'add to basket',
+        'proceed to checkout',
+        '/store',      // beatoapp, health-tech, D2C brands with store sections
+    ];
     foreach ($cartSignals as $s) {
         if (strpos($html, $s) !== false) return true;
     }
 
-    // Hindi ecommerce signals — strong signals for Indian stores
-    // खरीदें = Buy/Purchase | कार्ट = Cart | अभी खरीदें = Buy Now | डालें = Add (to cart)
+    // ── Hindi ecommerce signals — Indian stores ───────────────────────────────
+    // खरीदें = Buy/Purchase | कार्ट = Cart | अभी खरीदें = Buy Now | कार्ट में = In cart
+    // Covers: myupchar, 1mg, netmeds, any Hindi-language store
     foreach (['खरीदें', 'कार्ट', 'अभी खरीदें', 'कार्ट में'] as $s) {
         if (strpos($rawHtml, $s) !== false) return true;
     }
 
-    // ₹ appearing 2+ times = multiple product prices → strong ecommerce signal
+    // ── ₹ price signals ───────────────────────────────────────────────────────
+    // ₹ ×2 = multiple product prices visible → strong ecommerce (kapiva, beatoapp, etc.)
     if (substr_count($rawHtml, '₹') >= 2) return true;
 
-    // Product / price signals — require 2+ to reduce false positives
+    // ── Composite product/price signals — require 2+ to reduce false positives ─
+    // Each alone is weak; any combination of 2 is strong enough
+    // 'free shipping' + 'in stock' → almost certainly a store
+    // 'mrp' + '₹' → price listing on product/category page
     $count = 0;
-    foreach (['₹', 'mrp', '/products/', '/collections/', 'product-page',
-              'free shipping', 'cash on delivery', ' cod ', 'add to wishlist',
-              'out of stock', 'in stock', 'pincode', 'delivery charges'] as $s) {
+    foreach ([
+        '₹', 'mrp', '/products/', '/collections/', 'product-page',
+        'free shipping', 'cash on delivery', ' cod ', 'add to wishlist',
+        'out of stock', 'in stock', 'pincode', 'delivery charges',
+        'express delivery', 'same day delivery', 'seller',
+    ] as $s) {
         if (strpos($html, $s) !== false && ++$count >= 2) return true;
     }
 
@@ -318,15 +336,22 @@ function discoverPageUrls(string $base, string $html, string $platform): array
         $links = array_unique($m[1] ?? []);
 
         $productPats  = [
+            // Standard ecommerce (Shopify-style, WooCommerce, generic)
             '/\/(products?|item|p|pd)\/[^\/]{3,}/i',
             // Health / pharmacy stores (myupchar, pharmeasy, 1mg, netmeds, etc.)
             '/\/(medicine|medicines|drug|drugs|supplement|supplements|health-product|lab-test|labs?|otc)\/[^\/]{3,}/i',
+            // Health-tech / device stores (beatoapp — glucometer, strips, lancets, etc.)
+            '/\/(device|devices|glucometer|monitor|kit|combo|pack|buy)\/[^\/]{3,}/i',
         ];
         $categoryPats = [
+            // Standard ecommerce category URLs
             '/\/(collections?|categor|shop|browse|c)\/[^\/]{2,}/i',
             '/\/shop\/?$/i',
-            // Health category pages
+            // Health pharmacy category pages (myupchar, netmeds, pharmeasy)
             '/\/(pharmacy|health-products?|vitamins?|wellness|ayurved)\/?/i',
+            // D2C / health-tech store sections (beatoapp, etc.)
+            '/\/store\/?$/i',
+            '/\/store\//i',
         ];
         $cartPats     = ['/\/(cart|checkout|bag)\/?$/i'];
 
