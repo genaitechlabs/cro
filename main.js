@@ -677,13 +677,18 @@ async function showScoreResults() {
     document.getElementById('upsideAnnual').innerHTML = '<span style="color:var(--lime);font-weight:900">↑</span> ₹' + formatNum(upside.annualUpside);
   }
 
-  // Top 3 fixes
+  // Top 3 fixes — use curated recommendation pool (recommendations.js) where
+  // available; fall back to FIXES_DB for low-confidence parameters
   const sorted = scores.map((s, i) => ({ s, i })).sort((a, b) => a.s - b.s).slice(0, 3);
   const fixesEl = document.getElementById('topFixes');
   fixesEl.innerHTML = '<h4>🎯 Top 3 Quick Wins (Free)</h4>';
   sorted.forEach((item, rank) => {
-    const fix = FIXES_DB[item.i];
-    fixesEl.innerHTML += `<div class="fix-item"><strong>#${rank + 1} ${fix.param}</strong>${fix.fix}</div>`;
+    const paramKey = PARAM_ORDER[item.i];
+    const rec      = (typeof getRecommendation === 'function') ? getRecommendation(paramKey, item.s) : null;
+    const fallback = FIXES_DB[item.i];
+    const title    = rec ? rec.title : fallback.param;
+    const fix      = rec ? rec.fix   : fallback.fix;
+    fixesEl.innerHTML += `<div class="fix-item"><strong>#${rank + 1} ${title}</strong><p>${fix}</p></div>`;
   });
 
   // Score change notice — shown below pillar breakdown when same URL was scanned before
