@@ -35,7 +35,8 @@ section{padding:80px 5%}
 /* ── BUTTONS */
 .btn{display:inline-flex;align-items:center;gap:7px;padding:13px 26px;border-radius:100px;font-family:'Roboto',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;border:none;text-decoration:none;transition:all .22s ease;white-space:nowrap}
 .btn-coral{background:var(--coral);color:#fff}
-.btn-coral:hover{background:#e8391b;transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,79,46,.35)}
+.btn-coral:hover:not(:disabled){background:#e8391b;transform:translateY(-2px);box-shadow:0 8px 24px rgba(255,79,46,.35)}
+.btn-coral:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
 .btn-ghost{background:transparent;color:var(--white);border:1.5px solid var(--border)}
 .btn-ghost:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.05);transform:translateY(-2px)}
 

@@ -371,7 +371,11 @@ function runScoreAnalysis() {
   document.getElementById('scoreUrl').value = raw;
 
   let valid = false;
-  try { valid = /^https?:\/\/.+\..+/.test(new URL(raw).href); } catch(e) {}
+  try {
+    const u = new URL(raw);
+    // Hostname must contain a dot (e.g. 'ddd' or 'localhost' are invalid)
+    valid = /^https?:/.test(u.protocol) && u.hostname.includes('.') && u.hostname.split('.').every(p => p.length > 0);
+  } catch(e) {}
   if (!raw || !valid) {
     urlError.style.display = 'block';
     document.getElementById('scoreUrl').focus();
@@ -523,6 +527,9 @@ async function showScoreResults() {
   if (apiData.apiError) {
     document.getElementById('scanStatusPanel').style.display = 'none';
     document.getElementById('generatingMsg').style.display = 'none';
+    // Hide any previous scan results so stale data isn't visible
+    document.getElementById('scoreResults').classList.remove('show');
+    document.getElementById('scoreResults').style.display = 'none';
     document.getElementById('resetScanBtn').style.display = 'flex';
     document.getElementById('resetScanBtn').style.alignItems = 'center';
     document.getElementById('resetScanBtn').style.justifyContent = 'center';
@@ -692,9 +699,9 @@ async function showScoreResults() {
 }
 
 function resetScan() {
-  // Re-enable input and button
+  // Clear input; button goes disabled since input is now empty
   document.getElementById('scoreUrl').value = '';
-  document.getElementById('scoreBtn').disabled = false;
+  document.getElementById('scoreBtn').disabled = true;
   document.getElementById('urlError').style.display = 'none';
   // Reset right panel to empty state
   document.getElementById('screenshotPlaceholder').style.display = 'flex';
@@ -874,3 +881,14 @@ function goStep(n) {
 }
 document.getElementById('modal').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ─────────────────────────────────────────
+// DISABLE ANALYSE BUTTON WHEN INPUT EMPTY
+// ─────────────────────────────────────────
+(function initUrlInputState() {
+  const inp = document.getElementById('scoreUrl');
+  const btn = document.getElementById('scoreBtn');
+  // Disabled initially (input is empty on page load)
+  btn.disabled = true;
+  inp.addEventListener('input', () => { btn.disabled = !inp.value.trim(); });
+})();
