@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────
 // FLIP HEADLINE
 // ─────────────────────────────────────────
-const FLIP_WORDS = ['browsing.', 'comparing.', 'hesitating.', 'abandoning.', 'distracted.', 'price-checking.', 'stuck.', 'looking.'];
+const FLIP_WORDS = ['browsing.', 'comparing.', 'hesitating.', 'abandoning.', 'distracted.', 'price-checking.', 'bouncing.', 'looking.'];
 let flipIdx = 0;
 const flipEl = document.getElementById('flip-word');
 
