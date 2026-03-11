@@ -33,6 +33,8 @@ if (!$url || !filter_var($url, FILTER_VALIDATE_URL) || !preg_match('/^https?:\/\
     exit;
 }
 
+$urlNorm = normalizeUrl($url); // bare host for cross-URL matching (e.g. mynykaa.com)
+
 // ── 2. Rate limit check ──────────────────────────────────────────
 $ip = getClientIp();
 
@@ -89,18 +91,31 @@ if (isset($result['scores']) && defined('DB_NAME') && DB_NAME) {
         $token = generateScanToken();
         $stmt  = getDB()->prepare(
             'INSERT INTO owleye_scans
-             (scan_token, url, ip, owleye_score, pillar_scores, param_scores)
-             VALUES (?, ?, ?, ?, ?, ?)'
+             (scan_token, url, url_normalized, ip, owleye_score, pillar_scores, param_scores)
+             VALUES (?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([
             $token,
             $url,
+            $urlNorm,
             $ip,
             $result['owleye_score'] ?? 0,
             json_encode($result['pillar_scores'] ?? []),
             json_encode($result['scores']),
         ]);
         $result['scan_token'] = $token;
+
+        // Previous score — most recent other scan of the same host
+        $prev = getDB()->prepare(
+            'SELECT owleye_score FROM owleye_scans
+             WHERE url_normalized = ? AND scan_token != ?
+             ORDER BY created_at DESC LIMIT 1'
+        );
+        $prev->execute([$urlNorm, $token]);
+        $prevScore = $prev->fetchColumn();
+        if ($prevScore !== false) {
+            $result['previous_score'] = (int) $prevScore;
+        }
     } catch (Exception $e) {
         error_log('[OwlEye] Scan save failed: ' . $e->getMessage());
         // Don't fail the request — scan result still returned
@@ -113,6 +128,16 @@ echo json_encode($result);
 // ════════════════════════════════════════════════════════════════
 // Helper functions
 // ════════════════════════════════════════════════════════════════
+
+/**
+ * Strip protocol + www + path → bare host for cross-URL deduplication.
+ * e.g. https://www.mynykaa.com/sale → mynykaa.com
+ */
+function normalizeUrl(string $url): string
+{
+    $host = parse_url(strtolower(trim($url)), PHP_URL_HOST) ?? '';
+    return preg_replace('/^www\./i', '', $host) ?: strtolower(trim($url));
+}
 
 /**
  * Fetch and clean page HTML for AI analysis.

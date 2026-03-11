@@ -271,10 +271,13 @@ async function fetchRealScores(url) {
     if (data.error && !data.scores) throw new Error(data.error);
     const s = data.scores || {};
     // Convert named object → array in PARAM_ORDER (matches generateDemoScores format)
-    return PARAM_ORDER.map(k => (typeof s[k] === 'number' ? s[k] : 50));
+    return {
+      scores: PARAM_ORDER.map(k => (typeof s[k] === 'number' ? s[k] : 50)),
+      previousScore: typeof data.previous_score === 'number' ? data.previous_score : null,
+    };
   } catch (err) {
     console.warn('[OwlEye] API error, using demo scores:', err.message);
-    return generateDemoScores(url); // graceful fallback
+    return { scores: generateDemoScores(url), previousScore: null }; // graceful fallback
   }
 }
 
@@ -510,7 +513,9 @@ async function showScoreResults() {
   const url = document.getElementById('scoreUrl').value;
 
   // Await real AI scores (fetch started at scan begin — should already be resolved)
-  const scores = await (_scoresPromise || Promise.resolve(generateDemoScores(url)));
+  const apiData = await (_scoresPromise || Promise.resolve({ scores: generateDemoScores(url), previousScore: null }));
+  const scores = apiData.scores;
+  const previousScore = apiData.previousScore;
   const total = calcOwleyeTotal(scores);
   const upside = calcRevenueUpside(total);
   const band = getScoreBand(total);
@@ -605,6 +610,20 @@ async function showScoreResults() {
     const fix = FIXES_DB[item.i];
     fixesEl.innerHTML += `<div class="fix-item"><strong>#${rank + 1} ${fix.param}</strong>${fix.fix}</div>`;
   });
+
+  // Score change notice — shown below pillar breakdown when same URL was scanned before
+  const noticeEl = document.getElementById('scoreChangeNotice');
+  if (noticeEl && previousScore !== null && previousScore !== total) {
+    const up = total > previousScore;
+    noticeEl.className = 'score-change-notice ' + (up ? 'up' : 'down');
+    noticeEl.innerHTML =
+      `${up ? '↑' : '↓'} Your <strong>OwlEye Score™ beta</strong> has <strong>${up ? 'increased' : 'decreased'}</strong> ` +
+      `from <strong>${previousScore}</strong> to <strong>${total}</strong>. ` +
+      `If you have not made any changes, this variation could be due to temporary unavailability of some parameters scanned via third-party connections.`;
+    noticeEl.style.display = 'block';
+  } else if (noticeEl) {
+    noticeEl.style.display = 'none';
+  }
 }
 
 function resetScan() {
@@ -631,6 +650,9 @@ function resetScan() {
   }
   // Hide refresh button until next scan completes
   document.getElementById('resetScanBtn').style.display = 'none';
+  // Clear score change notice
+  const noticeEl = document.getElementById('scoreChangeNotice');
+  if (noticeEl) noticeEl.style.display = 'none';
   // Focus URL input for quick re-entry
   document.getElementById('scoreUrl').focus();
 }
