@@ -168,7 +168,7 @@ const HERO_SCENARIOS = [
 // Decoupled from OWLEYE_PILLAR_AVG (used in real scoring) so the blue ring
 // sits clearly outward, showing the gap between most stores and best practice.
 // Order: Purchase Flow, Page Experience, Trust & Convert, Engagement, Agentic, Technical
-const HERO_AVG = [78, 74, 76, 70, 65, 74];
+const HERO_AVG = [78, 74, 76, 70, 60, 74];
 let heroSceneIdx = 0, heroAnimPct = 0, heroRaf = null;
 let heroFrom = [...HERO_SCENARIOS[0]];
 let heroTo = [...HERO_SCENARIOS[0]];
