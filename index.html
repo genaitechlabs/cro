@@ -510,13 +510,19 @@
 
         <!-- Full-width Get Full Report -->
         <div class="gate-prompt" id="gatePrompt" style="max-width:520px;margin:20px auto 0">
-          <p id="gatePromptDesc">🔒 <strong style="color:var(--white)">Get your full report</strong><br>All 6 pillar scores + fix recommendations across 28 parameters</p>
-          <div class="gate-form">
-            <input type="text" placeholder="Your name" id="gateName">
-            <input type="email" placeholder="Work email" id="gateEmail">
-            <button class="btn btn-coral" style="width:100%;justify-content:center"
-              onclick="unlockFullReport()">Send Me the Full Report →</button>
+          <!-- Form state -->
+          <div id="gateFormWrap">
+            <p id="gatePromptDesc">🔒 <strong style="color:var(--white)">Get your full report</strong><br>All 6 pillar scores + fix recommendations across 28 parameters</p>
+            <div class="gate-form">
+              <input type="text" placeholder="Your name" id="gateName" autocomplete="name">
+              <input type="email" placeholder="Work email (not gmail/yahoo)" id="gateEmail" autocomplete="email">
+              <p id="gateError" style="display:none;font-size:.78rem;color:var(--coral);margin:-2px 0 0;text-align:left;line-height:1.5"></p>
+              <button class="btn btn-coral" id="reportSubmitBtn" style="width:100%;justify-content:center"
+                onclick="unlockFullReport()" disabled>Send Me the Full Report →</button>
+            </div>
           </div>
+          <!-- Success state (shown after submission) -->
+          <div id="gateSuccess" style="display:none;text-align:center;padding:8px 0"></div>
         </div>
 
       </div>

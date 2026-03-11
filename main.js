@@ -278,10 +278,11 @@ async function fetchRealScores(url) {
       unverifiedParams: Array.isArray(data.unverified_params)    ? data.unverified_params : [],
       pagesScanned:     typeof data.pages_scanned  === 'number'  ? data.pages_scanned   : null,
       jsRendered:       !!data.js_rendered,
+      scanToken:        typeof data.scan_token === 'string'       ? data.scan_token       : null,
     };
   } catch (err) {
     console.warn('[OwlEye] Network/parse error, using demo scores:', err.message);
-    return { scores: generateDemoScores(url), previousScore: null, verifiedCount: null, unverifiedParams: [], pagesScanned: null, jsRendered: false };
+    return { scores: generateDemoScores(url), previousScore: null, verifiedCount: null, unverifiedParams: [], pagesScanned: null, jsRendered: false, scanToken: null };
   }
 }
 
@@ -553,6 +554,8 @@ async function showScoreResults() {
   const unverifiedParams = apiData.unverifiedParams || [];
   const pagesScanned    = apiData.pagesScanned;
   const jsRendered      = apiData.jsRendered || false;
+  // Store scan token so the gate form can attach it to the lead
+  window._lastScanToken = apiData.scanToken || '';
   const total = calcOwleyeTotal(scores);
   const upside = calcRevenueUpside(total);
   const band = getScoreBand(total);
@@ -728,18 +731,90 @@ function resetScan() {
   // Clear verified badge
   const vbEl2 = document.getElementById('verifiedBadge');
   if (vbEl2) vbEl2.style.display = 'none';
+  // Reset gate form back to initial state for next scan
+  const gateFormWrap = document.getElementById('gateFormWrap');
+  const gateSuccess  = document.getElementById('gateSuccess');
+  if (gateFormWrap) gateFormWrap.style.display = 'block';
+  if (gateSuccess)  { gateSuccess.style.display = 'none'; gateSuccess.innerHTML = ''; }
+  const gateNameEl  = document.getElementById('gateName');
+  const gateEmailEl = document.getElementById('gateEmail');
+  const gateErrEl   = document.getElementById('gateError');
+  const gateBtn     = document.getElementById('reportSubmitBtn');
+  if (gateNameEl)  gateNameEl.value  = '';
+  if (gateEmailEl) gateEmailEl.value = '';
+  if (gateErrEl)   gateErrEl.style.display = 'none';
+  if (gateBtn)     { gateBtn.disabled = true; gateBtn.textContent = 'Send Me the Full Report →'; }
+  window._lastScanToken = '';
   // Focus URL input for quick re-entry
   document.getElementById('scoreUrl').focus();
 }
 
+const PERSONAL_EMAIL_DOMAINS = [
+  'gmail.com', 'googlemail.com',
+  'yahoo.com', 'yahoo.in', 'yahoo.co.in', 'ymail.com',
+  'hotmail.com', 'hotmail.in', 'live.com', 'live.in', 'outlook.com', 'msn.com',
+  'aol.com',
+  'icloud.com', 'me.com', 'mac.com',
+  'protonmail.com', 'pm.me',
+  'rediffmail.com',
+];
+
 function unlockFullReport() {
-  const name = document.getElementById('gateName').value.trim();
-  const email = document.getElementById('gateEmail').value.trim();
-  if (!name || !email) { alert('Please enter your name and email'); return; }
-  document.getElementById('gatePrompt').innerHTML = `
-    <p style="color:var(--lime)">✅ <strong style="color:var(--white)">Report on its way!</strong><br>
-    Check ${email} for your full <span class="owleye-brand">OwlEye Score™</span><sup style="font-size:.6em;font-weight:700;background:rgba(255,79,46,.18);color:#FF4F2E;border-radius:4px;padding:1px 5px;margin-left:2px;font-family:Roboto,sans-serif">Beta</sup> breakdown.</p>
-    <a href="#" class="btn btn-coral" style="margin-top:12px" onclick="openModal();return false">Book Free Strategy Call →</a>`;
+  const name    = document.getElementById('gateName').value.trim();
+  const email   = document.getElementById('gateEmail').value.trim().toLowerCase();
+  const errEl   = document.getElementById('gateError');
+  const btn     = document.getElementById('reportSubmitBtn');
+
+  function showErr(msg) { errEl.textContent = msg; errEl.style.display = 'block'; }
+  errEl.style.display = 'none';
+
+  // Name validation
+  if (!name || name.length < 2) { showErr('Please enter your full name.'); return; }
+
+  // Email format
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('Please enter a valid email address.'); return; }
+
+  // Work email only
+  const domain = email.split('@')[1] || '';
+  if (PERSONAL_EMAIL_DOMAINS.includes(domain)) {
+    showErr('Please fill correct details to get the report. Use your work email, not a personal address.');
+    return;
+  }
+
+  // Loading state
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  const scannedUrl = document.getElementById('scoreUrl').value;
+
+  fetch('api/save-lead.php', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ name, email, url: scannedUrl, scan_token: window._lastScanToken || '' }),
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        showErr(data.error);
+        btn.disabled = false;
+        btn.textContent = 'Send Me the Full Report →';
+        return;
+      }
+      // Success
+      document.getElementById('gateFormWrap').style.display = 'none';
+      const successEl = document.getElementById('gateSuccess');
+      successEl.style.display = 'block';
+      successEl.innerHTML =
+        '<div style="font-size:1.5rem;margin-bottom:10px">✅</div>' +
+        '<p style="color:var(--white);font-weight:700;margin-bottom:6px">You\'re on the list!</p>' +
+        '<p style="font-size:.82rem;color:rgba(248,249,255,.6);margin-bottom:16px">You\'ll receive your full report at <strong style="color:var(--white)">' + email + '</strong> soon.</p>' +
+        '<a href="https://topmate.io/productmentor/1026755" target="_blank" rel="noopener" class="btn btn-coral" style="font-size:.84rem">Book Free Audit Call →</a>';
+    })
+    .catch(() => {
+      showErr('Something went wrong. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Send Me the Full Report →';
+    });
 }
 
 // ─────────────────────────────────────────
@@ -888,7 +963,18 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal()
 (function initUrlInputState() {
   const inp = document.getElementById('scoreUrl');
   const btn = document.getElementById('scoreBtn');
-  // Disabled initially (input is empty on page load)
   btn.disabled = true;
   inp.addEventListener('input', () => { btn.disabled = !inp.value.trim(); });
+})();
+
+// ─────────────────────────────────────────
+// DISABLE GATE SUBMIT UNTIL BOTH FIELDS FILLED
+// ─────────────────────────────────────────
+(function initGateInputs() {
+  const nameInp = document.getElementById('gateName');
+  const emailInp = document.getElementById('gateEmail');
+  const btn = document.getElementById('reportSubmitBtn');
+  function checkGate() { btn.disabled = !nameInp.value.trim() || !emailInp.value.trim(); }
+  nameInp.addEventListener('input', checkGate);
+  emailInp.addEventListener('input', checkGate);
 })();
