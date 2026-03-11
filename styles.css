@@ -132,6 +132,8 @@ h1.hero-h1{font-family:'Roboto',sans-serif;font-size:clamp(2.2rem,4.5vw,3.8rem);
 .pillar-card.p4::before{background:radial-gradient(ellipse at top,rgba(245,197,24,.08),transparent 70%)}
 .pillar-card.p5:hover{border-color:rgba(168,85,247,.5)}
 .pillar-card.p5::before{background:radial-gradient(ellipse at top,rgba(168,85,247,.08),transparent 70%)}
+.pillar-card.p6:hover{border-color:rgba(20,184,166,.5)}
+.pillar-card.p6::before{background:radial-gradient(ellipse at top,rgba(20,184,166,.08),transparent 70%)}
 .pillar-card-left{display:flex;flex-direction:column;align-items:center;flex-shrink:0;gap:6px}
 .pillar-card-right{flex:1;min-width:0;display:flex;flex-direction:column}
 .pillar-icon-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center}

@@ -42,6 +42,16 @@ $mobile  = ScreenshotAdapter::capture($url, 'mobile');
 // ── 4. AI analysis ───────────────────────────────────────────────
 $result = AiAdapter::analyse($url, $html, $desktop, $mobile);
 
+// ── 5. PageSpeed Insights — overrides AI estimate for page_speed ──
+// Runs only when GOOGLE_PSI_KEY is configured. Graceful skip otherwise.
+if (defined('GOOGLE_PSI_KEY') && GOOGLE_PSI_KEY) {
+    require_once __DIR__ . '/pagespeed/PageSpeedAdapter.php';
+    $psiScore = PageSpeedAdapter::score($url);
+    if ($psiScore !== null && isset($result['scores'])) {
+        $result['scores']['page_speed'] = $psiScore;
+    }
+}
+
 echo json_encode($result);
 
 
