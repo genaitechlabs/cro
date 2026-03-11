@@ -360,8 +360,8 @@ footer{background:var(--ink2);border-top:1px solid var(--border);padding:40px 5%
   .pillars-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:900px){
-  #hero{min-height:auto;padding-top:80px;padding-bottom:40px}
-  .hero-layout{grid-template-columns:1fr}
+  #hero{min-height:auto;padding:80px 5% 40px}
+  .hero-layout{grid-template-columns:1fr;padding:0}
   .hero-right{display:flex;margin-top:32px}
   #heroRadar{width:100% !important;height:auto !important;max-width:300px}
   .radar-title h4{font-size:.9rem}
