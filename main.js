@@ -289,8 +289,9 @@ async function fetchRealScores(url) {
   } catch (err) {
     clearTimeout(timeoutId);
     console.warn('[OwlEye] Fetch error:', err.message);
+    const host = (() => { try { return new URL(url).hostname; } catch(e) { return url; } })();
     const msg = err.name === 'AbortError'
-      ? 'The scan timed out. The target site may be temporarily unavailable or very slow. Please try again in a moment.'
+      ? `The target site (${host}) is not reachable. OwlEye scan can't perform the evaluation at this time. Please retry.`
       : 'The scan could not complete. Please check your connection and try again.';
     return { apiError: msg, scores: null };
   }

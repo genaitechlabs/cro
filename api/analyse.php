@@ -78,7 +78,7 @@ if (!empty($pages['_unreachable'])) {
     $host = parse_url($url, PHP_URL_HOST) ?? $url;
     http_response_code(400);
     echo json_encode([
-        'error' => "The target site ({$host}) is not reachable. OwlEye scan can't perform the evaluation at this time. Please check the URL or try again later.",
+        'error' => "The target site ({$host}) is not reachable. OwlEye scan can't perform the evaluation at this time. Please retry.",
     ]);
     exit;
 }
