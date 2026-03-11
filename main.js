@@ -533,13 +533,16 @@ function runScoreAnalysis() {
     setTimeout(scanNext, 400);
   }
 
-  // Fetch store screenshot via thum.io (free, no API key)
+  // Fetch store screenshot via thum.io (free, no API key).
+  // Screenshot loads in background — scan starts immediately so there's no dead wait.
+  // When thum.io responds the image naturally appears through the semi-transparent overlay.
   const screenshotImg = document.getElementById('scanScreenshot');
   screenshotImg.style.display = 'none';
-  screenshotImg.onload = () => { screenshotImg.style.display = 'block'; beginScan(); };
-  screenshotImg.onerror = () => setTimeout(beginScan, 300);
-  setTimeout(() => beginScan(), 6000); // max wait fallback
+  screenshotImg.onload = () => { screenshotImg.style.display = 'block'; };
+  screenshotImg.onerror = () => {};
   screenshotImg.src = 'https://image.thum.io/get/width/800/crop/500/' + url;
+  // Start scan immediately — no wait for screenshot
+  beginScan();
 }
 
 async function showScoreResults() {

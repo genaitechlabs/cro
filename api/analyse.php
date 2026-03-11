@@ -207,8 +207,8 @@ function isEcommerceStore(array $pages): bool
         if (strpos($rawHtml, $s) !== false) return true;
     }
 
-    // ₹ appearing 3+ times = multiple product prices → very strong ecommerce signal
-    if (substr_count($rawHtml, '₹') >= 3) return true;
+    // ₹ appearing 2+ times = multiple product prices → strong ecommerce signal
+    if (substr_count($rawHtml, '₹') >= 2) return true;
 
     // Product / price signals — require 2+ to reduce false positives
     $count = 0;
@@ -317,8 +317,17 @@ function discoverPageUrls(string $base, string $html, string $platform): array
         $host  = parse_url($base, PHP_URL_HOST);
         $links = array_unique($m[1] ?? []);
 
-        $productPats  = ['/\/(products?|item|p|pd)\/[^\/]{3,}/i'];
-        $categoryPats = ['/\/(collections?|categor|shop|browse|c)\/[^\/]{2,}/i', '/\/shop\/?$/i'];
+        $productPats  = [
+            '/\/(products?|item|p|pd)\/[^\/]{3,}/i',
+            // Health / pharmacy stores (myupchar, pharmeasy, 1mg, netmeds, etc.)
+            '/\/(medicine|medicines|drug|drugs|supplement|supplements|health-product|lab-test|labs?|otc)\/[^\/]{3,}/i',
+        ];
+        $categoryPats = [
+            '/\/(collections?|categor|shop|browse|c)\/[^\/]{2,}/i',
+            '/\/shop\/?$/i',
+            // Health category pages
+            '/\/(pharmacy|health-products?|vitamins?|wellness|ayurved)\/?/i',
+        ];
         $cartPats     = ['/\/(cart|checkout|bag)\/?$/i'];
 
         foreach ($links as $link) {
