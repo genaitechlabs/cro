@@ -5,7 +5,7 @@
 // ─────────────────────────────────────────
 // FLIP HEADLINE
 // ─────────────────────────────────────────
-const FLIP_WORDS = ['browsing.', 'comparing.', 'hesitating.', 'abandoning.', 'distracted.', 'price-checking.', 'stuck.', 'looking.'];
+const FLIP_WORDS = ['browsing.', 'comparing.', 'hesitating.', 'abandoning.', 'distracted.', 'bouncing.', 'looking.'];
 let flipIdx = 0;
 const flipEl = document.getElementById('flip-word');
 
@@ -156,15 +156,19 @@ function drawRadar(canvasId, yourScores, avgScores, size) {
 
 // Hero radar — cycles every 3s with lerp animation
 // 6 values per scenario — one per pillar (Purchase, Page Exp, Trust, Engagement, Agentic, Technical)
+// Designed so scenarios fall mostly BELOW industry avg with isolated spikes — shows where stores lose revenue
 const HERO_SCENARIOS = [
-  [58, 65, 72, 55, 30, 62],   // typical store — weak on Agentic Commerce
-  [72, 48, 85, 62, 45, 58],   // great purchase + trust, low page exp + agentic
-  [45, 80, 60, 75, 55, 70],   // strong page + engagement, weak purchase flow
-  [88, 62, 50, 45, 38, 42],   // purchase optimised, poor agentic + engagement
-  [55, 72, 68, 82, 65, 85],   // engagement + tech leader, growing agentic score
+  [55, 60, 68, 42, 28, 58],   // typical store — below avg across board, agentic very weak
+  [70, 45, 82, 52, 38, 54],   // strong trust, low page exp + engagement + agentic
+  [42, 78, 55, 72, 48, 66],   // page exp + engagement spike, purchase flow critical
+  [85, 58, 48, 38, 32, 40],   // purchase optimised only — rest well below avg
+  [60, 72, 70, 75, 62, 80],   // close-to-avg store, technical + engagement leading
 ];
-// Pillar-level industry averages — sourced from OWLEYE_PILLAR_AVG in owleye-ai.js
-const HERO_AVG = OWLEYE_PILLAR_AVG;
+// Hero industry avg — fixed at ~4th radar ring (~78) for visual impact.
+// Decoupled from OWLEYE_PILLAR_AVG (used in real scoring) so the blue ring
+// sits clearly outward, showing the gap between most stores and best practice.
+// Order: Purchase Flow, Page Experience, Trust & Convert, Engagement, Agentic, Technical
+const HERO_AVG = [78, 74, 76, 70, 60, 74];
 let heroSceneIdx = 0, heroAnimPct = 0, heroRaf = null;
 let heroFrom = [...HERO_SCENARIOS[0]];
 let heroTo = [...HERO_SCENARIOS[0]];
@@ -256,21 +260,39 @@ const PARAM_ORDER = [
 let _scoresPromise = null;
 
 async function fetchRealScores(url) {
+  // Hard 50s cap — prevents hanging forever if the target site is extremely slow
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 50000);
+
   try {
     const res = await fetch('api/analyse.php', {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
+      body:    JSON.stringify({ url }),
+      signal:  controller.signal,
     });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
+    clearTimeout(timeoutId);
     const data = await res.json();
-    if (data.error && !data.scores) throw new Error(data.error);
+    // Known API error (e.g. not an ecommerce store, unreachable, rate limit)
+    if (data.error && !data.scores) return { apiError: data.error, scores: null };
     const s = data.scores || {};
-    // Convert named object → array in PARAM_ORDER (matches generateDemoScores format)
-    return PARAM_ORDER.map(k => (typeof s[k] === 'number' ? s[k] : 50));
+    // Convert named object → array in PARAM_ORDER
+    return {
+      scores:           PARAM_ORDER.map(k => (typeof s[k] === 'number' ? s[k] : 50)),
+      previousScore:    typeof data.previous_score === 'number' ? data.previous_score : null,
+      verifiedCount:    typeof data.verified_count === 'number'  ? data.verified_count  : null,
+      unverifiedParams: Array.isArray(data.unverified_params)    ? data.unverified_params : [],
+      pagesScanned:     typeof data.pages_scanned  === 'number'  ? data.pages_scanned   : null,
+      jsRendered:       !!data.js_rendered,
+      scanToken:        typeof data.scan_token === 'string'       ? data.scan_token       : null,
+    };
   } catch (err) {
-    console.warn('[OwlEye] API error, using demo scores:', err.message);
-    return generateDemoScores(url); // graceful fallback
+    clearTimeout(timeoutId);
+    console.warn('[OwlEye] Fetch error:', err.message);
+    const msg = err.name === 'AbortError'
+      ? 'The scan timed out. The target site may be temporarily unavailable or very slow. Please try again in a moment.'
+      : 'The scan could not complete. Please check your connection and try again.';
+    return { apiError: msg, scores: null };
   }
 }
 
@@ -278,14 +300,15 @@ async function fetchRealScores(url) {
 // OWLEYE SCORE TOOL
 // ─────────────────────────────────────────
 const SCAN_PARAMS = [
-  // Purchase Flow (5)
-  { name: 'Checkout Flow',      icon: '🛒', msgs: ['Mapping checkout steps…',          'Counting form fields…',              'Checking progress indicators…'] },
+  // Page Experience — first impression (scanned first)
+  { name: 'Landing Page',       icon: '📄', msgs: ['Reading above-fold content…',       'Scoring CTA placement…',             'Evaluating headline clarity…'] },
   { name: 'Payment Options',    icon: '💳', msgs: ['Detecting payment methods…',        'Checking UPI/COD support…',          'Validating payment UX…'] },
+  // Purchase Flow (remaining 4)
+  { name: 'Checkout Flow',      icon: '🛒', msgs: ['Mapping checkout steps…',          'Counting form fields…',              'Checking progress indicators…'] },
   { name: 'Cart Recovery',      icon: '🔄', msgs: ['Scanning cart behaviour…',          'Checking abandonment triggers…',     'Analysing recovery flows…'] },
   { name: 'Express Checkout',   icon: '⚡', msgs: ['Checking one-click buy options…',   'Testing guest checkout flow…',       'Scanning express payment presence…'] },
   { name: 'COD Prominence',     icon: '💵', msgs: ['Scanning COD visibility…',          'Checking payment hierarchy…',        'Measuring COD prominence near CTA…'] },
-  // Page Experience (5)
-  { name: 'Landing Page',       icon: '📄', msgs: ['Reading above-fold content…',       'Scoring CTA placement…',             'Evaluating headline clarity…'] },
+  // Page Experience (remaining 4)
   { name: 'Product Pages',      icon: '🖼️', msgs: ['Inspecting product images…',        'Checking reviews section…',          'Analysing buy-button area…'] },
   { name: 'Search UX',          icon: '🔍', msgs: ['Testing site search experience…',   'Checking autocomplete quality…',     'Evaluating search result relevance…'] },
   { name: 'Sticky Add-to-Cart', icon: '📌', msgs: ['Checking sticky add-to-cart…',      'Testing scroll behaviour on mobile…','Evaluating CTA persistence…'] },
@@ -360,7 +383,11 @@ function runScoreAnalysis() {
   document.getElementById('scoreUrl').value = raw;
 
   let valid = false;
-  try { valid = /^https?:\/\/.+\..+/.test(new URL(raw).href); } catch(e) {}
+  try {
+    const u = new URL(raw);
+    // Hostname must contain a dot (e.g. 'ddd' or 'localhost' are invalid)
+    valid = /^https?:/.test(u.protocol) && u.hostname.includes('.') && u.hostname.split('.').every(p => p.length > 0);
+  } catch(e) {}
   if (!raw || !valid) {
     urlError.style.display = 'block';
     document.getElementById('scoreUrl').focus();
@@ -373,7 +400,12 @@ function runScoreAnalysis() {
   // Kick off real AI scoring immediately — runs in parallel with the scan animation
   _scoresPromise = fetchRealScores(url);
 
+  // Cache result as soon as it resolves — checked in scanNext() for early termination
+  let _resolvedApiData = null;
+  _scoresPromise.then(d => { _resolvedApiData = d; });
+
   document.getElementById('scoreBtn').disabled = true;
+  document.getElementById('scoreUrl').readOnly = true;
   document.getElementById('screenshotPlaceholder').style.display = 'none';
   document.getElementById('scoreResults').classList.remove('show');
   document.getElementById('scoreResults').style.display = 'none';
@@ -429,6 +461,14 @@ function runScoreAnalysis() {
   const ctrEl = document.getElementById('scanCounterLabel');
 
   function scanNext() {
+    // Early exit: API already returned an error — stop animation immediately
+    if (_resolvedApiData?.apiError) {
+      document.getElementById('paramScanWrap').innerHTML = '';
+      document.getElementById('generatingMsg').style.display = 'none';
+      showScoreResults();
+      return;
+    }
+
     if (paramIdx >= SCAN_PARAMS.length) {
       rowEl.style.opacity = '0';
       setTimeout(() => {
@@ -506,7 +546,40 @@ async function showScoreResults() {
   const url = document.getElementById('scoreUrl').value;
 
   // Await real AI scores (fetch started at scan begin — should already be resolved)
-  const scores = await (_scoresPromise || Promise.resolve(generateDemoScores(url)));
+  const apiData = await (_scoresPromise || Promise.resolve({ scores: generateDemoScores(url), previousScore: null, verifiedCount: null, unverifiedParams: [], pagesScanned: null }));
+
+  // Handle known API errors (non-ecommerce site, rate limit, etc.)
+  if (apiData.apiError) {
+    document.getElementById('scanStatusPanel').style.display = 'none';
+    document.getElementById('generatingMsg').style.display = 'none';
+    // Hide any previous scan results so stale data isn't visible
+    document.getElementById('scoreResults').classList.remove('show');
+    document.getElementById('scoreResults').style.display = 'none';
+    document.getElementById('resetScanBtn').style.display = 'flex';
+    document.getElementById('resetScanBtn').style.alignItems = 'center';
+    document.getElementById('resetScanBtn').style.justifyContent = 'center';
+    const scanOvEl = document.getElementById('scanOverlay');
+    scanOvEl.style.background = 'rgba(5,10,20,.88)';
+    scanOvEl.style.backdropFilter = 'blur(4px)';
+    scanOvEl.innerHTML =
+      '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:24px">' +
+      '<div style="font-size:2rem">🦉</div>' +
+      '<div style="font-size:.88rem;font-weight:700;color:var(--coral)">Scan could not complete</div>' +
+      '<div style="font-size:.75rem;color:rgba(248,249,255,.6);max-width:260px;line-height:1.65">' + apiData.apiError + '</div>' +
+      '<a href="https://topmate.io/productmentor/1026755" target="_blank" rel="noopener" ' +
+      'style="margin-top:4px;padding:8px 18px;background:var(--coral);color:#fff;border-radius:100px;font-size:.75rem;font-weight:700;text-decoration:none">Book Audit Call →</a>' +
+      '</div>';
+    return;
+  }
+
+  const scores          = apiData.scores;
+  const previousScore   = apiData.previousScore;
+  const verifiedCount   = apiData.verifiedCount;
+  const unverifiedParams = apiData.unverifiedParams || [];
+  const pagesScanned    = apiData.pagesScanned;
+  const jsRendered      = apiData.jsRendered || false;
+  // Store scan token so the gate form can attach it to the lead
+  window._lastScanToken = apiData.scanToken || '';
   const total = calcOwleyeTotal(scores);
   const upside = calcRevenueUpside(total);
   const band = getScoreBand(total);
@@ -525,7 +598,11 @@ async function showScoreResults() {
   const scanOvEl = document.getElementById('scanOverlay');
   scanOvEl.style.background = 'rgba(5,10,20,.72)';
   scanOvEl.style.backdropFilter = 'blur(2px)';
-  scanOvEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px"><div class="score-number" id="scoreNumber" style="font-family:\'Roboto\',sans-serif;font-size:4rem;font-weight:900;line-height:1">0</div><div style="font-size:.85rem;color:rgba(248,249,255,.6);margin-top:2px">out of 100</div><div class="score-band" id="scoreBand">—</div></div>';
+  scanOvEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px">' +
+    (verifiedCount !== null ? '<div style="font-size:.65rem;color:rgba(248,249,255,.45);font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:-2px">Estimated</div>' : '') +
+    '<div class="score-number" id="scoreNumber" style="font-family:\'Roboto\',sans-serif;font-size:4rem;font-weight:900;line-height:1">0</div>' +
+    '<div style="font-size:.85rem;color:rgba(248,249,255,.6);margin-top:2px">out of 100</div>' +
+    '<div class="score-band" id="scoreBand">—</div></div>';
 
   const resultsEl = document.getElementById('scoreResults');
   resultsEl.style.display = 'block';
@@ -553,6 +630,37 @@ async function showScoreResults() {
     // Radar shows 6 pillar scores — parameters are secret ingredients
     drawRadar('scoreRadar', getPillarScores(scores), null, Math.min(360, available));
   }, 300);
+
+  // Verified badge — shows how many of 28 params were directly observed
+  const vbEl = document.getElementById('verifiedBadge');
+  if (vbEl && verifiedCount !== null) {
+    const unvCount = 28 - verifiedCount;
+    vbEl.innerHTML =
+      `<span class="verified-badge-check">✓ ${verifiedCount}/28 parameters verified</span>` +
+      (unvCount > 0 ? `<span class="verified-gap">${unvCount} estimated from page signals</span>` : '');
+    vbEl.style.display = 'flex';
+  }
+
+  // JS-rendered site disclaimer
+  const existingJsBanner = document.getElementById('jsRenderedBanner');
+  if (existingJsBanner) existingJsBanner.remove();
+  if (jsRendered) {
+    const jsBanner = document.createElement('div');
+    jsBanner.id = 'jsRenderedBanner';
+    jsBanner.style.cssText = 'display:flex;align-items:flex-start;gap:8px;background:rgba(255,79,46,.07);border:1px solid rgba(255,79,46,.2);border-radius:10px;padding:10px 14px;font-size:.78rem;color:rgba(248,249,255,.65);line-height:1.6;margin-top:10px';
+    jsBanner.innerHTML = '⚡ <span>Your store\'s dynamic content couldn\'t be fully crawled. Some scores are estimated. <a href="https://topmate.io/productmentor/1026755" target="_blank" rel="noopener" style="color:var(--coral);font-weight:700;text-decoration:none">Book an Audit Call →</a> for a complete review.</span>';
+    const vbEl = document.getElementById('verifiedBadge');
+    if (vbEl && vbEl.parentNode) vbEl.parentNode.insertBefore(jsBanner, vbEl.nextSibling);
+  }
+
+  // Gate prompt — surface unverified params as audit hook
+  const gpdEl = document.getElementById('gatePromptDesc');
+  if (gpdEl && unverifiedParams.length > 0) {
+    const sample = unverifiedParams.slice(0, 3).map(p => p.replace(/_/g, ' ')).join(', ');
+    gpdEl.innerHTML =
+      `🔒 <strong style="color:var(--white)">Get your full report</strong><br>` +
+      `${unverifiedParams.length} parameters (${sample}${unverifiedParams.length > 3 ? '…' : ''}) couldn't be verified in this automated scan. Get a complete 28-parameter hands-on audit.`;
+  }
 
   // Pillar bars
   const barsEl = document.getElementById('pillarBars');
@@ -593,20 +701,40 @@ async function showScoreResults() {
     document.getElementById('upsideAnnual').innerHTML = '<span style="color:var(--lime);font-weight:900">↑</span> ₹' + formatNum(upside.annualUpside);
   }
 
-  // Top 3 fixes
+  // Top 3 fixes — use curated recommendation pool (recommendations.js) where
+  // available; fall back to FIXES_DB for low-confidence parameters
   const sorted = scores.map((s, i) => ({ s, i })).sort((a, b) => a.s - b.s).slice(0, 3);
   const fixesEl = document.getElementById('topFixes');
   fixesEl.innerHTML = '<h4>🎯 Top 3 Quick Wins (Free)</h4>';
   sorted.forEach((item, rank) => {
-    const fix = FIXES_DB[item.i];
-    fixesEl.innerHTML += `<div class="fix-item"><strong>#${rank + 1} ${fix.param}</strong>${fix.fix}</div>`;
+    const paramKey = PARAM_ORDER[item.i];
+    const rec      = (typeof getRecommendation === 'function') ? getRecommendation(paramKey, item.s) : null;
+    const fallback = FIXES_DB[item.i];
+    const title    = rec ? rec.title : fallback.param;
+    const fix      = rec ? rec.fix   : fallback.fix;
+    fixesEl.innerHTML += `<div class="fix-item"><strong>#${rank + 1} ${title}</strong><p>${fix}</p></div>`;
   });
+
+  // Score change notice — shown below pillar breakdown when same URL was scanned before
+  const noticeEl = document.getElementById('scoreChangeNotice');
+  if (noticeEl && previousScore !== null && previousScore !== total) {
+    const up = total > previousScore;
+    noticeEl.className = 'score-change-notice ' + (up ? 'up' : 'down');
+    noticeEl.innerHTML =
+      `${up ? '↑' : '↓'} Your <strong>OwlEye Score™ beta</strong> has <strong>${up ? 'increased' : 'decreased'}</strong> ` +
+      `from <strong>${previousScore}</strong> to <strong>${total}</strong>. ` +
+      `If you have not made any changes, this variation could be due to temporary unavailability of some parameters scanned via third-party connections.`;
+    noticeEl.style.display = 'block';
+  } else if (noticeEl) {
+    noticeEl.style.display = 'none';
+  }
 }
 
 function resetScan() {
-  // Re-enable input and button
+  // Clear input; restore editability; button disabled since input is now empty
   document.getElementById('scoreUrl').value = '';
-  document.getElementById('scoreBtn').disabled = false;
+  document.getElementById('scoreUrl').readOnly = false;
+  document.getElementById('scoreBtn').disabled = true;
   document.getElementById('urlError').style.display = 'none';
   // Reset right panel to empty state
   document.getElementById('screenshotPlaceholder').style.display = 'flex';
@@ -627,18 +755,96 @@ function resetScan() {
   }
   // Hide refresh button until next scan completes
   document.getElementById('resetScanBtn').style.display = 'none';
+  // Clear score change notice
+  const noticeEl = document.getElementById('scoreChangeNotice');
+  if (noticeEl) noticeEl.style.display = 'none';
+  // Clear verified badge
+  const vbEl2 = document.getElementById('verifiedBadge');
+  if (vbEl2) vbEl2.style.display = 'none';
+  // Reset gate form back to initial state for next scan
+  const gateFormWrap = document.getElementById('gateFormWrap');
+  const gateSuccess  = document.getElementById('gateSuccess');
+  if (gateFormWrap) gateFormWrap.style.display = 'block';
+  if (gateSuccess)  { gateSuccess.style.display = 'none'; gateSuccess.innerHTML = ''; }
+  const gateNameEl  = document.getElementById('gateName');
+  const gateEmailEl = document.getElementById('gateEmail');
+  const gateErrEl   = document.getElementById('gateError');
+  const gateBtn     = document.getElementById('reportSubmitBtn');
+  if (gateNameEl)  gateNameEl.value  = '';
+  if (gateEmailEl) gateEmailEl.value = '';
+  if (gateErrEl)   gateErrEl.style.display = 'none';
+  if (gateBtn)     { gateBtn.disabled = true; gateBtn.textContent = 'Send Me the Full Report →'; }
+  window._lastScanToken = '';
   // Focus URL input for quick re-entry
   document.getElementById('scoreUrl').focus();
 }
 
+const PERSONAL_EMAIL_DOMAINS = [
+  'gmail.com', 'googlemail.com',
+  'yahoo.com', 'yahoo.in', 'yahoo.co.in', 'ymail.com',
+  'hotmail.com', 'hotmail.in', 'live.com', 'live.in', 'outlook.com', 'msn.com',
+  'aol.com',
+  'icloud.com', 'me.com', 'mac.com',
+  'protonmail.com', 'pm.me',
+  'rediffmail.com',
+];
+
 function unlockFullReport() {
-  const name = document.getElementById('gateName').value.trim();
-  const email = document.getElementById('gateEmail').value.trim();
-  if (!name || !email) { alert('Please enter your name and email'); return; }
-  document.getElementById('gatePrompt').innerHTML = `
-    <p style="color:var(--lime)">✅ <strong style="color:var(--white)">Report on its way!</strong><br>
-    Check ${email} for your full <span class="owleye-brand">OwlEye Score™</span><sup style="font-size:.6em;font-weight:700;background:rgba(255,79,46,.18);color:#FF4F2E;border-radius:4px;padding:1px 5px;margin-left:2px;font-family:Roboto,sans-serif">Beta</sup> breakdown.</p>
-    <a href="#" class="btn btn-coral" style="margin-top:12px" onclick="openModal();return false">Book Free Strategy Call →</a>`;
+  const name    = document.getElementById('gateName').value.trim();
+  const email   = document.getElementById('gateEmail').value.trim().toLowerCase();
+  const errEl   = document.getElementById('gateError');
+  const btn     = document.getElementById('reportSubmitBtn');
+
+  function showErr(msg) { errEl.textContent = msg; errEl.style.display = 'block'; }
+  errEl.style.display = 'none';
+
+  // Name validation
+  if (!name || name.length < 2) { showErr('Please enter your full name.'); return; }
+
+  // Email format
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr('Please enter a valid email address.'); return; }
+
+  // Work email only
+  const domain = email.split('@')[1] || '';
+  if (PERSONAL_EMAIL_DOMAINS.includes(domain)) {
+    showErr('Please fill correct details to get the report. Use your work email, not a personal address.');
+    return;
+  }
+
+  // Loading state
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  const scannedUrl = document.getElementById('scoreUrl').value;
+
+  fetch('api/save-lead.php', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ name, email, url: scannedUrl, scan_token: window._lastScanToken || '' }),
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        showErr(data.error);
+        btn.disabled = false;
+        btn.textContent = 'Send Me the Full Report →';
+        return;
+      }
+      // Success
+      document.getElementById('gateFormWrap').style.display = 'none';
+      const successEl = document.getElementById('gateSuccess');
+      successEl.style.display = 'block';
+      successEl.innerHTML =
+        '<div style="font-size:1.5rem;margin-bottom:10px">✅</div>' +
+        '<p style="color:var(--white);font-weight:700;margin-bottom:6px">You\'re on the list!</p>' +
+        '<p style="font-size:.82rem;color:rgba(248,249,255,.6);margin-bottom:16px">You\'ll receive your full report at <strong style="color:var(--white)">' + email + '</strong> soon.</p>' +
+        '<a href="https://topmate.io/productmentor/1026755" target="_blank" rel="noopener" class="btn btn-coral" style="font-size:.84rem">Book Free Audit Call →</a>';
+    })
+    .catch(() => {
+      showErr('Something went wrong. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Send Me the Full Report →';
+    });
 }
 
 // ─────────────────────────────────────────
@@ -780,3 +986,25 @@ function goStep(n) {
 }
 document.getElementById('modal').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ─────────────────────────────────────────
+// DISABLE ANALYSE BUTTON WHEN INPUT EMPTY
+// ─────────────────────────────────────────
+(function initUrlInputState() {
+  const inp = document.getElementById('scoreUrl');
+  const btn = document.getElementById('scoreBtn');
+  btn.disabled = true;
+  inp.addEventListener('input', () => { btn.disabled = !inp.value.trim(); });
+})();
+
+// ─────────────────────────────────────────
+// DISABLE GATE SUBMIT UNTIL BOTH FIELDS FILLED
+// ─────────────────────────────────────────
+(function initGateInputs() {
+  const nameInp = document.getElementById('gateName');
+  const emailInp = document.getElementById('gateEmail');
+  const btn = document.getElementById('reportSubmitBtn');
+  function checkGate() { btn.disabled = !nameInp.value.trim() || !emailInp.value.trim(); }
+  nameInp.addEventListener('input', checkGate);
+  emailInp.addEventListener('input', checkGate);
+})();

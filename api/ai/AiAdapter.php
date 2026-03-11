@@ -11,23 +11,22 @@ require_once __DIR__ . '/claude.php';
 class AiAdapter
 {
     /**
-     * Analyse a store URL and return scores for all 9 parameters.
+     * Analyse a store and return scores for all 28 parameters.
      *
      * @param string      $url      The store URL being analysed
-     * @param string      $html     Cleaned, truncated page HTML
+     * @param array       $pages    ['home'=>html, 'product'=>html, 'category'=>html, 'cart'=>html]
      * @param string|null $desktop  Base64-encoded desktop screenshot (or null)
      * @param string|null $mobile   Base64-encoded mobile screenshot (or null)
      * @return array  { scores: { checkout_flow: int, ... } }
-     *                or { error: string, scores: { ... fallback 50s } }
      */
-    public static function analyse(string $url, string $html, ?string $desktop, ?string $mobile): array
+    public static function analyse(string $url, array $pages, ?string $desktop, ?string $mobile): array
     {
         switch (AI_PROVIDER) {
             case 'claude':
-                return ClaudeProvider::analyse($url, $html, $desktop, $mobile);
+                return ClaudeProvider::analyse($url, $pages, $desktop, $mobile);
             case 'openai':
             default:
-                return OpenAIProvider::analyse($url, $html, $desktop, $mobile);
+                return OpenAIProvider::analyse($url, $pages, $desktop, $mobile);
         }
     }
 }

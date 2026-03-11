@@ -2,38 +2,37 @@
 /* ═══════════════════════════════════════════════════════════════
    OWLEYE — api/ai/openai.php
    OpenAI (GPT-4o) provider — 28 parameters × 6 pillars.
-   Supports vision (screenshots) when available, falls back to
-   HTML-only analysis gracefully.
+   Receives multi-page HTML (home, product, category, cart).
    ═══════════════════════════════════════════════════════════════ */
 
 class OpenAIProvider
 {
     private static string $endpoint = 'https://api.openai.com/v1/chat/completions';
 
-    // Must match OWLEYE_PILLARS flatMap order in owleye-ai.js (28 params × 6 pillars)
+    // Must match OWLEYE_PILLARS flatMap order in owleye-ai.js
     private static array $PARAMS = [
-        'checkout_flow', 'payment_options', 'cart_recovery',       // Purchase Flow
-        'express_checkout', 'cod_prominence',                        // Purchase Flow
-        'landing_page',  'product_pages', 'search_ux',              // Page Experience
-        'sticky_atc', 'category_pages',                              // Page Experience
-        'trust_signals', 'returns_policy', 'social_proof',          // Trust & Conversion
-        'review_quality', 'guarantee_signals',                       // Trust & Conversion
-        'cross_sell', 'email_capture', 'whatsapp_marketing',        // Engagement & Retention
-        'schema_markup', 'content_clarity',                          // Agentic Commerce
-        'ai_discoverability', 'conversational_ux',                   // Agentic Commerce
-        'open_graph_quality', 'canonical_health',                    // Agentic Commerce
-        'mobile_ux', 'page_speed',                                   // Technical Foundation
-        'navigation_clarity', 'accessibility',                       // Technical Foundation
+        'checkout_flow', 'payment_options', 'cart_recovery',
+        'express_checkout', 'cod_prominence',
+        'landing_page',  'product_pages', 'search_ux',
+        'sticky_atc', 'category_pages',
+        'trust_signals', 'returns_policy', 'social_proof',
+        'review_quality', 'guarantee_signals',
+        'cross_sell', 'email_capture', 'whatsapp_marketing',
+        'schema_markup', 'content_clarity',
+        'ai_discoverability', 'conversational_ux',
+        'open_graph_quality', 'canonical_health',
+        'mobile_ux', 'page_speed',
+        'navigation_clarity', 'accessibility',
     ];
 
-    public static function analyse(string $url, string $html, ?string $desktop, ?string $mobile): array
+    public static function analyse(string $url, array $pages, ?string $desktop, ?string $mobile): array
     {
-        $messages = self::buildMessages($url, $html, $desktop, $mobile);
+        $messages = self::buildMessages($url, $pages, $desktop, $mobile);
 
         $payload = [
             'model'           => AI_MODEL,
             'messages'        => $messages,
-            'max_tokens'      => 400,
+            'max_tokens'      => 600,
             'temperature'     => 0.1,
             'response_format' => ['type' => 'json_object'],
         ];
@@ -42,114 +41,137 @@ class OpenAIProvider
         return self::parseScores($raw);
     }
 
-    // ── Build prompt messages ────────────────────────────────────
-
-    private static function buildMessages(string $url, string $html, ?string $desktop, ?string $mobile): array
+    private static function buildMessages(string $url, array $pages, ?string $desktop, ?string $mobile): array
     {
-        $system = <<<SYS
-You are an expert CRO (Conversion Rate Optimisation) analyst specialising in Indian ecommerce.
-You score websites on 28 conversion parameters from 0 to 100.
-Always respond with valid JSON only — no explanation, no markdown, no code fences.
+        $system = self::systemPrompt();
+        $userText = self::buildUserPrompt($url, $pages);
+
+        $userContent = [['type' => 'text', 'text' => $userText]];
+
+        if ($desktop !== null) {
+            $userContent[] = [
+                'type'      => 'image_url',
+                'image_url' => ['url' => 'data:image/jpeg;base64,' . $desktop, 'detail' => 'low'],
+            ];
+        }
+        if ($mobile !== null) {
+            $userContent[] = [
+                'type'      => 'image_url',
+                'image_url' => ['url' => 'data:image/jpeg;base64,' . $mobile, 'detail' => 'low'],
+            ];
+        }
+
+        return [
+            ['role' => 'system', 'content' => $system],
+            ['role' => 'user',   'content' => $userContent],
+        ];
+    }
+
+    private static function systemPrompt(): string
+    {
+        return <<<SYS
+You are a senior CRO analyst benchmarking Indian ecommerce stores against industry standards.
+You will receive HTML crawled from multiple pages of the same store — each section is clearly labelled.
+
+Score each of the 28 parameters from 0 to 100 using this exact rubric:
+  0–20  → Feature absent or critically broken
+  21–40 → Present but poorly implemented — ALSO USE 40 when a parameter CANNOT be verified from the provided pages
+  41–60 → Meets basic standard; average Indian ecommerce performance
+  61–80 → Good implementation; above Indian D2C average
+  81–100 → Best practice; top 10% of Indian ecommerce
+
+CRITICAL RULES:
+1. Score exactly 40 for any parameter marked [UNVERIFIABLE] or whose required page was not provided or is empty.
+2. Indian ecommerce standards apply: COD is an expected feature (not a bonus), UPI is the dominant payment method, WhatsApp marketing is standard practice for Indian D2C.
+3. Benchmark against Indian D2C stores — not Western ecommerce platforms.
+4. Respond with valid JSON only — no explanation, no markdown, no code fences.
+
+SCORE CALIBRATION ANCHORS:
+• Top Indian store (Mamaearth/Nykaa-tier): checkout_flow≈78, payment_options≈85, trust_signals≈75, product_pages≈80
+• Average Indian D2C store: checkout_flow≈48, payment_options≈58, trust_signals≈45, product_pages≈52
+• Poor performer: checkout_flow≈22, payment_options≈30, trust_signals≈18, product_pages≈25
 SYS;
+    }
 
+    private static function buildUserPrompt(string $url, array $pages): string
+    {
+        // ── Page HTML blocks ──────────────────────────────────────
+        $labels = [
+            'home'     => 'HOME PAGE',
+            'product'  => 'PRODUCT PAGE',
+            'category' => 'CATEGORY / COLLECTION PAGE',
+            'cart'     => 'CART PAGE',
+            'returns'  => 'RETURNS / REFUND POLICY PAGE',
+        ];
+
+        $pagesBlock = '';
+        foreach ($labels as $type => $label) {
+            if (!empty($pages[$type])) {
+                $pagesBlock .= "\n=== {$label} ({$url}) ===\n{$pages[$type]}\n";
+            } else {
+                $pagesBlock .= "\n=== {$label} ===\n[Page not accessible — score {$label}-dependent parameters at 40]\n";
+            }
+        }
+
+        // ── Criteria with page-context tags ───────────────────────
         $criteria = <<<CRIT
-Score each parameter 0–100 based on what you observe:
+Score each parameter using only evidence from the labelled page sections above:
 
-PURCHASE FLOW
-- checkout_flow      : Steps to buy, progress indicators, form length, guest checkout
-- payment_options    : UPI, COD, cards, BNPL (Razorpay/PayU/Simpl/LazyPay) presence
-- cart_recovery      : Exit-intent, cart persistence, recovery messaging
-- express_checkout   : One-click/instant buy, Google Pay, PhonePe express options
-- cod_prominence     : Cash on Delivery visibility, placement in checkout hierarchy
+PURCHASE FLOW — draw evidence from CART PAGE
+- checkout_flow      [CART PAGE]: Steps to complete purchase, progress bar, guest checkout option, form length
+- payment_options    [CART PAGE]: UPI (GPay/PhonePe/Paytm), COD, cards, BNPL (Razorpay/Simpl/LazyPay) visibility
+- cart_recovery      [UNVERIFIABLE — score 40]: Requires active session; exit-intent/email recovery cannot be observed
+- express_checkout   [CART PAGE]: One-click buy, Google Pay express, PhonePe instant checkout option
+- cod_prominence     [CART PAGE]: COD badge/label visibility, position in payment method hierarchy
 
 PAGE EXPERIENCE
-- landing_page       : Above-fold clarity, benefit headline, CTA prominence & placement
-- product_pages      : Image count/quality, reviews visibility, add-to-cart prominence
-- search_ux          : Autocomplete, typo tolerance, search result relevance
-- sticky_atc         : Sticky add-to-cart bar on mobile scroll, persistence of buy button
-- category_pages     : Filter/sort options, product card quality, listing page layout
+- landing_page       [HOME PAGE]: Above-fold clarity, hero headline quality, primary CTA placement & copy
+- product_pages      [PRODUCT PAGE]: Image count/quality, reviews placement, ATC button prominence, product video
+- search_ux          [CATEGORY PAGE]: Search bar, autocomplete quality, typo tolerance, filter/sort controls
+- sticky_atc         [PRODUCT PAGE]: Sticky add-to-cart bar visible while scrolling, mobile-optimised persistence
+- category_pages     [CATEGORY PAGE]: Filter/sort options, product grid quality, listing layout, pagination
 
 TRUST & CONVERSION
-- trust_signals      : SSL, trust badges, review count, security logos near buy button
-- returns_policy     : Policy visibility, plain language, placement near CTA
-- social_proof       : Review volume, photo/video reviews, UGC presence, placement
-- review_quality     : Review depth, recency, rating distribution, verified buyer badges
-- guarantee_signals  : Money-back guarantee, warranty, risk-reversal copy near CTA
+- trust_signals      [HOME PAGE]: SSL indicator, trust badges, review count, security logos near CTA
+- returns_policy     [RETURNS / REFUND POLICY PAGE]: Score based on actual policy content —
+    81–100: 100% refund (money back to original payment) with simple process and clear timeline (7–15 days); easy cancellation before dispatch with full refund
+    61–80:  Refund with reasonable conditions (unused item, original packaging, within stated timeframe); cancellation allowed with minor restrictions
+    41–60:  Store credit / exchange only; OR conditions present but many exceptions or unclear process; cancellation with partial penalty
+    21–40:  Very restrictive — refund case-by-case, no clear timeline, complex or undisclosed conditions; cancellation not clearly allowed
+    0–20:   No refund policy stated, all sales final, or page not found
+    If page is missing, score 40.
+- social_proof       [PRODUCT PAGE]: Review volume, photo/video UGC, rating display, review recency
+- review_quality     [PRODUCT PAGE]: Review depth, rating distribution, verified buyer badges, brand responses
+- guarantee_signals  [PRODUCT PAGE]: Money-back guarantee, warranty, risk-reversal copy near buy button
 
 ENGAGEMENT & RETENTION
-- cross_sell         : Upsell/cross-sell modules, "frequently bought together", bundles
-- email_capture      : Email popup, exit-intent capture, lead magnet quality
-- whatsapp_marketing : WhatsApp opt-in, abandoned cart via WhatsApp, order tracking
+- cross_sell         [PRODUCT PAGE]: Related products, "frequently bought together" modules, bundle offers
+- email_capture      [HOME PAGE]: Email popup, exit-intent capture, lead magnet quality, newsletter signup
+- whatsapp_marketing [HOME PAGE]: WhatsApp opt-in widget, chat button, marketing touchpoint visibility
 
-AGENTIC COMMERCE (how well AI agents can read and rank this store)
-- schema_markup      : Schema.org Product/Review/FAQ/BreadcrumbList structured data
-- content_clarity    : Plain language copy, scannable headings for LLM parsing
-- ai_discoverability : Meta descriptions, OG tags, semantic HTML hierarchy
-- conversational_ux  : FAQ sections, chatbot presence, Q&A content depth
-- open_graph_quality : og:title, og:description, og:image presence and quality
-- canonical_health   : Canonical tags on product/category pages, URL de-duplication
+AGENTIC COMMERCE — how well AI agents can read and rank this store
+- schema_markup      [HOME PAGE]: JSON-LD Product/Review/FAQ/BreadcrumbList structured data present in HTML
+- content_clarity    [HOME PAGE]: Plain-language copy, scannable headings, LLM-parseable structure
+- ai_discoverability [HOME PAGE]: Meta descriptions, semantic HTML hierarchy, heading tag structure
+- conversational_ux  [HOME PAGE]: FAQ section depth, chatbot presence, structured Q&A content
+- open_graph_quality [HOME PAGE]: og:title, og:description, og:image presence and quality
+- canonical_health   [HOME PAGE]: Canonical tags present, URL structure clarity, no obvious duplication
 
 TECHNICAL FOUNDATION
-- mobile_ux          : Mobile layout, tap target sizes, mobile-optimised checkout
-- page_speed         : Estimated Lighthouse mobile score (0–100), Core Web Vitals signals
-- navigation_clarity : Top-level menu structure, category hierarchy, discoverability
-- accessibility      : Alt text, colour contrast, ARIA labels, keyboard navigation
+- mobile_ux          [HOME PAGE]: Viewport meta, mobile layout signals, tap target size indicators
+- page_speed         [PSI API — already injected if available, otherwise estimate from HTML signals]
+- navigation_clarity [HOME PAGE]: Top-level menu structure, category hierarchy, mega-menu quality
+- accessibility      [HOME PAGE]: Alt text on images, colour contrast signals, ARIA labels, semantic HTML
 CRIT;
 
         $jsonTemplate = '{"checkout_flow":0,"payment_options":0,"cart_recovery":0,"express_checkout":0,"cod_prominence":0,"landing_page":0,"product_pages":0,"search_ux":0,"sticky_atc":0,"category_pages":0,"trust_signals":0,"returns_policy":0,"social_proof":0,"review_quality":0,"guarantee_signals":0,"cross_sell":0,"email_capture":0,"whatsapp_marketing":0,"schema_markup":0,"content_clarity":0,"ai_discoverability":0,"conversational_ux":0,"open_graph_quality":0,"canonical_health":0,"mobile_ux":0,"page_speed":0,"navigation_clarity":0,"accessibility":0}';
 
-        $hasScreenshots = ($desktop !== null || $mobile !== null);
-
-        if ($hasScreenshots) {
-            // Vision request — include screenshots as images
-            $screenshotNote = '';
-            if ($desktop && $mobile) $screenshotNote = 'I have provided both a desktop (1280px) and mobile (390px) screenshot.';
-            elseif ($desktop)        $screenshotNote = 'I have provided a desktop (1280px) screenshot.';
-            else                     $screenshotNote = 'I have provided a mobile (390px) screenshot.';
-
-            $textContent = "Analyse this Indian ecommerce website: {$url}\n\n"
-                . "{$criteria}\n\n"
-                . "{$screenshotNote} I have also provided the page HTML below.\n\n"
-                . "HTML (truncated):\n```\n{$html}\n```\n\n"
-                . "Respond with ONLY this JSON structure (fill in real scores):\n{$jsonTemplate}";
-
-            $userContent = [
-                ['type' => 'text', 'text' => $textContent],
-            ];
-
-            if ($desktop !== null) {
-                $userContent[] = [
-                    'type'      => 'image_url',
-                    'image_url' => ['url' => 'data:image/jpeg;base64,' . $desktop, 'detail' => 'low'],
-                ];
-            }
-            if ($mobile !== null) {
-                $userContent[] = [
-                    'type'      => 'image_url',
-                    'image_url' => ['url' => 'data:image/jpeg;base64,' . $mobile, 'detail' => 'low'],
-                ];
-            }
-
-            return [
-                ['role' => 'system', 'content' => $system],
-                ['role' => 'user',   'content' => $userContent],
-            ];
-
-        } else {
-            // HTML-only (no screenshot key configured yet)
-            $text = "Analyse this Indian ecommerce website based on its HTML: {$url}\n\n"
-                . "{$criteria}\n\n"
-                . "HTML (truncated):\n```\n{$html}\n```\n\n"
-                . "Respond with ONLY this JSON structure (fill in real scores):\n{$jsonTemplate}";
-
-            return [
-                ['role' => 'system', 'content' => $system],
-                ['role' => 'user',   'content' => $text],
-            ];
-        }
+        return "Analyse this Indian ecommerce store: {$url}\n"
+             . $pagesBlock . "\n"
+             . $criteria . "\n\n"
+             . "Respond with ONLY this JSON structure (fill in real scores):\n"
+             . $jsonTemplate;
     }
-
-    // ── Call OpenAI API ──────────────────────────────────────────
 
     private static function callApi(array $payload): string
     {
@@ -162,23 +184,20 @@ CRIT;
                 'Content-Type: application/json',
                 'Authorization: Bearer ' . OPENAI_API_KEY,
             ],
-            CURLOPT_TIMEOUT        => 45,
+            CURLOPT_TIMEOUT        => 50,
             CURLOPT_SSL_VERIFYPEER => true,
         ]);
 
-        $result   = curl_exec($ch);
-        $curlErr  = curl_error($ch);
+        $result  = curl_exec($ch);
+        $curlErr = curl_error($ch);
         curl_close($ch);
 
         if ($curlErr) {
             error_log('[OwlEye] OpenAI cURL error: ' . $curlErr);
             return '';
         }
-
         return $result;
     }
-
-    // ── Parse + sanitise scores ──────────────────────────────────
 
     private static function parseScores(string $response): array
     {
@@ -199,7 +218,6 @@ CRIT;
         $content = $data['choices'][0]['message']['content'] ?? '{}';
         $raw     = json_decode($content, true) ?? [];
 
-        // Clamp every score to 0–100; default missing params to 50
         $scores = [];
         foreach (self::$PARAMS as $p) {
             $scores[$p] = isset($raw[$p])
