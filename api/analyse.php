@@ -95,19 +95,14 @@ $mobile  = ScreenshotAdapter::capture($url, 'mobile');
 $result = AiAdapter::analyse($url, $pages, $desktop, $mobile);
 
 // ── 6. PageSpeed Insights — overrides AI estimate for page_speed ─
-$psiDefined    = defined('GOOGLE_PSI_KEY');
-$psiConfigured = $psiDefined && GOOGLE_PSI_KEY;
-error_log('[OwlEye] PSI defined=' . var_export($psiDefined, true) . ' configured=' . var_export($psiConfigured, true));
+$psiConfigured = defined('GOOGLE_PSI_KEY') && GOOGLE_PSI_KEY;
 if ($psiConfigured) {
     require_once __DIR__ . '/pagespeed/PageSpeedAdapter.php';
     $psiScore = PageSpeedAdapter::score($url);
-    error_log('[OwlEye] PSI score=' . var_export($psiScore, true));
     if ($psiScore !== null && isset($result['scores'])) {
         $result['scores']['page_speed'] = $psiScore;
     }
 }
-// TEMP DEBUG — remove after confirming PSI works
-$result['_psi_debug'] = ['defined' => $psiDefined, 'configured' => $psiConfigured];
 
 // ── 7. Compute pillar scores + OwlEye total ──────────────────────
 if (isset($result['scores'])) {
