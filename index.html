@@ -64,7 +64,7 @@
           <h4 class="owleye-brand">OwlEye Score™ <sup
               style="font-size:.55em;font-weight:700;background:rgba(255,79,46,.18);color:var(--coral);border-radius:4px;padding:1px 5px;font-style:normal;font-family:'Roboto',sans-serif">Beta</sup>
           </h4>
-          <p>6 pillars · 25+ parameters</p>
+          <p>6 pillars · 28 parameters</p>
         </div>
         <canvas id="heroRadar"></canvas>
         <div class="radar-legend">
@@ -163,8 +163,10 @@
               "Order Confirmed" and remove friction.</p>
             <div class="pillar-params">
               <div class="pillar-param">Checkout Flow</div>
-              <div class="pillar-param">Payment Options (UPI/COD)</div>
+              <div class="pillar-param">Payment Options (UPI/COD/BNPL)</div>
               <div class="pillar-param">Cart & Abandonment Recovery</div>
+              <div class="pillar-param">Express Checkout</div>
+              <div class="pillar-param">COD Prominence</div>
             </div>
           </div>
         </div>
@@ -180,10 +182,13 @@
           <div class="pillar-card-right">
             <h3>Page Experience</h3>
             <p>Your pages should do the selling before a visitor reaches checkout. We score above-fold clarity, product
-              page persuasion, and search quality.</p>
+              page persuasion, and on-site search quality.</p>
             <div class="pillar-params">
               <div class="pillar-param">Landing Page & Above-fold</div>
               <div class="pillar-param">Product Page Quality</div>
+              <div class="pillar-param">Search UX</div>
+              <div class="pillar-param">Sticky Add-to-Cart</div>
+              <div class="pillar-param">Category Pages</div>
             </div>
           </div>
         </div>
@@ -203,6 +208,9 @@
             <div class="pillar-params">
               <div class="pillar-param">Trust & Credibility Signals</div>
               <div class="pillar-param">Returns & Refund Policy</div>
+              <div class="pillar-param">Social Proof & UGC</div>
+              <div class="pillar-param">Review Quality</div>
+              <div class="pillar-param">Guarantee Signals</div>
             </div>
           </div>
         </div>
@@ -217,11 +225,12 @@
           </div>
           <div class="pillar-card-right">
             <h3>Engagement & Retention</h3>
-            <p>Every visitor who buys once is a candidate to buy again. We score cross-sell, upsell, and re-engagement
+            <p>Every visitor who buys once is a candidate to buy again. We score cross-sell, email, and WhatsApp
               flows that compound revenue over time.</p>
             <div class="pillar-params">
               <div class="pillar-param">Cross-sell & Upsell</div>
-              <div class="pillar-param">Post-purchase Experience</div>
+              <div class="pillar-param">Email Capture</div>
+              <div class="pillar-param">WhatsApp Marketing</div>
             </div>
           </div>
         </div>
@@ -241,7 +250,9 @@
               <div class="pillar-param">Schema & Structured Data</div>
               <div class="pillar-param">Content Clarity for LLMs</div>
               <div class="pillar-param">AI Discoverability</div>
-              <div class="pillar-param">Conversational UX</div>
+              <div class="pillar-param">Conversational UX & FAQ</div>
+              <div class="pillar-param">Open Graph Quality</div>
+              <div class="pillar-param">Canonical Health</div>
             </div>
           </div>
         </div>
@@ -257,10 +268,12 @@
           <div class="pillar-card-right">
             <h3>Technical Foundation</h3>
             <p>Speed and mobile experience are table stakes. A 1-second delay reduces conversion by 7%. We check Core Web
-              Vitals, mobile UX, and navigation structure.</p>
+              Vitals, mobile UX, navigation, and accessibility.</p>
             <div class="pillar-params">
               <div class="pillar-param">Mobile UX</div>
-              <div class="pillar-param">Page Speed & Core Web Vitals</div>
+              <div class="pillar-param">Page Speed (Google Lighthouse)</div>
+              <div class="pillar-param">Navigation Clarity</div>
+              <div class="pillar-param">Accessibility</div>
             </div>
           </div>
         </div>
@@ -314,7 +327,7 @@
         <h2 style="color:var(--white)">OwlEye Score™ <sup
             style="font-size:.55em;font-weight:700;background:rgba(255,79,46,.18);color:var(--coral);border-radius:4px;padding:1px 5px;font-style:normal;font-family:'Roboto',sans-serif">Beta</sup>
         </h2>
-        <p>Our Proprietary AI analyses 25+ parameters across 6 pillars and generates a <span class="owleye-brand">OwlEye Score™</span></p>
+        <p>Our Proprietary AI analyses 28 parameters across 6 pillars and generates a <span class="owleye-brand">OwlEye Score™</span></p>
       </div>
       <div class="score-layout reveal">
 
@@ -434,7 +447,7 @@
 
         <!-- Full-width Get Full Report -->
         <div class="gate-prompt" id="gatePrompt" style="max-width:520px;margin:20px auto 0">
-          <p>🔒 <strong style="color:var(--white)">Get your full report</strong><br>All 6 pillar scores + fix recommendations across 25+ parameters</p>
+          <p>🔒 <strong style="color:var(--white)">Get your full report</strong><br>All 6 pillar scores + fix recommendations across 28 parameters</p>
           <div class="gate-form">
             <input type="text" placeholder="Your name" id="gateName">
             <input type="email" placeholder="Work email" id="gateEmail">

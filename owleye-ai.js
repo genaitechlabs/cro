@@ -1,7 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════
    OWLEYE SCORE™ — owleye-ai.js
    AI scoring engine, benchmarks, and API endpoints spec
-   13 PARAMETERS × 6 PILLARS
+   28 PARAMETERS × 6 PILLARS
+   weight: 1.0 = high confidence | 0.6 = medium confidence
    ═══════════════════════════════════════════════════════════════ */
 
 // ─────────────────────────────────────────
@@ -23,8 +24,9 @@ const OWLEYE_BENCHMARKS = {
 };
 
 // ─────────────────────────────────────────
-// 13 PARAMETERS × 6 PILLARS
-// Parameters are the secret ingredients — add freely without touching UI
+// 28 PARAMETERS × 6 PILLARS
+// weight: 1.0 = high confidence | 0.6 = medium confidence
+// Parameters are secret ingredients — add freely without touching UI
 // ─────────────────────────────────────────
 const OWLEYE_PILLARS = [
   {
@@ -38,6 +40,7 @@ const OWLEYE_PILLARS = [
       {
         id: 'checkout_flow',
         name: 'Checkout Flow',
+        weight: 1.0,
         max_pts: 12,
         industry_avg: 70,
         scan_msgs: ['Mapping checkout steps…', 'Counting form fields…', 'Checking progress indicators…'],
@@ -50,6 +53,7 @@ const OWLEYE_PILLARS = [
       {
         id: 'payment_options',
         name: 'Payment Options',
+        weight: 1.0,
         max_pts: 10,
         industry_avg: 68,
         scan_msgs: ['Detecting payment methods…', 'Checking UPI/COD support…', 'Validating payment UX…'],
@@ -62,6 +66,7 @@ const OWLEYE_PILLARS = [
       {
         id: 'cart_recovery',
         name: 'Cart Recovery',
+        weight: 1.0,
         max_pts: 8,
         industry_avg: 65,
         scan_msgs: ['Scanning cart behaviour…', 'Checking abandonment triggers…', 'Analysing recovery flows…'],
@@ -70,7 +75,33 @@ const OWLEYE_PILLARS = [
           mid:  'Add cart persistence across sessions. 43% return to buy within 24h.',
           high: 'Recovery flows are set up. Test WhatsApp recovery — 3× higher open rate than email.',
         }
-      }
+      },
+      {
+        id: 'express_checkout',
+        name: 'Express Checkout',
+        weight: 1.0,
+        max_pts: 10,
+        industry_avg: 42,
+        scan_msgs: ['Checking one-click buy options…', 'Testing guest checkout flow…', 'Scanning express payment presence…'],
+        fixes: {
+          low:  'Add Google Pay or PhonePe express checkout — reduces checkout to 2 taps for 45% of buyers.',
+          mid:  'Enable instant buy on product pages. Cuts checkout from 5 steps to 1.',
+          high: 'Express checkout is live. Test placing the express button above the standard checkout.',
+        }
+      },
+      {
+        id: 'cod_prominence',
+        name: 'COD Prominence',
+        weight: 1.0,
+        max_pts: 8,
+        industry_avg: 65,
+        scan_msgs: ['Scanning COD visibility…', 'Checking payment hierarchy…', 'Measuring COD prominence near CTA…'],
+        fixes: {
+          low:  'Display "Cash on Delivery available" on product pages — converts 38% of hesitant buyers.',
+          mid:  'Move COD to first position in checkout — preferred by 45% of Tier 2/3 buyers.',
+          high: 'COD is prominent. Add "No prepayment needed" near add-to-cart to reduce anxiety.',
+        }
+      },
     ]
   },
   {
@@ -84,6 +115,7 @@ const OWLEYE_PILLARS = [
       {
         id: 'landing_page',
         name: 'Landing Page',
+        weight: 1.0,
         max_pts: 13,
         industry_avg: 72,
         scan_msgs: ['Reading above-fold content…', 'Scoring CTA placement…', 'Evaluating headline clarity…'],
@@ -96,6 +128,7 @@ const OWLEYE_PILLARS = [
       {
         id: 'product_pages',
         name: 'Product Pages',
+        weight: 1.0,
         max_pts: 12,
         industry_avg: 70,
         scan_msgs: ['Inspecting product images…', 'Checking reviews section…', 'Analysing buy-button prominence…'],
@@ -104,7 +137,46 @@ const OWLEYE_PILLARS = [
           mid:  'Display "X bought in last 24h" social proof near add-to-cart. Proven 8–12% lift.',
           high: 'Product pages look strong. Test pinned sticky add-to-cart on mobile scroll.',
         }
-      }
+      },
+      {
+        id: 'search_ux',
+        name: 'Search UX',
+        weight: 1.0,
+        max_pts: 10,
+        industry_avg: 52,
+        scan_msgs: ['Testing site search experience…', 'Checking autocomplete quality…', 'Evaluating search result relevance…'],
+        fixes: {
+          low:  'Add autocomplete search with product images — 43% of site search users have higher purchase intent.',
+          mid:  'Add typo tolerance and synonym support to search. Missing matches = lost sales.',
+          high: 'Search UX is solid. Add "trending searches" and "recently viewed" to boost discovery.',
+        }
+      },
+      {
+        id: 'sticky_atc',
+        name: 'Sticky Add-to-Cart',
+        weight: 1.0,
+        max_pts: 8,
+        industry_avg: 38,
+        scan_msgs: ['Checking sticky add-to-cart…', 'Testing scroll behaviour on mobile…', 'Evaluating CTA persistence…'],
+        fixes: {
+          low:  'Add a sticky add-to-cart bar on mobile — lifts conversions by 10–20% on long product pages.',
+          mid:  'Make sticky ATC show price + selected variant. Eliminates need to scroll back up.',
+          high: 'Sticky ATC is in place. Add purchase count ("1,247 bought this") to the sticky bar.',
+        }
+      },
+      {
+        id: 'category_pages',
+        name: 'Category Pages',
+        weight: 0.6,
+        max_pts: 8,
+        industry_avg: 55,
+        scan_msgs: ['Evaluating category page layout…', 'Checking filter & sort options…', 'Scoring product card quality…'],
+        fixes: {
+          low:  'Add filter and sort on category pages — 67% of shoppers use filters to find the right product.',
+          mid:  'Show review star ratings on product cards in listing pages. Proven 15% CTR lift.',
+          high: 'Category pages are well-structured. Test infinite scroll vs pagination for your audience.',
+        }
+      },
     ]
   },
   {
@@ -118,6 +190,7 @@ const OWLEYE_PILLARS = [
       {
         id: 'trust_signals',
         name: 'Trust Signals',
+        weight: 1.0,
         max_pts: 10,
         industry_avg: 68,
         scan_msgs: ['Looking for trust badges…', 'Scanning security indicators…', 'Checking social proof…'],
@@ -130,6 +203,7 @@ const OWLEYE_PILLARS = [
       {
         id: 'returns_policy',
         name: 'Returns Policy',
+        weight: 1.0,
         max_pts: 10,
         industry_avg: 72,
         scan_msgs: ['Locating returns policy…', 'Evaluating visibility…', 'Scoring ease of understanding…'],
@@ -138,7 +212,46 @@ const OWLEYE_PILLARS = [
           mid:  'Add inline returns explainer on product page. Reduces pre-purchase anxiety by 31%.',
           high: 'Returns policy is visible. Consider adding a no-questions-asked highlight.',
         }
-      }
+      },
+      {
+        id: 'social_proof',
+        name: 'Social Proof',
+        weight: 1.0,
+        max_pts: 10,
+        industry_avg: 52,
+        scan_msgs: ['Counting review volume…', 'Checking photo/video reviews…', 'Evaluating social proof placement…'],
+        fixes: {
+          low:  'Add customer review count ("2,400+ reviews") near hero CTA — reduces purchase anxiety immediately.',
+          mid:  'Add real customer photos or UGC to product pages — 88% of buyers trust UGC over brand photography.',
+          high: 'Social proof is strong. Test a live purchase notifications ticker for real-time credibility.',
+        }
+      },
+      {
+        id: 'review_quality',
+        name: 'Review Quality',
+        weight: 1.0,
+        max_pts: 10,
+        industry_avg: 50,
+        scan_msgs: ['Analysing review depth…', 'Checking rating distribution…', 'Scanning review recency…'],
+        fixes: {
+          low:  'Actively collect reviews post-purchase — fresh, detailed reviews convert 3× better than old ones.',
+          mid:  'Add a Q&A section and verified buyer badge. Reduces trust gap for high-value purchases.',
+          high: 'Review quality is excellent. Highlight top 3 reviews on product page to maximise impact.',
+        }
+      },
+      {
+        id: 'guarantee_signals',
+        name: 'Guarantee Signals',
+        weight: 0.6,
+        max_pts: 8,
+        industry_avg: 45,
+        scan_msgs: ['Looking for money-back guarantee…', 'Checking warranty information…', 'Scoring risk-reversal copy…'],
+        fixes: {
+          low:  'Add a visible money-back guarantee — risk reversal increases conversions by up to 25%.',
+          mid:  'Place guarantee messaging directly beside the buy button, not only on a separate policy page.',
+          high: 'Guarantee signals are clear. Test a "Try Before You Pay" framing for premium SKUs.',
+        }
+      },
     ]
   },
   {
@@ -152,6 +265,7 @@ const OWLEYE_PILLARS = [
       {
         id: 'cross_sell',
         name: 'Cross-sell & Upsell',
+        weight: 1.0,
         max_pts: 15,
         industry_avg: 66,
         scan_msgs: ['Detecting upsell modules…', 'Checking bundle offers…', 'Scoring AOV optimisation…'],
@@ -160,7 +274,33 @@ const OWLEYE_PILLARS = [
           mid:  'Add post-purchase upsell page. Highest-converting touchpoint — buyer trust is peak.',
           high: 'Cross-sell is active. Test AI-personalised recommendations vs rule-based.',
         }
-      }
+      },
+      {
+        id: 'email_capture',
+        name: 'Email Capture',
+        weight: 1.0,
+        max_pts: 10,
+        industry_avg: 55,
+        scan_msgs: ['Checking email capture mechanisms…', 'Evaluating popup timing…', 'Scoring lead magnet quality…'],
+        fixes: {
+          low:  'Add a welcome offer popup (10% off) — email captures convert at 3–5% when incentivised correctly.',
+          mid:  'Switch to exit-intent email capture — shown to 3× opt-in rates vs time-based popups.',
+          high: 'Email capture is active. Segment by product category for better lifecycle targeting.',
+        }
+      },
+      {
+        id: 'whatsapp_marketing',
+        name: 'WhatsApp Marketing',
+        weight: 1.0,
+        max_pts: 10,
+        industry_avg: 40,
+        scan_msgs: ['Checking WhatsApp touchpoints…', 'Scanning opt-in flows…', 'Evaluating messaging integration…'],
+        fixes: {
+          low:  'Add a WhatsApp opt-in at checkout — WhatsApp campaigns have 98% open rate vs 22% email.',
+          mid:  'Set up WhatsApp abandoned cart messages. 3× higher recovery rate than email for Indian shoppers.',
+          high: 'WhatsApp integration is active. Add "Track Order on WhatsApp" to confirmation emails.',
+        }
+      },
     ]
   },
   {
@@ -174,6 +314,7 @@ const OWLEYE_PILLARS = [
       {
         id: 'schema_markup',
         name: 'Schema Markup',
+        weight: 1.0,
         max_pts: 10,
         industry_avg: 25,
         scan_msgs: ['Checking schema markup…', 'Scanning structured data tags…', 'Validating JSON-LD implementation…'],
@@ -186,18 +327,20 @@ const OWLEYE_PILLARS = [
       {
         id: 'content_clarity',
         name: 'Content Clarity',
+        weight: 1.0,
         max_pts: 10,
         industry_avg: 55,
         scan_msgs: ['Analysing copy for LLM readability…', 'Scoring plain-language usage…', 'Testing AI content parsing…'],
         fixes: {
-          low:  'Rewrite product descriptions in plain, conversational language — AI agents relay these to shoppers verbatim.',
-          mid:  'Add clear benefit statements to category pages. LLMs summarise these when answering shopping queries.',
+          low:  'Rewrite product descriptions in plain, conversational language — AI agents relay these verbatim.',
+          mid:  'Add clear benefit statements to category pages. LLMs summarise these for shopping queries.',
           high: 'Content reads clearly. Add structured comparison tables — highly referenced by AI shopping assistants.',
         }
       },
       {
         id: 'ai_discoverability',
         name: 'AI Discoverability',
+        weight: 1.0,
         max_pts: 10,
         industry_avg: 40,
         scan_msgs: ['Testing AI search signals…', 'Checking meta structure…', 'Scanning semantic HTML hierarchy…'],
@@ -210,6 +353,7 @@ const OWLEYE_PILLARS = [
       {
         id: 'conversational_ux',
         name: 'Conversational UX',
+        weight: 1.0,
         max_pts: 10,
         industry_avg: 35,
         scan_msgs: ['Looking for FAQ sections…', 'Checking assistant/chatbot presence…', 'Scanning Q&A content depth…'],
@@ -218,7 +362,33 @@ const OWLEYE_PILLARS = [
           mid:  'Implement a WhatsApp or live chat touchpoint. AI-assisted chat converts 2.4× better than forms.',
           high: 'Conversational UX is in place. Train your chat on top 20 objections to automate resolution.',
         }
-      }
+      },
+      {
+        id: 'open_graph_quality',
+        name: 'Open Graph Quality',
+        weight: 1.0,
+        max_pts: 8,
+        industry_avg: 45,
+        scan_msgs: ['Checking OG tags…', 'Validating social share previews…', 'Testing OG image quality…'],
+        fixes: {
+          low:  'Add og:title, og:description, and og:image to all product pages — required for WhatsApp and Facebook previews.',
+          mid:  'Set og:image to min 1200×630px. Blurry previews reduce click-through from social shares.',
+          high: 'OG tags are complete. Add og:price and product OG type for enhanced Facebook Shops display.',
+        }
+      },
+      {
+        id: 'canonical_health',
+        name: 'Canonical Health',
+        weight: 0.6,
+        max_pts: 8,
+        industry_avg: 48,
+        scan_msgs: ['Checking canonical tags…', 'Scanning for duplicate URL patterns…', 'Validating URL structure…'],
+        fixes: {
+          low:  'Add canonical tags to all product/category pages — prevents duplicate content from diluting AI rankings.',
+          mid:  'Fix faceted navigation URLs (filter duplicates) by adding canonical to the base category URL.',
+          high: 'Canonical structure is solid. Audit pagination to ensure rel=canonical is set correctly.',
+        }
+      },
     ]
   },
   {
@@ -232,6 +402,7 @@ const OWLEYE_PILLARS = [
       {
         id: 'mobile_ux',
         name: 'Mobile UX',
+        weight: 1.0,
         max_pts: 10,
         industry_avg: 70,
         scan_msgs: ['Simulating mobile viewport…', 'Checking tap target sizes…', 'Measuring scroll depth…'],
@@ -240,7 +411,46 @@ const OWLEYE_PILLARS = [
           mid:  'Increase tap target size to 44×44px minimum. Reduces mis-taps and frustration.',
           high: 'Mobile UX is solid. Test bottom-sheet product detail vs full-page for mobile.',
         }
-      }
+      },
+      {
+        id: 'page_speed',
+        name: 'Page Speed',
+        weight: 1.0,
+        max_pts: 12,
+        industry_avg: 55,
+        scan_msgs: ['Running Google PageSpeed check…', 'Analysing Lighthouse score…', 'Measuring Core Web Vitals…'],
+        fixes: {
+          low:  'Critical: Lighthouse mobile score below 50. Compress images and remove render-blocking scripts.',
+          mid:  'Serve next-gen images (WebP/AVIF) and enable lazy loading — typically 20–40 point Lighthouse lift.',
+          high: 'Page speed is strong. Monitor monthly — a 1s slowdown reduces conversion by 7%.',
+        }
+      },
+      {
+        id: 'navigation_clarity',
+        name: 'Navigation Clarity',
+        weight: 1.0,
+        max_pts: 8,
+        industry_avg: 60,
+        scan_msgs: ['Evaluating navigation structure…', 'Checking category hierarchy…', 'Testing menu discoverability…'],
+        fixes: {
+          low:  'Simplify navigation to max 7 top-level items. Cognitive overload reduces browsing conversion by 35%.',
+          mid:  'Add a "Shop by Category" mega-menu with product images — reduces time to find desired products.',
+          high: 'Navigation is clear. Add a sticky nav with search bar to improve deep-scroll discovery.',
+        }
+      },
+      {
+        id: 'accessibility',
+        name: 'Accessibility',
+        weight: 0.6,
+        max_pts: 8,
+        industry_avg: 38,
+        scan_msgs: ['Checking colour contrast…', 'Scanning alt text on images…', 'Testing keyboard navigation…'],
+        fixes: {
+          low:  'Add alt text to all product images — required for screen readers and AI vision indexing.',
+          mid:  'Fix colour contrast on CTAs (min 4.5:1 ratio) — benefits 8% of users with colour vision deficiency.',
+          high: 'Accessibility baseline is met. Conduct a full WCAG 2.1 audit to unlock assistive tech users.',
+        }
+      },
     ]
   }
 ];
@@ -263,29 +473,32 @@ function generateDemoScores(url) {
 }
 
 /**
- * Calculate total OwlEye Score™ from parameter scores (weighted by pillar)
- */
-function calcOwleyeTotal(paramScores) {
-  let weightedSum = 0, totalWeight = 0;
-  OWLEYE_PILLARS.forEach((pillar, pi) => {
-    const base = OWLEYE_PILLARS.slice(0, pi).reduce((a, p) => a + p.parameters.length, 0);
-    const pillarScores = pillar.parameters.map((_, i) => paramScores[base + i]);
-    const pillarAvg = pillarScores.reduce((a, b) => a + b, 0) / pillarScores.length;
-    weightedSum += pillarAvg * pillar.weight;
-    totalWeight += pillar.weight;
-  });
-  return Math.round(weightedSum / totalWeight);
-}
-
-/**
- * Convert flat param scores array → pillar-level scores array (for radar)
+ * Convert flat param scores array → pillar-level scores (weighted by param.weight)
  */
 function getPillarScores(paramScores) {
   return OWLEYE_PILLARS.map((pillar, pi) => {
     const base = OWLEYE_PILLARS.slice(0, pi).reduce((a, p) => a + p.parameters.length, 0);
-    const pArr = pillar.parameters.map((_, i) => paramScores[base + i]);
-    return Math.round(pArr.reduce((a, b) => a + b, 0) / pArr.length);
+    let weightedSum = 0, totalWeight = 0;
+    pillar.parameters.forEach((param, i) => {
+      const w = param.weight ?? 1.0;
+      weightedSum += paramScores[base + i] * w;
+      totalWeight += w;
+    });
+    return Math.round(weightedSum / totalWeight);
   });
+}
+
+/**
+ * Calculate total OwlEye Score™ from parameter scores (weighted by pillar, then param)
+ */
+function calcOwleyeTotal(paramScores) {
+  const pillarScores = getPillarScores(paramScores);
+  let weightedSum = 0, totalWeight = 0;
+  OWLEYE_PILLARS.forEach((pillar, pi) => {
+    weightedSum += pillarScores[pi] * pillar.weight;
+    totalWeight += pillar.weight;
+  });
+  return Math.round(weightedSum / totalWeight);
 }
 
 /**
@@ -337,7 +550,7 @@ function getFixForScore(paramId, score) {
 // INDUSTRY AVERAGE ARRAYS
 // ─────────────────────────────────────────
 
-// Parameter-level (13 values) — used internally
+// Parameter-level (28 values) — used internally
 const OWLEYE_INDUSTRY_AVG = OWLEYE_PILLARS
   .flatMap(p => p.parameters.map(param => param.industry_avg));
 
@@ -353,7 +566,7 @@ const OWLEYE_PILLAR_AVG = OWLEYE_PILLARS.map(pillar =>
   POST /api/owleye/analyse
   Request:  { url: string }
   Response: {
-    scores: { [param_id]: number },   // 13 parameters
+    scores: { [param_id]: number },   // 28 parameters
     total: number,
     band: string,
     pillar_breakdown: { [pillar_id]: number },

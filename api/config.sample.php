@@ -20,3 +20,8 @@ define('SCREENSHOT_PROVIDER',      'screenshotone'); // 'screenshotone' | 'micro
 
 define('SCREENSHOTONE_ACCESS_KEY', '');     // ← from screenshotone.com
 define('MICROLINK_API_KEY',        '');     // ← fill when switching to Microlink
+
+// ── PageSpeed Insights (Google) ───────────────────────────────────
+// Free: 25,000 requests/day — https://developers.google.com/speed/docs/insights/v5/get-started
+// Leave empty to skip real Lighthouse scoring (AI will estimate page_speed instead).
+define('GOOGLE_PSI_KEY', '');              // ← your Google API key

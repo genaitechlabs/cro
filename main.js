@@ -236,15 +236,20 @@ setInterval(() => {
 // ─────────────────────────────────────────
 // REAL AI SCORE FETCHING
 // ─────────────────────────────────────────
-// Parameter order must match OWLEYE_PILLARS.flatMap in owleye-ai.js (13 params × 6 pillars)
+// Parameter order must match OWLEYE_PILLARS.flatMap in owleye-ai.js (28 params × 6 pillars)
 const PARAM_ORDER = [
   'checkout_flow', 'payment_options', 'cart_recovery',          // Purchase Flow
-  'landing_page',  'product_pages',                             // Page Experience
-  'trust_signals', 'returns_policy',                            // Trust & Conversion
-  'cross_sell',                                                 // Engagement & Retention
+  'express_checkout', 'cod_prominence',                         // Purchase Flow
+  'landing_page',  'product_pages', 'search_ux',               // Page Experience
+  'sticky_atc', 'category_pages',                               // Page Experience
+  'trust_signals', 'returns_policy', 'social_proof',            // Trust & Conversion
+  'review_quality', 'guarantee_signals',                        // Trust & Conversion
+  'cross_sell', 'email_capture', 'whatsapp_marketing',          // Engagement & Retention
   'schema_markup', 'content_clarity',                           // Agentic Commerce
   'ai_discoverability', 'conversational_ux',                    // Agentic Commerce
-  'mobile_ux',                                                  // Technical Foundation
+  'open_graph_quality', 'canonical_health',                     // Agentic Commerce
+  'mobile_ux', 'page_speed',                                    // Technical Foundation
+  'navigation_clarity', 'accessibility',                        // Technical Foundation
 ];
 
 // Holds the in-flight API promise so animation + fetch run in parallel
@@ -273,35 +278,77 @@ async function fetchRealScores(url) {
 // OWLEYE SCORE TOOL
 // ─────────────────────────────────────────
 const SCAN_PARAMS = [
-  { name: 'Checkout Flow', icon: '🛒', msgs: ['Mapping checkout steps…', 'Counting form fields…', 'Checking progress indicators…'] },
-  { name: 'Payment Options', icon: '💳', msgs: ['Detecting payment methods…', 'Checking UPI/COD support…', 'Validating payment UX…'] },
-  { name: 'Cart Recovery', icon: '🔄', msgs: ['Scanning cart behaviour…', 'Checking abandonment triggers…', 'Analysing recovery flows…'] },
-  { name: 'Landing Page', icon: '📄', msgs: ['Reading above-fold content…', 'Scoring CTA placement…', 'Evaluating headline clarity…'] },
-  { name: 'Product Pages', icon: '🖼️', msgs: ['Inspecting product images…', 'Checking reviews section…', 'Analysing buy-button area…'] },
-  { name: 'Trust Signals', icon: '🤝', msgs: ['Looking for trust badges…', 'Scanning social proof…', 'Checking security indicators…'] },
-  { name: 'Returns Policy', icon: '📋', msgs: ['Locating returns policy…', 'Evaluating visibility…', 'Scoring policy clarity…'] },
-  { name: 'Cross-sell', icon: '⚡', msgs: ['Detecting upsell modules…', 'Checking bundle offers…', 'Scoring AOV optimisation…'] },
-  { name: 'Schema Markup', icon: '🔮', msgs: ['Checking schema markup…', 'Scanning structured data tags…', 'Validating JSON-LD implementation…'] },
-  { name: 'Content Clarity', icon: '🔮', msgs: ['Analysing copy for LLM readability…', 'Scoring plain-language usage…', 'Testing AI content parsing…'] },
-  { name: 'AI Discoverability', icon: '🔮', msgs: ['Testing AI search signals…', 'Checking meta structure…', 'Scanning semantic HTML hierarchy…'] },
-  { name: 'Conversational UX', icon: '🔮', msgs: ['Looking for FAQ sections…', 'Checking assistant presence…', 'Scanning Q&A content depth…'] },
-  { name: 'Mobile UX', icon: '📱', msgs: ['Simulating mobile viewport…', 'Checking tap targets…', 'Measuring scroll depth…'] },
+  // Purchase Flow (5)
+  { name: 'Checkout Flow',      icon: '🛒', msgs: ['Mapping checkout steps…',          'Counting form fields…',              'Checking progress indicators…'] },
+  { name: 'Payment Options',    icon: '💳', msgs: ['Detecting payment methods…',        'Checking UPI/COD support…',          'Validating payment UX…'] },
+  { name: 'Cart Recovery',      icon: '🔄', msgs: ['Scanning cart behaviour…',          'Checking abandonment triggers…',     'Analysing recovery flows…'] },
+  { name: 'Express Checkout',   icon: '⚡', msgs: ['Checking one-click buy options…',   'Testing guest checkout flow…',       'Scanning express payment presence…'] },
+  { name: 'COD Prominence',     icon: '💵', msgs: ['Scanning COD visibility…',          'Checking payment hierarchy…',        'Measuring COD prominence near CTA…'] },
+  // Page Experience (5)
+  { name: 'Landing Page',       icon: '📄', msgs: ['Reading above-fold content…',       'Scoring CTA placement…',             'Evaluating headline clarity…'] },
+  { name: 'Product Pages',      icon: '🖼️', msgs: ['Inspecting product images…',        'Checking reviews section…',          'Analysing buy-button area…'] },
+  { name: 'Search UX',          icon: '🔍', msgs: ['Testing site search experience…',   'Checking autocomplete quality…',     'Evaluating search result relevance…'] },
+  { name: 'Sticky Add-to-Cart', icon: '📌', msgs: ['Checking sticky add-to-cart…',      'Testing scroll behaviour on mobile…','Evaluating CTA persistence…'] },
+  { name: 'Category Pages',     icon: '🗂️', msgs: ['Evaluating category page layout…',  'Checking filter & sort options…',    'Scoring product card quality…'] },
+  // Trust & Conversion (5)
+  { name: 'Trust Signals',      icon: '🤝', msgs: ['Looking for trust badges…',         'Scanning security indicators…',      'Checking social proof…'] },
+  { name: 'Returns Policy',     icon: '📋', msgs: ['Locating returns policy…',           'Evaluating visibility…',             'Scoring policy clarity…'] },
+  { name: 'Social Proof',       icon: '⭐', msgs: ['Counting review volume…',            'Checking photo/video reviews…',      'Evaluating social proof placement…'] },
+  { name: 'Review Quality',     icon: '💬', msgs: ['Analysing review depth…',            'Checking rating distribution…',      'Scanning review recency…'] },
+  { name: 'Guarantee Signals',  icon: '🛡️', msgs: ['Looking for money-back guarantee…', 'Checking warranty information…',     'Scoring risk-reversal copy…'] },
+  // Engagement & Retention (3)
+  { name: 'Cross-sell & Upsell',    icon: '🔁', msgs: ['Detecting upsell modules…',         'Checking bundle offers…',            'Scoring AOV optimisation…'] },
+  { name: 'Email Capture',      icon: '📧', msgs: ['Checking email capture mechanisms…','Evaluating popup timing…',            'Scoring lead magnet quality…'] },
+  { name: 'WhatsApp Marketing', icon: '💬', msgs: ['Checking WhatsApp touchpoints…',    'Scanning opt-in flows…',             'Evaluating messaging integration…'] },
+  // Agentic Commerce (6)
+  { name: 'Schema Markup',      icon: '🔮', msgs: ['Checking schema markup…',           'Scanning structured data tags…',     'Validating JSON-LD implementation…'] },
+  { name: 'Content Clarity',    icon: '🔮', msgs: ['Analysing copy for LLM readability…','Scoring plain-language usage…',      'Testing AI content parsing…'] },
+  { name: 'AI Discoverability', icon: '🔮', msgs: ['Testing AI search signals…',        'Checking meta structure…',           'Scanning semantic HTML hierarchy…'] },
+  { name: 'Conversational UX',  icon: '🔮', msgs: ['Looking for FAQ sections…',         'Checking assistant presence…',       'Scanning Q&A content depth…'] },
+  { name: 'Open Graph Quality', icon: '🔮', msgs: ['Checking OG tags…',                 'Validating social share previews…',  'Testing OG image quality…'] },
+  { name: 'Canonical Health',   icon: '🔮', msgs: ['Checking canonical tags…',          'Scanning duplicate URL patterns…',   'Validating URL structure…'] },
+  // Technical Foundation (4)
+  { name: 'Mobile UX',          icon: '📱', msgs: ['Simulating mobile viewport…',       'Checking tap target sizes…',         'Measuring scroll depth…'] },
+  { name: 'Page Speed',         icon: '⚡', msgs: ['Running Google PageSpeed check…',   'Analysing Lighthouse score…',        'Measuring Core Web Vitals…'] },
+  { name: 'Navigation Clarity', icon: '🗺️', msgs: ['Evaluating navigation structure…',  'Checking category hierarchy…',       'Testing menu discoverability…'] },
+  { name: 'Accessibility',      icon: '♿', msgs: ['Checking colour contrast…',          'Scanning alt text on images…',       'Testing keyboard navigation…'] },
 ];
 
 const FIXES_DB = [
-  { param: 'Checkout Flow', fix: 'Add a progress indicator — reduces abandonment by up to 18%.' },
-  { param: 'Payment Options', fix: 'Add UPI and COD — 62% of Indian shoppers abandon without preferred payment.' },
-  { param: 'Cart Recovery', fix: 'Set up exit-intent popup + 3-email abandoned cart sequence (1h/24h/72h).' },
-  { param: 'Landing Page', fix: 'Move primary CTA above the fold with a benefit-led headline.' },
-  { param: 'Product Pages', fix: 'Add 4+ images, a video, and size guide — lifts conversion by 24%.' },
-  { param: 'Trust Signals', fix: 'Display verified photo reviews and trust badges near the buy button.' },
-  { param: 'Returns Policy', fix: 'Show "30-day easy returns" prominently near CTA — removes #1 objection.' },
-  { param: 'Cross-sell', fix: 'Add "Frequently bought together" bundles — 12–18% AOV uplift.' },
-  { param: 'Schema Markup', fix: 'Add Schema.org Product + Review markup — lets AI agents accurately read your catalogue.' },
-  { param: 'Content Clarity', fix: 'Rewrite product descriptions in plain language — AI agents relay these to shoppers verbatim.' },
+  // Purchase Flow
+  { param: 'Checkout Flow',      fix: 'Add a progress indicator to checkout — reduces abandonment by up to 18%.' },
+  { param: 'Payment Options',    fix: 'Add UPI and COD — 62% of Indian shoppers abandon without their preferred payment.' },
+  { param: 'Cart Recovery',      fix: 'Set up exit-intent popup + 3-email abandoned cart sequence (1h, 24h, 72h).' },
+  { param: 'Express Checkout',   fix: 'Add Google Pay or PhonePe express checkout — reduces checkout to 2 taps for 45% of buyers.' },
+  { param: 'COD Prominence',     fix: 'Display "Cash on Delivery available" on product pages — converts 38% of hesitant buyers.' },
+  // Page Experience
+  { param: 'Landing Page',       fix: 'Move primary CTA above the fold with a benefit-led headline. 73% of visitors never scroll.' },
+  { param: 'Product Pages',      fix: 'Add 4+ images, a video, and size guide — lifts conversion by 24%.' },
+  { param: 'Search UX',          fix: 'Add autocomplete with product images — 43% of site searchers have higher purchase intent.' },
+  { param: 'Sticky Add-to-Cart', fix: 'Add a sticky add-to-cart bar on mobile — lifts conversions by 10–20% on long product pages.' },
+  { param: 'Category Pages',     fix: 'Add filter and sort on category pages — 67% of shoppers use filters to find the right product.' },
+  // Trust & Conversion
+  { param: 'Trust Signals',      fix: 'Display verified photo reviews and trust badges near the buy button.' },
+  { param: 'Returns Policy',     fix: 'Show "30-day easy returns" prominently near CTA — removes the #1 objection.' },
+  { param: 'Social Proof',       fix: 'Add customer review count ("2,400+ reviews") near hero CTA — reduces purchase anxiety immediately.' },
+  { param: 'Review Quality',     fix: 'Actively collect reviews post-purchase — fresh, detailed reviews convert 3× better.' },
+  { param: 'Guarantee Signals',  fix: 'Add a visible money-back guarantee — risk reversal increases conversions by up to 25%.' },
+  // Engagement & Retention
+  { param: 'Cross-sell & Upsell',    fix: 'Add "Frequently bought together" bundles — average 12–18% AOV uplift.' },
+  { param: 'Email Capture',      fix: 'Add a welcome offer popup (10% off) — email captures convert at 3–5% when incentivised.' },
+  { param: 'WhatsApp Marketing', fix: 'Add a WhatsApp opt-in at checkout — WhatsApp campaigns have 98% open rate vs 22% email.' },
+  // Agentic Commerce
+  { param: 'Schema Markup',      fix: 'Add Schema.org Product + Review markup — lets AI agents accurately read your catalogue.' },
+  { param: 'Content Clarity',    fix: 'Rewrite product descriptions in plain language — AI agents relay these to shoppers verbatim.' },
   { param: 'AI Discoverability', fix: 'Fix missing meta descriptions — ChatGPT Search and Perplexity pull these directly.' },
-  { param: 'Conversational UX', fix: 'Add a structured FAQ page — the primary source LLMs cite when answering product questions.' },
-  { param: 'Mobile UX', fix: 'Reduce mobile checkout to 2 screens. 67% of Indian traffic is mobile.' },
+  { param: 'Conversational UX',  fix: 'Add a structured FAQ page — the primary source LLMs cite when answering product questions.' },
+  { param: 'Open Graph Quality', fix: 'Add og:title, og:description, and og:image to all product pages — required for WhatsApp and Facebook previews.' },
+  { param: 'Canonical Health',   fix: 'Add canonical tags to all product/category pages — prevents duplicate content diluting AI rankings.' },
+  // Technical Foundation
+  { param: 'Mobile UX',          fix: 'Reduce mobile checkout to 2 screens. 67% of Indian ecommerce traffic is mobile.' },
+  { param: 'Page Speed',         fix: 'Compress images and remove render-blocking scripts — a 1s slowdown reduces conversion by 7%.' },
+  { param: 'Navigation Clarity', fix: 'Simplify navigation to max 7 top-level items — cognitive overload reduces browsing conversion by 35%.' },
+  { param: 'Accessibility',      fix: 'Add alt text to all product images — required for screen readers and AI vision indexing.' },
 ];
 
 function runScoreAnalysis() {
