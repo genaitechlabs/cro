@@ -1,0 +1,64 @@
+# GenAI Tech Labs
+
+> AI-powered CRO (Conversion Rate Optimisation) agency for Indian ecommerce brands on Shopify and WooCommerce.
+
+## Who We Are
+
+GenAI Tech Labs helps Indian ecommerce brands convert more visitors into buyers using AI-powered analysis and human CRO expertise. We analyse why traffic leaves without buying and fix it — delivering more revenue from the traffic you're already paying for.
+
+## Our Tool: OwlEye Score™ (Beta)
+
+- Free instant audit of 28 conversion parameters across 6 pillars
+- Powered by AI (GPT-4o / Claude) + Google PageSpeed Insights (real Lighthouse score)
+- Pillar weights: Purchase Flow (28%) · Page Experience (22%) · Trust & Conversion (18%) · Engagement (12%) · Agentic Commerce (10%) · Technical Foundation (10%)
+- Includes agentic commerce scoring: how well AI agents can discover, read, and rank your store
+- Try the tool: https://genaitechlabs.com/#score-tool
+
+## The 6-Pillar OwlEye Framework
+
+### 1. Purchase Flow (weight: 28%)
+Checkout flow, payment options (UPI/COD/BNPL), cart recovery, express checkout, COD prominence
+
+### 2. Page Experience (weight: 22%)
+Landing page quality, product pages, search UX, sticky add-to-cart, category pages
+
+### 3. Trust & Conversion (weight: 18%)
+Trust signals, returns policy, social proof, review quality, guarantee signals
+
+### 4. Engagement & Retention (weight: 12%)
+Cross-sell & upsell, email capture, WhatsApp marketing
+
+### 5. Agentic Commerce (weight: 10%)
+Schema markup, content clarity for LLMs, AI discoverability, conversational UX, Open Graph quality, canonical health
+
+### 6. Technical Foundation (weight: 10%)
+Mobile UX, page speed (Google Lighthouse), navigation clarity, accessibility
+
+## Services
+
+- **CRO Audit (Free)** — Full funnel diagnostic, prioritised fixes, revenue estimates within 5 days
+- **A/B Testing** — Structured experiments on highest-traffic pages (hypothesis → design → analysis)
+- **Checkout Optimisation** — Cart, payment options, and post-purchase experience
+- **Landing Page Optimisation** — Ad landing pages and PDPs rebuilt for conversion
+
+## Industry Focus
+
+- Indian ecommerce on Shopify and WooCommerce
+- UPI, COD, and BNPL payment optimisation
+- Mobile-first conversion (67% of Indian ecommerce traffic is mobile)
+- Agentic commerce readiness (AI agent discoverability and structured data)
+
+## Industry Benchmarks (Indian Ecommerce)
+
+- Average CVR: 1.8%
+- Optimised store CVR: 4.2%
+- Average OwlEye Score: 58/100
+- CVR lift per OwlEye point: ~0.125%
+
+## Book a Free Audit Call
+
+URL: https://topmate.io/productmentor/1026755
+
+## Website
+
+https://genaitechlabs.com
