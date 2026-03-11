@@ -231,6 +231,40 @@ setInterval(() => {
 }, 3000);
 
 // ─────────────────────────────────────────
+// REAL AI SCORE FETCHING
+// ─────────────────────────────────────────
+// Parameter order must match OWLEYE_PILLARS.flatMap in owleye-ai.js
+const PARAM_ORDER = [
+  'checkout_flow', 'payment_options', 'cart_recovery',
+  'landing_page',  'product_pages',
+  'trust_signals', 'returns_policy',
+  'cross_sell',
+  'mobile_ux',
+];
+
+// Holds the in-flight API promise so animation + fetch run in parallel
+let _scoresPromise = null;
+
+async function fetchRealScores(url) {
+  try {
+    const res = await fetch('api/analyse.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (data.error && !data.scores) throw new Error(data.error);
+    const s = data.scores || {};
+    // Convert named object → array in PARAM_ORDER (matches generateDemoScores format)
+    return PARAM_ORDER.map(k => (typeof s[k] === 'number' ? s[k] : 50));
+  } catch (err) {
+    console.warn('[OwlEye] API error, using demo scores:', err.message);
+    return generateDemoScores(url); // graceful fallback
+  }
+}
+
+// ─────────────────────────────────────────
 // OWLEYE SCORE TOOL
 // ─────────────────────────────────────────
 const SCAN_PARAMS = [
@@ -275,6 +309,10 @@ function runScoreAnalysis() {
   urlError.style.display = 'none';
 
   const url = raw;
+
+  // Kick off real AI scoring immediately — runs in parallel with the scan animation
+  _scoresPromise = fetchRealScores(url);
+
   document.getElementById('scoreBtn').disabled = true;
   document.getElementById('screenshotPlaceholder').style.display = 'none';
   document.getElementById('scoreResults').classList.remove('show');
@@ -403,12 +441,12 @@ function runScoreAnalysis() {
   screenshotImg.src = 'https://image.thum.io/get/width/800/crop/500/' + url;
 }
 
-function showScoreResults() {
+async function showScoreResults() {
   document.getElementById('generatingMsg').style.display = 'none';
   const url = document.getElementById('scoreUrl').value;
 
-  // Use owleye-ai.js generateDemoScores
-  const scores = generateDemoScores(url);
+  // Await real AI scores (fetch started at scan begin — should already be resolved)
+  const scores = await (_scoresPromise || Promise.resolve(generateDemoScores(url)));
   const total = calcOwleyeTotal(scores);
   const upside = calcRevenueUpside(total);
   const band = getScoreBand(total);
