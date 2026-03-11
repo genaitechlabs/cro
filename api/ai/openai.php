@@ -10,13 +10,15 @@ class OpenAIProvider
 {
     private static string $endpoint = 'https://api.openai.com/v1/chat/completions';
 
-    // Must match OWLEYE_PILLARS flatMap order in owleye-ai.js
+    // Must match OWLEYE_PILLARS flatMap order in owleye-ai.js (13 params × 6 pillars)
     private static array $PARAMS = [
-        'checkout_flow', 'payment_options', 'cart_recovery',
-        'landing_page',  'product_pages',
-        'trust_signals', 'returns_policy',
-        'cross_sell',
-        'mobile_ux',
+        'checkout_flow', 'payment_options', 'cart_recovery',   // Purchase Flow
+        'landing_page',  'product_pages',                       // Page Experience
+        'trust_signals', 'returns_policy',                      // Trust & Conversion
+        'cross_sell',                                           // Engagement & Retention
+        'schema_markup', 'content_clarity',                     // Agentic Commerce
+        'ai_discoverability', 'conversational_ux',              // Agentic Commerce
+        'mobile_ux',                                            // Technical Foundation
     ];
 
     public static function analyse(string $url, string $html, ?string $desktop, ?string $mobile): array
@@ -48,18 +50,33 @@ SYS;
         $criteria = <<<CRIT
 Score each parameter 0–100 based on what you observe:
 
-- checkout_flow    : Steps to buy, progress indicators, form length, guest checkout
-- payment_options  : UPI, COD, cards, BNPL (Razorpay/PayU/Simpl/LazyPay) presence
-- cart_recovery    : Exit-intent, cart persistence, recovery messaging
-- landing_page     : Above-fold clarity, benefit headline, CTA prominence & placement
-- product_pages    : Image count/quality, reviews visibility, add-to-cart prominence
-- trust_signals    : SSL, trust badges, review count, security logos near buy button
-- returns_policy   : Policy visibility, plain language, placement near CTA
-- cross_sell       : Upsell/cross-sell modules, "frequently bought together", bundles
-- mobile_ux        : Mobile layout, tap target sizes, mobile-optimised checkout
+PURCHASE FLOW
+- checkout_flow      : Steps to buy, progress indicators, form length, guest checkout
+- payment_options    : UPI, COD, cards, BNPL (Razorpay/PayU/Simpl/LazyPay) presence
+- cart_recovery      : Exit-intent, cart persistence, recovery messaging
+
+PAGE EXPERIENCE
+- landing_page       : Above-fold clarity, benefit headline, CTA prominence & placement
+- product_pages      : Image count/quality, reviews visibility, add-to-cart prominence
+
+TRUST & CONVERSION
+- trust_signals      : SSL, trust badges, review count, security logos near buy button
+- returns_policy     : Policy visibility, plain language, placement near CTA
+
+ENGAGEMENT & RETENTION
+- cross_sell         : Upsell/cross-sell modules, "frequently bought together", bundles
+
+AGENTIC COMMERCE (how well AI agents can read and rank this store)
+- schema_markup      : Schema.org Product/Review/FAQ/BreadcrumbList structured data present in HTML
+- content_clarity    : Plain language copy, scannable headings, clear product descriptions for LLM parsing
+- ai_discoverability : Meta descriptions, OG tags, semantic HTML hierarchy, AI search signal quality
+- conversational_ux  : FAQ sections, chatbot/assistant presence, Q&A format content depth
+
+TECHNICAL FOUNDATION
+- mobile_ux          : Mobile layout, tap target sizes, mobile-optimised checkout
 CRIT;
 
-        $jsonTemplate = '{"checkout_flow":0,"payment_options":0,"cart_recovery":0,"landing_page":0,"product_pages":0,"trust_signals":0,"returns_policy":0,"cross_sell":0,"mobile_ux":0}';
+        $jsonTemplate = '{"checkout_flow":0,"payment_options":0,"cart_recovery":0,"landing_page":0,"product_pages":0,"trust_signals":0,"returns_policy":0,"cross_sell":0,"schema_markup":0,"content_clarity":0,"ai_discoverability":0,"conversational_ux":0,"mobile_ux":0}';
 
         $hasScreenshots = ($desktop !== null || $mobile !== null);
 

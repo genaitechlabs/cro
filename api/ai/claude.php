@@ -15,11 +15,13 @@ class ClaudeProvider
     private static string $version  = '2023-06-01';
 
     private static array $PARAMS = [
-        'checkout_flow', 'payment_options', 'cart_recovery',
-        'landing_page',  'product_pages',
-        'trust_signals', 'returns_policy',
-        'cross_sell',
-        'mobile_ux',
+        'checkout_flow', 'payment_options', 'cart_recovery',   // Purchase Flow
+        'landing_page',  'product_pages',                       // Page Experience
+        'trust_signals', 'returns_policy',                      // Trust & Conversion
+        'cross_sell',                                           // Engagement & Retention
+        'schema_markup', 'content_clarity',                     // Agentic Commerce
+        'ai_discoverability', 'conversational_ux',              // Agentic Commerce
+        'mobile_ux',                                            // Technical Foundation
     ];
 
     public static function analyse(string $url, string $html, ?string $desktop, ?string $mobile): array
@@ -40,7 +42,7 @@ class ClaudeProvider
     private static function systemPrompt(): string
     {
         return 'You are an expert CRO analyst specialising in Indian ecommerce. '
-             . 'Score websites on 9 conversion parameters from 0 to 100. '
+             . 'Score websites on 13 conversion parameters across 6 pillars from 0 to 100. '
              . 'Always respond with valid JSON only — no explanation, no markdown.';
     }
 
@@ -48,15 +50,31 @@ class ClaudeProvider
     {
         $criteria = <<<CRIT
 Score each parameter 0–100:
-- checkout_flow    : Steps to buy, progress indicators, form length, guest checkout
-- payment_options  : UPI, COD, cards, BNPL (Razorpay/PayU/Simpl/LazyPay)
-- cart_recovery    : Exit-intent, cart persistence, recovery messaging
-- landing_page     : Above-fold clarity, benefit headline, CTA prominence
-- product_pages    : Image count/quality, reviews, add-to-cart prominence
-- trust_signals    : SSL, trust badges, review count, security logos
-- returns_policy   : Policy visibility, plain language, placement near CTA
-- cross_sell       : Upsell/cross-sell modules, bundles, related products
-- mobile_ux        : Mobile layout, tap targets, mobile checkout flow
+
+PURCHASE FLOW
+- checkout_flow      : Steps to buy, progress indicators, form length, guest checkout
+- payment_options    : UPI, COD, cards, BNPL (Razorpay/PayU/Simpl/LazyPay)
+- cart_recovery      : Exit-intent, cart persistence, recovery messaging
+
+PAGE EXPERIENCE
+- landing_page       : Above-fold clarity, benefit headline, CTA prominence
+- product_pages      : Image count/quality, reviews, add-to-cart prominence
+
+TRUST & CONVERSION
+- trust_signals      : SSL, trust badges, review count, security logos
+- returns_policy     : Policy visibility, plain language, placement near CTA
+
+ENGAGEMENT & RETENTION
+- cross_sell         : Upsell/cross-sell modules, bundles, related products
+
+AGENTIC COMMERCE (how well AI agents can read and rank this store)
+- schema_markup      : Schema.org Product/Review/FAQ structured data in HTML
+- content_clarity    : Plain language copy, scannable headings for LLM parsing
+- ai_discoverability : Meta descriptions, OG tags, semantic HTML hierarchy
+- conversational_ux  : FAQ sections, chatbot presence, Q&A content depth
+
+TECHNICAL FOUNDATION
+- mobile_ux          : Mobile layout, tap targets, mobile checkout flow
 
 URL: {$url}
 HTML:
@@ -65,7 +83,7 @@ HTML:
 ```
 
 Respond ONLY with:
-{"checkout_flow":0,"payment_options":0,"cart_recovery":0,"landing_page":0,"product_pages":0,"trust_signals":0,"returns_policy":0,"cross_sell":0,"mobile_ux":0}
+{"checkout_flow":0,"payment_options":0,"cart_recovery":0,"landing_page":0,"product_pages":0,"trust_signals":0,"returns_policy":0,"cross_sell":0,"schema_markup":0,"content_clarity":0,"ai_discoverability":0,"conversational_ux":0,"mobile_ux":0}
 CRIT;
 
         $content = [['type' => 'text', 'text' => $criteria]];

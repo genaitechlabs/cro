@@ -63,7 +63,8 @@ document.querySelectorAll('.metric').forEach(m => ctrObs.observe(m));
 // ─────────────────────────────────────────
 // RADAR CHART (Canvas)
 // ─────────────────────────────────────────
-const RADAR_LABELS = ['Checkout', 'Payment', 'Cart Recovery', 'Landing Page', 'Product Pages', 'Trust', 'Returns', 'Cross-sell', 'Mobile UX'];
+// 6 pillar names — radar shows pillar-level scores, not individual parameters
+const RADAR_LABELS = ['Purchase Flow', 'Page Experience', 'Trust & Convert', 'Engagement', 'Agentic Commerce', 'Technical'];
 
 function drawRadar(canvasId, yourScores, avgScores, size) {
   const canvas = document.getElementById(canvasId);
@@ -130,7 +131,7 @@ function drawRadar(canvasId, yourScores, avgScores, size) {
     });
   }
 
-  drawPoly(avgScores, 'rgba(14,165,233,0.1)', 'rgba(14,165,233,0.55)');
+  if (avgScores) drawPoly(avgScores, 'rgba(14,165,233,0.1)', 'rgba(14,165,233,0.55)');
   drawPoly(yourScores, 'rgba(255,79,46,0.15)', 'rgba(255,79,46,0.9)');
 
   // Labels
@@ -154,14 +155,16 @@ function drawRadar(canvasId, yourScores, avgScores, size) {
 }
 
 // Hero radar — cycles every 3s with lerp animation
+// 6 values per scenario — one per pillar (Purchase, Page Exp, Trust, Engagement, Agentic, Technical)
 const HERO_SCENARIOS = [
-  [58, 65, 72, 55, 68, 60, 75, 50, 62],
-  [72, 48, 85, 62, 55, 78, 42, 68, 58],
-  [45, 80, 60, 75, 42, 55, 88, 52, 70],
-  [88, 62, 50, 45, 78, 65, 58, 75, 42],
-  [55, 72, 68, 82, 50, 70, 48, 60, 85],
+  [58, 65, 72, 55, 30, 62],   // typical store — weak on Agentic Commerce
+  [72, 48, 85, 62, 45, 58],   // great purchase + trust, low page exp + agentic
+  [45, 80, 60, 75, 55, 70],   // strong page + engagement, weak purchase flow
+  [88, 62, 50, 45, 38, 42],   // purchase optimised, poor agentic + engagement
+  [55, 72, 68, 82, 65, 85],   // engagement + tech leader, growing agentic score
 ];
-const HERO_AVG = [70, 68, 65, 72, 70, 68, 72, 66, 70];
+// Pillar-level industry averages — sourced from OWLEYE_PILLAR_AVG in owleye-ai.js
+const HERO_AVG = OWLEYE_PILLAR_AVG;
 let heroSceneIdx = 0, heroAnimPct = 0, heroRaf = null;
 let heroFrom = [...HERO_SCENARIOS[0]];
 let heroTo = [...HERO_SCENARIOS[0]];
@@ -233,13 +236,15 @@ setInterval(() => {
 // ─────────────────────────────────────────
 // REAL AI SCORE FETCHING
 // ─────────────────────────────────────────
-// Parameter order must match OWLEYE_PILLARS.flatMap in owleye-ai.js
+// Parameter order must match OWLEYE_PILLARS.flatMap in owleye-ai.js (13 params × 6 pillars)
 const PARAM_ORDER = [
-  'checkout_flow', 'payment_options', 'cart_recovery',
-  'landing_page',  'product_pages',
-  'trust_signals', 'returns_policy',
-  'cross_sell',
-  'mobile_ux',
+  'checkout_flow', 'payment_options', 'cart_recovery',          // Purchase Flow
+  'landing_page',  'product_pages',                             // Page Experience
+  'trust_signals', 'returns_policy',                            // Trust & Conversion
+  'cross_sell',                                                 // Engagement & Retention
+  'schema_markup', 'content_clarity',                           // Agentic Commerce
+  'ai_discoverability', 'conversational_ux',                    // Agentic Commerce
+  'mobile_ux',                                                  // Technical Foundation
 ];
 
 // Holds the in-flight API promise so animation + fetch run in parallel
@@ -276,6 +281,10 @@ const SCAN_PARAMS = [
   { name: 'Trust Signals', icon: '🤝', msgs: ['Looking for trust badges…', 'Scanning social proof…', 'Checking security indicators…'] },
   { name: 'Returns Policy', icon: '📋', msgs: ['Locating returns policy…', 'Evaluating visibility…', 'Scoring policy clarity…'] },
   { name: 'Cross-sell', icon: '⚡', msgs: ['Detecting upsell modules…', 'Checking bundle offers…', 'Scoring AOV optimisation…'] },
+  { name: 'Schema Markup', icon: '🔮', msgs: ['Checking schema markup…', 'Scanning structured data tags…', 'Validating JSON-LD implementation…'] },
+  { name: 'Content Clarity', icon: '🔮', msgs: ['Analysing copy for LLM readability…', 'Scoring plain-language usage…', 'Testing AI content parsing…'] },
+  { name: 'AI Discoverability', icon: '🔮', msgs: ['Testing AI search signals…', 'Checking meta structure…', 'Scanning semantic HTML hierarchy…'] },
+  { name: 'Conversational UX', icon: '🔮', msgs: ['Looking for FAQ sections…', 'Checking assistant presence…', 'Scanning Q&A content depth…'] },
   { name: 'Mobile UX', icon: '📱', msgs: ['Simulating mobile viewport…', 'Checking tap targets…', 'Measuring scroll depth…'] },
 ];
 
@@ -288,6 +297,10 @@ const FIXES_DB = [
   { param: 'Trust Signals', fix: 'Display verified photo reviews and trust badges near the buy button.' },
   { param: 'Returns Policy', fix: 'Show "30-day easy returns" prominently near CTA — removes #1 objection.' },
   { param: 'Cross-sell', fix: 'Add "Frequently bought together" bundles — 12–18% AOV uplift.' },
+  { param: 'Schema Markup', fix: 'Add Schema.org Product + Review markup — lets AI agents accurately read your catalogue.' },
+  { param: 'Content Clarity', fix: 'Rewrite product descriptions in plain language — AI agents relay these to shoppers verbatim.' },
+  { param: 'AI Discoverability', fix: 'Fix missing meta descriptions — ChatGPT Search and Perplexity pull these directly.' },
+  { param: 'Conversational UX', fix: 'Add a structured FAQ page — the primary source LLMs cite when answering product questions.' },
   { param: 'Mobile UX', fix: 'Reduce mobile checkout to 2 screens. 67% of Indian traffic is mobile.' },
 ];
 
@@ -490,7 +503,8 @@ async function showScoreResults() {
   setTimeout(() => {
     const radarRow = document.querySelector('.score-radar-row');
     const available = radarRow ? Math.max(220, radarRow.offsetWidth - 20) : 360;
-    drawRadar('scoreRadar', scores, OWLEYE_INDUSTRY_AVG, Math.min(360, available));
+    // Radar shows 6 pillar scores — parameters are secret ingredients
+    drawRadar('scoreRadar', getPillarScores(scores), null, Math.min(360, available));
   }, 300);
 
   // Pillar bars

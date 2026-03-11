@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════
    OWLEYE SCORE™ — owleye-ai.js
    AI scoring engine, benchmarks, and API endpoints spec
+   13 PARAMETERS × 6 PILLARS
    ═══════════════════════════════════════════════════════════════ */
 
 // ─────────────────────────────────────────
@@ -22,14 +23,15 @@ const OWLEYE_BENCHMARKS = {
 };
 
 // ─────────────────────────────────────────
-// 9 PARAMETERS × 5 PILLARS
+// 13 PARAMETERS × 6 PILLARS
+// Parameters are the secret ingredients — add freely without touching UI
 // ─────────────────────────────────────────
 const OWLEYE_PILLARS = [
   {
     id: 'purchase_flow',
     name: 'Purchase Flow',
     icon: '🛒',
-    weight: 30,
+    weight: 28,
     color: '#FF4F2E',
     description: 'The most critical pillar — covers the end-to-end buying journey from cart to confirmation.',
     parameters: [
@@ -74,8 +76,8 @@ const OWLEYE_PILLARS = [
   {
     id: 'page_experience',
     name: 'Page Experience',
-    icon: '📄',
-    weight: 25,
+    icon: '🗒️',
+    weight: 22,
     color: '#0EA5E9',
     description: 'Covers the quality and conversion-readiness of your landing pages and product detail pages.',
     parameters: [
@@ -109,7 +111,7 @@ const OWLEYE_PILLARS = [
     id: 'trust_conversion',
     name: 'Trust & Conversion',
     icon: '🤝',
-    weight: 20,
+    weight: 18,
     color: '#A8E535',
     description: 'Buyers need to trust your brand before they buy. This pillar measures signals that reduce purchase anxiety.',
     parameters: [
@@ -143,7 +145,7 @@ const OWLEYE_PILLARS = [
     id: 'engagement_retention',
     name: 'Engagement & Retention',
     icon: '⚡',
-    weight: 15,
+    weight: 12,
     color: '#F5C518',
     description: 'Maximising revenue per visit through intelligent cross-sell, upsell and re-engagement.',
     parameters: [
@@ -162,11 +164,69 @@ const OWLEYE_PILLARS = [
     ]
   },
   {
+    id: 'agentic_commerce',
+    name: 'Agentic Commerce',
+    icon: '🔮',
+    weight: 10,
+    color: '#A855F7',
+    description: 'As AI agents navigate the web on behalf of shoppers, your store must be readable and rankable by machines — not just humans.',
+    parameters: [
+      {
+        id: 'schema_markup',
+        name: 'Schema Markup',
+        max_pts: 10,
+        industry_avg: 25,
+        scan_msgs: ['Checking schema markup…', 'Scanning structured data tags…', 'Validating JSON-LD implementation…'],
+        fixes: {
+          low:  'Add Schema.org Product + Review markup — lets AI agents accurately read your catalogue.',
+          mid:  'Extend schema to include FAQPage and BreadcrumbList. Improves LLM and rich-result coverage.',
+          high: 'Schema markup is solid. Add Offer schema with price/availability for real-time AI indexing.',
+        }
+      },
+      {
+        id: 'content_clarity',
+        name: 'Content Clarity',
+        max_pts: 10,
+        industry_avg: 55,
+        scan_msgs: ['Analysing copy for LLM readability…', 'Scoring plain-language usage…', 'Testing AI content parsing…'],
+        fixes: {
+          low:  'Rewrite product descriptions in plain, conversational language — AI agents relay these to shoppers verbatim.',
+          mid:  'Add clear benefit statements to category pages. LLMs summarise these when answering shopping queries.',
+          high: 'Content reads clearly. Add structured comparison tables — highly referenced by AI shopping assistants.',
+        }
+      },
+      {
+        id: 'ai_discoverability',
+        name: 'AI Discoverability',
+        max_pts: 10,
+        industry_avg: 40,
+        scan_msgs: ['Testing AI search signals…', 'Checking meta structure…', 'Scanning semantic HTML hierarchy…'],
+        fixes: {
+          low:  'Fix missing/duplicate meta descriptions — ChatGPT Search and Perplexity pull these directly.',
+          mid:  'Add semantic heading hierarchy (H1→H2→H3). LLMs use this to understand page structure.',
+          high: 'AI discoverability is strong. Submit to Bing Webmaster (feeds Copilot) and update sitemap weekly.',
+        }
+      },
+      {
+        id: 'conversational_ux',
+        name: 'Conversational UX',
+        max_pts: 10,
+        industry_avg: 35,
+        scan_msgs: ['Looking for FAQ sections…', 'Checking assistant/chatbot presence…', 'Scanning Q&A content depth…'],
+        fixes: {
+          low:  'Add a well-structured FAQ page — the primary source LLMs cite when answering product questions.',
+          mid:  'Implement a WhatsApp or live chat touchpoint. AI-assisted chat converts 2.4× better than forms.',
+          high: 'Conversational UX is in place. Train your chat on top 20 objections to automate resolution.',
+        }
+      }
+    ]
+  },
+  {
     id: 'technical_foundation',
     name: 'Technical Foundation',
     icon: '📱',
     weight: 10,
-    color: '#A855F7',
+    color: '#14B8A6',
     description: 'Speed and mobile experience are table stakes. Poor technical performance kills conversions silently.',
     parameters: [
       {
@@ -190,8 +250,7 @@ const OWLEYE_PILLARS = [
 // ─────────────────────────────────────────
 
 /**
- * Generate a deterministic-ish score for a URL (demo mode)
- * In production: replace with actual Claude AI analysis
+ * Generate deterministic demo scores for a URL (fallback mode)
  */
 function generateDemoScores(url) {
   const seed = url.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
@@ -204,18 +263,13 @@ function generateDemoScores(url) {
 }
 
 /**
- * Calculate total OwlEye Score™ from parameter scores (weighted)
+ * Calculate total OwlEye Score™ from parameter scores (weighted by pillar)
  */
 function calcOwleyeTotal(paramScores) {
-  const allParams = OWLEYE_PILLARS.flatMap(p => p.parameters);
   let weightedSum = 0, totalWeight = 0;
-  OWLEYE_PILLARS.forEach(pillar => {
-    const pillarScores = pillar.parameters.map((param, pi) => {
-      const globalIdx = OWLEYE_PILLARS
-        .slice(0, OWLEYE_PILLARS.indexOf(pillar))
-        .reduce((a, p2) => a + p2.parameters.length, 0) + pi;
-      return paramScores[globalIdx];
-    });
+  OWLEYE_PILLARS.forEach((pillar, pi) => {
+    const base = OWLEYE_PILLARS.slice(0, pi).reduce((a, p) => a + p.parameters.length, 0);
+    const pillarScores = pillar.parameters.map((_, i) => paramScores[base + i]);
     const pillarAvg = pillarScores.reduce((a, b) => a + b, 0) / pillarScores.length;
     weightedSum += pillarAvg * pillar.weight;
     totalWeight += pillar.weight;
@@ -224,8 +278,18 @@ function calcOwleyeTotal(paramScores) {
 }
 
 /**
- * Slab-based score gain: how many points can realistically be added
- * based on current score band (returns a float)
+ * Convert flat param scores array → pillar-level scores array (for radar)
+ */
+function getPillarScores(paramScores) {
+  return OWLEYE_PILLARS.map((pillar, pi) => {
+    const base = OWLEYE_PILLARS.slice(0, pi).reduce((a, p) => a + p.parameters.length, 0);
+    const pArr = pillar.parameters.map((_, i) => paramScores[base + i]);
+    return Math.round(pArr.reduce((a, b) => a + b, 0) / pArr.length);
+  });
+}
+
+/**
+ * Slab-based score gain potential
  */
 function getSlabGain(score) {
   if (score >= 100) return 0;
@@ -233,30 +297,23 @@ function getSlabGain(score) {
   if (score >= 90)  return +(score * 0.050).toFixed(2);
   if (score >= 80)  return +(score * 0.075).toFixed(2);
   if (score >= 70)  return +(score * 0.100).toFixed(2);
-  return               +(score * 0.125).toFixed(2);   // ≤ 69
+  return               +(score * 0.125).toFixed(2);
 }
 
 /**
- * Calculate estimated revenue upside from slab-based score improvement
+ * Calculate estimated revenue upside from score improvement
  */
 function calcRevenueUpside(currentScore, visitors = 100000, aov = 1200) {
-  const scoreGain   = getSlabGain(currentScore);
-  const targetScore = +(currentScore + scoreGain).toFixed(1);
-  const cvrLiftPct  = +(scoreGain * OWLEYE_BENCHMARKS.cvr_lift_per_point).toFixed(2);
-  const extraOrders = Math.round(visitors * (cvrLiftPct / 100));
+  const scoreGain     = getSlabGain(currentScore);
+  const targetScore   = +(currentScore + scoreGain).toFixed(1);
+  const cvrLiftPct    = +(scoreGain * OWLEYE_BENCHMARKS.cvr_lift_per_point).toFixed(2);
+  const extraOrders   = Math.round(visitors * (cvrLiftPct / 100));
   const monthlyUpside = extraOrders * aov;
-  return {
-    scoreGain,
-    targetScore,
-    cvrLiftPct,
-    extraOrders,
-    monthlyUpside,
-    annualUpside: monthlyUpside * 12,
-  };
+  return { scoreGain, targetScore, cvrLiftPct, extraOrders, monthlyUpside, annualUpside: monthlyUpside * 12 };
 }
 
 /**
- * Get score band label + class
+ * Get score band label + CSS class
  */
 function getScoreBand(score) {
   if (score < 41) return { label: '⚠️ Critical',   cls: 'band-critical' };
@@ -277,78 +334,32 @@ function getFixForScore(paramId, score) {
 }
 
 // ─────────────────────────────────────────
-// INDUSTRY AVERAGE ARRAY (for radar chart)
+// INDUSTRY AVERAGE ARRAYS
 // ─────────────────────────────────────────
+
+// Parameter-level (13 values) — used internally
 const OWLEYE_INDUSTRY_AVG = OWLEYE_PILLARS
   .flatMap(p => p.parameters.map(param => param.industry_avg));
 
+// Pillar-level (6 values) — used for radar chart
+const OWLEYE_PILLAR_AVG = OWLEYE_PILLARS.map(pillar =>
+  Math.round(pillar.parameters.reduce((a, p) => a + p.industry_avg, 0) / pillar.parameters.length)
+);
+
 // ─────────────────────────────────────────
 // API ENDPOINT SPECIFICATION
-// (Implement server-side with Node/Express + PostgreSQL/Supabase)
 // ─────────────────────────────────────────
-
 /*
   POST /api/owleye/analyse
-  ─────────────────────────
-  Request:
-    { url: string }
-  Response:
-    {
-      id: uuid,
-      url: string,
-      scores: number[9],
-      total: number,
-      band: string,
-      pillar_breakdown: { [pillar_id]: number },
-      top_fixes: { param: string, score: number, fix: string }[],
-      revenue_upside: { scoreGap, cvrLiftPct, monthlyUpside, annualUpside },
-      created_at: ISO string
-    }
-
-  POST /api/owleye/gate
-  ─────────────────────────
-  Request:
-    { scan_id: uuid, name: string, email: string, phone?: string }
-  Response:
-    { success: true, report_url: string }
-  Side effects:
-    - Stores lead in `owleye_leads` table
-    - Triggers email with full PDF report
-
-  GET /api/owleye/scans
-  ─────────────────────────
-  Returns paginated scan history (admin auth required)
-  Response:
-    { scans: ScanRecord[], total: number, page: number }
-
-  ─────────────────────────
-  DATABASE SCHEMA (PostgreSQL / Supabase):
-  ─────────────────────────
-
-  CREATE TABLE owleye_scans (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    url         TEXT NOT NULL,
-    scores      JSONB NOT NULL,       -- { param_id: score }
-    total       SMALLINT NOT NULL,
-    band        TEXT NOT NULL,
-    created_at  TIMESTAMPTZ DEFAULT now()
-  );
-
-  CREATE TABLE owleye_leads (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    scan_id     UUID REFERENCES owleye_scans(id),
-    name        TEXT NOT NULL,
-    email       TEXT NOT NULL,
-    phone       TEXT,
-    report_sent BOOLEAN DEFAULT false,
-    created_at  TIMESTAMPTZ DEFAULT now()
-  );
-
-  CREATE TABLE owleye_benchmarks (
-    param_id    TEXT PRIMARY KEY,
-    industry_avg SMALLINT,
-    updated_at  TIMESTAMPTZ DEFAULT now()
-  );
+  Request:  { url: string }
+  Response: {
+    scores: { [param_id]: number },   // 13 parameters
+    total: number,
+    band: string,
+    pillar_breakdown: { [pillar_id]: number },
+    top_fixes: { param: string, score: number, fix: string }[],
+    revenue_upside: { scoreGain, cvrLiftPct, monthlyUpside, annualUpside }
+  }
 */
 
 // ─────────────────────────────────────────
@@ -356,14 +367,10 @@ const OWLEYE_INDUSTRY_AVG = OWLEYE_PILLARS
 // ─────────────────────────────────────────
 if (typeof module !== 'undefined') {
   module.exports = {
-    OWLEYE_PILLARS,
-    OWLEYE_BENCHMARKS,
-    OWLEYE_INDUSTRY_AVG,
-    generateDemoScores,
-    calcOwleyeTotal,
-    getSlabGain,
-    calcRevenueUpside,
-    getScoreBand,
-    getFixForScore,
+    OWLEYE_PILLARS, OWLEYE_BENCHMARKS,
+    OWLEYE_INDUSTRY_AVG, OWLEYE_PILLAR_AVG,
+    generateDemoScores, getPillarScores,
+    calcOwleyeTotal, getSlabGain,
+    calcRevenueUpside, getScoreBand, getFixForScore,
   };
 }
