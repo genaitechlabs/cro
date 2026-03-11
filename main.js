@@ -260,17 +260,23 @@ const PARAM_ORDER = [
 let _scoresPromise = null;
 
 async function fetchRealScores(url) {
+  // Hard 50s cap — prevents hanging forever if the target site is extremely slow
+  const controller = new AbortController();
+  const timeoutId  = setTimeout(() => controller.abort(), 50000);
+
   try {
     const res = await fetch('api/analyse.php', {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
+      body:    JSON.stringify({ url }),
+      signal:  controller.signal,
     });
+    clearTimeout(timeoutId);
     const data = await res.json();
-    // Known API error (e.g. not an ecommerce store, rate limit) — surface to user
+    // Known API error (e.g. not an ecommerce store, unreachable, rate limit)
     if (data.error && !data.scores) return { apiError: data.error, scores: null };
     const s = data.scores || {};
-    // Convert named object → array in PARAM_ORDER (matches generateDemoScores format)
+    // Convert named object → array in PARAM_ORDER
     return {
       scores:           PARAM_ORDER.map(k => (typeof s[k] === 'number' ? s[k] : 50)),
       previousScore:    typeof data.previous_score === 'number' ? data.previous_score : null,
@@ -281,9 +287,12 @@ async function fetchRealScores(url) {
       scanToken:        typeof data.scan_token === 'string'       ? data.scan_token       : null,
     };
   } catch (err) {
-    console.warn('[OwlEye] Network/parse error:', err.message);
-    // Surface error to user — never silently show fake demo scores on a real scan
-    return { apiError: 'The scan could not complete — the store may be temporarily unavailable or blocking automated requests. Please try again in a moment.', scores: null };
+    clearTimeout(timeoutId);
+    console.warn('[OwlEye] Fetch error:', err.message);
+    const msg = err.name === 'AbortError'
+      ? 'The scan timed out. The target site may be temporarily unavailable or very slow. Please try again in a moment.'
+      : 'The scan could not complete. Please check your connection and try again.';
+    return { apiError: msg, scores: null };
   }
 }
 
@@ -391,6 +400,10 @@ function runScoreAnalysis() {
   // Kick off real AI scoring immediately — runs in parallel with the scan animation
   _scoresPromise = fetchRealScores(url);
 
+  // Cache result as soon as it resolves — checked in scanNext() for early termination
+  let _resolvedApiData = null;
+  _scoresPromise.then(d => { _resolvedApiData = d; });
+
   document.getElementById('scoreBtn').disabled = true;
   document.getElementById('scoreUrl').readOnly = true;
   document.getElementById('screenshotPlaceholder').style.display = 'none';
@@ -448,6 +461,14 @@ function runScoreAnalysis() {
   const ctrEl = document.getElementById('scanCounterLabel');
 
   function scanNext() {
+    // Early exit: API already returned an error — stop animation immediately
+    if (_resolvedApiData?.apiError) {
+      document.getElementById('paramScanWrap').innerHTML = '';
+      document.getElementById('generatingMsg').style.display = 'none';
+      showScoreResults();
+      return;
+    }
+
     if (paramIdx >= SCAN_PARAMS.length) {
       rowEl.style.opacity = '0';
       setTimeout(() => {

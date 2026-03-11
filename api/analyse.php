@@ -73,11 +73,21 @@ if (defined('RATE_LIMIT_PER_HOUR') && RATE_LIMIT_PER_HOUR > 0 && defined('DB_NAM
 // Fetches home + discovers and fetches product, category, cart pages
 $pages = discoverAndFetchPages($url);
 
-// ── 3b. Extract JS-rendered flag before passing pages to AI ──────
+// ── 3b. Check if target site was unreachable ─────────────────────
+if (!empty($pages['_unreachable'])) {
+    $host = parse_url($url, PHP_URL_HOST) ?? $url;
+    http_response_code(400);
+    echo json_encode([
+        'error' => "The target site ({$host}) is not reachable. OwlEye scan can't perform the evaluation at this time. Please check the URL or try again later.",
+    ]);
+    exit;
+}
+
+// ── 3c. Extract JS-rendered flag before passing pages to AI ──────
 $jsRendered = !empty($pages['_js_rendered']);
 unset($pages['_js_rendered']);
 
-// ── 3c. Ecommerce store check ─────────────────────────────────────
+// ── 3d. Ecommerce store check ─────────────────────────────────────
 if (!isEcommerceStore($pages)) {
     $host = parse_url($url, PHP_URL_HOST) ?? $url;
     http_response_code(400);
@@ -222,7 +232,8 @@ function discoverAndFetchPages(string $url): array
 
     // Always fetch homepage first
     $homeHtml = fetchSinglePage($url);
-    if (!$homeHtml) return [];
+    // Empty response = site unreachable, down, or blocking — signal to caller
+    if (!$homeHtml) return ['_unreachable' => true];
 
     $pages = ['home' => cleanHtml($homeHtml, 'home')];
     if (detectJsRendered($homeHtml)) $pages['_js_rendered'] = true;
