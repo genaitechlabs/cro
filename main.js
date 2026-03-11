@@ -156,15 +156,19 @@ function drawRadar(canvasId, yourScores, avgScores, size) {
 
 // Hero radar — cycles every 3s with lerp animation
 // 6 values per scenario — one per pillar (Purchase, Page Exp, Trust, Engagement, Agentic, Technical)
+// Designed so scenarios fall mostly BELOW industry avg with isolated spikes — shows where stores lose revenue
 const HERO_SCENARIOS = [
-  [58, 65, 72, 55, 30, 62],   // typical store — weak on Agentic Commerce
-  [72, 48, 85, 62, 45, 58],   // great purchase + trust, low page exp + agentic
-  [45, 80, 60, 75, 55, 70],   // strong page + engagement, weak purchase flow
-  [88, 62, 50, 45, 38, 42],   // purchase optimised, poor agentic + engagement
-  [55, 72, 68, 82, 65, 85],   // engagement + tech leader, growing agentic score
+  [55, 60, 68, 42, 28, 58],   // typical store — below avg across board, agentic very weak
+  [70, 45, 82, 52, 38, 54],   // strong trust, low page exp + engagement + agentic
+  [42, 78, 55, 72, 48, 66],   // page exp + engagement spike, purchase flow critical
+  [85, 58, 48, 38, 32, 40],   // purchase optimised only — rest well below avg
+  [60, 72, 70, 75, 62, 80],   // close-to-avg store, technical + engagement leading
 ];
-// Pillar-level industry averages — sourced from OWLEYE_PILLAR_AVG in owleye-ai.js
-const HERO_AVG = OWLEYE_PILLAR_AVG;
+// Hero industry avg — fixed at ~4th radar ring (~78) for visual impact.
+// Decoupled from OWLEYE_PILLAR_AVG (used in real scoring) so the blue ring
+// sits clearly outward, showing the gap between most stores and best practice.
+// Order: Purchase Flow, Page Experience, Trust & Convert, Engagement, Agentic, Technical
+const HERO_AVG = [78, 74, 76, 70, 65, 74];
 let heroSceneIdx = 0, heroAnimPct = 0, heroRaf = null;
 let heroFrom = [...HERO_SCENARIOS[0]];
 let heroTo = [...HERO_SCENARIOS[0]];
