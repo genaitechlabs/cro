@@ -53,6 +53,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:18px 5%;display:flex
 .nav-links{display:flex;align-items:center;gap:24px}
 .nav-links a{color:var(--muted);text-decoration:none;font-size:.86rem;font-weight:500;transition:color .2s}
 .nav-links a:hover{color:var(--white)}
+/* WhatsApp nav link — desktop hidden, mobile only */
+.nav-whatsapp{display:none}
 /* Hamburger — hidden on desktop */
 .hamburger{display:none;flex-direction:column;justify-content:center;gap:5px;background:none;border:none;cursor:pointer;padding:6px;z-index:201}
 .hamburger span{display:block;width:24px;height:2px;background:var(--white);border-radius:2px;transition:transform .3s,opacity .3s}
@@ -326,6 +328,7 @@ footer{background:var(--ink2);border-top:1px solid var(--border);padding:40px 5%
 .footer-love-contact{margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.76rem;color:rgba(248,249,255,.35)}
 .footer-love-contact a{color:rgba(248,249,255,.4);text-decoration:none;transition:color .2s}
 .footer-love-contact a:hover{color:var(--coral)}
+.footer-whatsapp{display:inline-flex;align-items:center;gap:5px}
 .footer-love-contact .heart{color:#ef4444;animation:heartbeat 1.4s ease infinite}
 .footer-divider{color:rgba(248,249,255,.18)}
 @keyframes heartbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
@@ -381,9 +384,10 @@ footer{background:var(--ink2);border-top:1px solid var(--border);padding:40px 5%
   /* Hamburger visible on mobile */
   .hamburger{display:flex}
   /* Nav links become full-width dropdown */
-  .nav-links{display:none;flex-direction:column;align-items:stretch;gap:0;position:absolute;top:100%;left:0;right:0;background:rgba(11,17,32,.98);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);padding:8px 5% 16px}
+  .nav-links{display:none;flex-direction:column;align-items:stretch;gap:0;position:absolute;top:100%;left:0;right:0;background:rgba(11,17,32,1);border-bottom:1px solid var(--border);padding:8px 5% 16px}
   .nav-links.open{display:flex}
   .nav-links a:not(.btn){padding:14px 0;border-bottom:1px solid var(--border);font-size:1rem;color:var(--white)}
+  .nav-whatsapp{display:flex;align-items:center;gap:8px}
   .nav-links .btn{margin-top:12px;justify-content:center;text-align:center}
   /* Mobile radar between text and CTAs */
   .hero-radar-mobile-wrap{display:flex;flex-direction:column;align-items:center;margin:28px 0 8px}
