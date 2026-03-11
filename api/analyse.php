@@ -167,30 +167,44 @@ echo json_encode($result);
  */
 function isEcommerceStore(array $pages): bool
 {
-    $html = strtolower(
-        ($pages['home']     ?? '') .
-        ($pages['product']  ?? '') .
-        ($pages['category'] ?? '') .
-        ($pages['cart']     ?? '')
-    );
+    $rawHtml = ($pages['home'] ?? '') . ($pages['product'] ?? '') .
+               ($pages['category'] ?? '') . ($pages['cart'] ?? '');
+
+    // JSON-LD Product schema — definitive regardless of language/platform
+    if (stripos($rawHtml, '"@type":"product"') !== false ||
+        stripos($rawHtml, '"@type": "product"') !== false) {
+        return true;
+    }
+
+    // Work on lowercased ASCII-safe copy for English signal checks
+    $html = strtolower($rawHtml);
 
     // Platform signals — definitive
     foreach (['shopify', 'woocommerce', 'magento', 'opencart', 'prestashop', 'bigcommerce'] as $p) {
         if (strpos($html, $p) !== false) return true;
     }
 
-    // Cart / checkout actions — very strong signals
+    // Cart / checkout actions — English (very strong signals)
     $cartSignals = ['add to cart', 'add-to-cart', 'addtocart', '/cart', '/checkout',
                     'buy now', 'add to bag', '/basket', 'proceed to checkout'];
     foreach ($cartSignals as $s) {
         if (strpos($html, $s) !== false) return true;
     }
 
+    // Hindi ecommerce signals — strong signals for Indian stores
+    // खरीदें = Buy/Purchase | कार्ट = Cart | अभी खरीदें = Buy Now | डालें = Add (to cart)
+    foreach (['खरीदें', 'कार्ट', 'अभी खरीदें', 'कार्ट में'] as $s) {
+        if (strpos($rawHtml, $s) !== false) return true;
+    }
+
+    // ₹ appearing 3+ times = multiple product prices → very strong ecommerce signal
+    if (substr_count($rawHtml, '₹') >= 3) return true;
+
     // Product / price signals — require 2+ to reduce false positives
     $count = 0;
     foreach (['₹', 'mrp', '/products/', '/collections/', 'product-page',
               'free shipping', 'cash on delivery', ' cod ', 'add to wishlist',
-              'out of stock', 'in stock', 'buy', 'shop now'] as $s) {
+              'out of stock', 'in stock', 'pincode', 'delivery charges'] as $s) {
         if (strpos($html, $s) !== false && ++$count >= 2) return true;
     }
 

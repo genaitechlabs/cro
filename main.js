@@ -390,6 +390,7 @@ function runScoreAnalysis() {
   _scoresPromise = fetchRealScores(url);
 
   document.getElementById('scoreBtn').disabled = true;
+  document.getElementById('scoreUrl').readOnly = true;
   document.getElementById('screenshotPlaceholder').style.display = 'none';
   document.getElementById('scoreResults').classList.remove('show');
   document.getElementById('scoreResults').style.display = 'none';
@@ -707,8 +708,9 @@ async function showScoreResults() {
 }
 
 function resetScan() {
-  // Clear input; button goes disabled since input is now empty
+  // Clear input; restore editability; button disabled since input is now empty
   document.getElementById('scoreUrl').value = '';
+  document.getElementById('scoreUrl').readOnly = false;
   document.getElementById('scoreBtn').disabled = true;
   document.getElementById('urlError').style.display = 'none';
   // Reset right panel to empty state
