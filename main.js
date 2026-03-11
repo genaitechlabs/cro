@@ -529,10 +529,12 @@ async function showScoreResults() {
     scanOvEl.style.background = 'rgba(5,10,20,.88)';
     scanOvEl.style.backdropFilter = 'blur(4px)';
     scanOvEl.innerHTML =
-      '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:20px">' +
+      '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:24px">' +
       '<div style="font-size:2rem">🦉</div>' +
-      '<div style="font-size:.9rem;font-weight:700;color:var(--coral)">Scan could not complete</div>' +
-      '<div style="font-size:.78rem;color:rgba(248,249,255,.65);max-width:260px;line-height:1.6">' + apiData.apiError + '</div>' +
+      '<div style="font-size:.88rem;font-weight:700;color:var(--coral)">Scan could not complete</div>' +
+      '<div style="font-size:.75rem;color:rgba(248,249,255,.6);max-width:260px;line-height:1.65">' + apiData.apiError + '</div>' +
+      '<a href="https://topmate.io/productmentor/1026755" target="_blank" rel="noopener" ' +
+      'style="margin-top:4px;padding:8px 18px;background:var(--coral);color:#fff;border-radius:100px;font-size:.75rem;font-weight:700;text-decoration:none">Book Audit Call →</a>' +
       '</div>';
     return;
   }

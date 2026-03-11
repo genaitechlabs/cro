@@ -66,7 +66,7 @@ if (!isEcommerceStore($pages)) {
     $host = parse_url($url, PHP_URL_HOST) ?? $url;
     http_response_code(400);
     echo json_encode([
-        'error' => "{$host} doesn't appear to be an ecommerce store. OwlEye Score™ is designed for online shops with products and a checkout.",
+        'error' => "The OwlEye Scan could not determine {$host} as an online store. OwlEye Score™ is designed for online shops with products and a checkout. In case this is a genuine miss, book an audit call and we'll review it manually.",
     ]);
     exit;
 }
