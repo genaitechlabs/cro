@@ -101,6 +101,7 @@ SYS;
             'product'  => 'PRODUCT PAGE',
             'category' => 'CATEGORY / COLLECTION PAGE',
             'cart'     => 'CART PAGE',
+            'returns'  => 'RETURNS / REFUND POLICY PAGE',
         ];
 
         $pagesBlock = '';
@@ -132,7 +133,13 @@ PAGE EXPERIENCE
 
 TRUST & CONVERSION
 - trust_signals      [HOME PAGE]: SSL indicator, trust badges, review count, security logos near CTA
-- returns_policy     [HOME PAGE]: Returns/refund policy visibility, plain language, placement relative to CTA
+- returns_policy     [RETURNS / REFUND POLICY PAGE]: Score based on actual policy content —
+    81–100: 100% refund (money back to original payment) with simple process and clear timeline (7–15 days); easy cancellation before dispatch with full refund
+    61–80:  Refund with reasonable conditions (unused item, original packaging, within stated timeframe); cancellation allowed with minor restrictions
+    41–60:  Store credit / exchange only; OR conditions present but many exceptions or unclear process; cancellation with partial penalty
+    21–40:  Very restrictive — refund case-by-case, no clear timeline, complex or undisclosed conditions; cancellation not clearly allowed
+    0–20:   No refund policy stated, all sales final, or page not found
+    If page is missing, score 40.
 - social_proof       [PRODUCT PAGE]: Review volume, photo/video UGC, rating display, review recency
 - review_quality     [PRODUCT PAGE]: Review depth, rating distribution, verified buyer badges, brand responses
 - guarantee_signals  [PRODUCT PAGE]: Money-back guarantee, warranty, risk-reversal copy near buy button

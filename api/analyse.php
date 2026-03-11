@@ -136,7 +136,7 @@ echo json_encode($result);
 
 /**
  * Orchestrate: fetch home → detect platform → discover page URLs → parallel fetch.
- * Returns ['home' => html, 'product' => html, 'category' => html, 'cart' => html]
+ * Returns ['home' => html, 'product' => html, 'category' => html, 'cart' => html, 'returns' => html]
  */
 function discoverAndFetchPages(string $url): array
 {
@@ -205,7 +205,8 @@ function discoverPageUrls(string $base, string $html, string $platform): array
             $urls['category'] = $base . '/collections/' . $c['collections'][0]['handle'];
         }
 
-        $urls['cart'] = $base . '/cart';
+        $urls['cart']    = $base . '/cart';
+        $urls['returns'] = $base . '/policies/refund-policy'; // always present on Shopify
 
     } elseif ($platform === 'woocommerce') {
         // Try standard WooCommerce paths
@@ -253,6 +254,30 @@ function discoverPageUrls(string $base, string $html, string $platform): array
                     if (preg_match($pat, $link)) { $urls['cart'] = $link; break; }
                 }
             }
+        }
+    }
+
+    // Returns / refund policy — scan homepage links first, then platform defaults
+    if (!isset($urls['returns'])) {
+        $host = parse_url($base, PHP_URL_HOST);
+        preg_match_all(
+            '/href=["\']([^"\'#?]*(?:refund|return|cancell|polic)[^"\'?#]*)["\']/',
+            $html, $rm
+        );
+        foreach (($rm[1] ?? []) as $rlink) {
+            if (!preg_match('/^https?:\/\//i', $rlink)) {
+                $rlink = $base . '/' . ltrim($rlink, '/');
+            }
+            if (strpos($rlink, $host) !== false) {
+                $urls['returns'] = $rlink;
+                break;
+            }
+        }
+        if (!isset($urls['returns'])) {
+            $urls['returns'] = match ($platform) {
+                'woocommerce' => $base . '/refund_policy',
+                default       => $base . '/refund-policy',
+            };
         }
     }
 
@@ -339,8 +364,8 @@ function cleanHtml(string $html, string $type): string
     $html = preg_replace('/<!--.*?-->/s',                     '', $html);
     $html = preg_replace('/\s{2,}/',                          ' ', $html);
 
-    $limits = ['home' => 6000, 'product' => 4000, 'category' => 3000, 'cart' => 3000];
-    return mb_substr(trim($html), 0, $limits[$type] ?? 3000);
+    $limits = ['home' => 12000, 'product' => 8000, 'category' => 6000, 'cart' => 6000, 'returns' => 6000];
+    return mb_substr(trim($html), 0, $limits[$type] ?? 6000);
 }
 
 
@@ -365,7 +390,7 @@ const PARAM_PAGE_REQUIREMENT = [
     'sticky_atc'         => 'product',
     'category_pages'     => 'category',
     'trust_signals'      => 'home',
-    'returns_policy'     => 'home',
+    'returns_policy'     => 'returns',
     'social_proof'       => 'product',
     'review_quality'     => 'product',
     'guarantee_signals'  => 'product',
