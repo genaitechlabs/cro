@@ -432,51 +432,48 @@ function cleanHtml(string $html, string $type): string
 // ════════════════════════════════════════════════════════════════
 
 /**
- * Which page type is required to verify each parameter.
- * null  = always unverifiable (behaviour/session dependent)
- * 'psi' = verified via Google PSI API
- */
-const PARAM_PAGE_REQUIREMENT = [
-    'checkout_flow'      => 'cart',
-    'payment_options'    => 'cart',
-    'cart_recovery'      => null,      // session/behaviour — always unverifiable
-    'express_checkout'   => 'cart',
-    'cod_prominence'     => 'cart',
-    'landing_page'       => 'home',
-    'product_pages'      => 'product',
-    'search_ux'          => 'category',
-    'sticky_atc'         => 'product',
-    'category_pages'     => 'category',
-    'trust_signals'      => 'home',
-    'returns_policy'     => 'returns',
-    'social_proof'       => 'product',
-    'review_quality'     => 'product',
-    'guarantee_signals'  => 'product',
-    'cross_sell'         => 'product',
-    'email_capture'      => 'home',
-    'whatsapp_marketing' => 'home',
-    'schema_markup'      => 'home',
-    'content_clarity'    => 'home',
-    'ai_discoverability' => 'home',
-    'conversational_ux'  => 'home',
-    'open_graph_quality' => 'home',
-    'canonical_health'   => 'home',
-    'mobile_ux'          => 'home',
-    'page_speed'         => 'psi',
-    'navigation_clarity' => 'home',
-    'accessibility'      => 'home',
-];
-
-/**
  * Compute which params are verified vs unverified based on pages fetched.
+ * Page requirement map is defined as a static inside the function to ensure
+ * it is always available regardless of PHP execution order.
  */
 function computeVerification(array $pages, bool $psiConfigured): array
 {
+    static $PARAM_PAGE_REQUIREMENT = [
+        'checkout_flow'      => 'cart',
+        'payment_options'    => 'cart',
+        'cart_recovery'      => null,      // session/behaviour — always unverifiable
+        'express_checkout'   => 'cart',
+        'cod_prominence'     => 'cart',
+        'landing_page'       => 'home',
+        'product_pages'      => 'product',
+        'search_ux'          => 'category',
+        'sticky_atc'         => 'product',
+        'category_pages'     => 'category',
+        'trust_signals'      => 'home',
+        'returns_policy'     => 'returns',
+        'social_proof'       => 'product',
+        'review_quality'     => 'product',
+        'guarantee_signals'  => 'product',
+        'cross_sell'         => 'product',
+        'email_capture'      => 'home',
+        'whatsapp_marketing' => 'home',
+        'schema_markup'      => 'home',
+        'content_clarity'    => 'home',
+        'ai_discoverability' => 'home',
+        'conversational_ux'  => 'home',
+        'open_graph_quality' => 'home',
+        'canonical_health'   => 'home',
+        'mobile_ux'          => 'home',
+        'page_speed'         => 'psi',
+        'navigation_clarity' => 'home',
+        'accessibility'      => 'home',
+    ];
+
     $fetched    = array_keys($pages);
     $verified   = [];
     $unverified = [];
 
-    foreach (PARAM_PAGE_REQUIREMENT as $param => $req) {
+    foreach ($PARAM_PAGE_REQUIREMENT as $param => $req) {
         $ok = match (true) {
             $req === null            => false,
             $req === 'psi'           => $psiConfigured,
