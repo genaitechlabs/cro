@@ -15,6 +15,18 @@ header('Access-Control-Allow-Headers: Content-Type');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST')    { http_response_code(405); echo json_encode(['error' => 'Method not allowed']); exit; }
 
+// Catch fatal errors and return them as JSON instead of a blank 500
+register_shutdown_function(function () {
+    $e = error_get_last();
+    if ($e && in_array($e['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        if (!headers_sent()) {
+            http_response_code(500);
+            header('Content-Type: application/json');
+        }
+        echo json_encode(['error' => 'PHP fatal: ' . $e['message'] . ' in ' . $e['file'] . ':' . $e['line']]);
+    }
+});
+
 set_time_limit(90);
 ini_set('max_execution_time', 90);
 
