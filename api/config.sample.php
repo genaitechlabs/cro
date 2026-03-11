@@ -8,7 +8,7 @@
 // ── AI Provider ──────────────────────────────────────────────────
 // To switch providers: change AI_PROVIDER + AI_MODEL. Nothing else.
 define('AI_PROVIDER',    'openai');          // 'openai' | 'claude'
-define('AI_MODEL',       'gpt-4o');          // 'gpt-4o' | 'claude-opus-4-5'
+define('AI_MODEL',       'gpt-4o');          // 'gpt-4o' | 'claude-sonnet-4-6'
 
 define('OPENAI_API_KEY', 'sk-...');          // ← your OpenAI key
 define('CLAUDE_API_KEY', '');               // ← fill when switching to Claude
