@@ -2,10 +2,11 @@
 /* ═══════════════════════════════════════════════════════════════
    OWLEYE — api/ai/claude.php
    Claude (Anthropic) provider — 28 parameters × 6 pillars.
+   Receives multi-page HTML (home, product, category, cart).
 
    To switch: in config.php set
      define('AI_PROVIDER', 'claude');
-     define('AI_MODEL',    'claude-opus-4-5');
+     define('AI_MODEL',    'claude-sonnet-4-6');
      define('CLAUDE_API_KEY', 'sk-ant-...');
    ═══════════════════════════════════════════════════════════════ */
 
@@ -14,29 +15,29 @@ class ClaudeProvider
     private static string $endpoint = 'https://api.anthropic.com/v1/messages';
     private static string $version  = '2023-06-01';
 
-    // Must match OWLEYE_PILLARS flatMap order in owleye-ai.js (28 params × 6 pillars)
+    // Must match OWLEYE_PILLARS flatMap order in owleye-ai.js
     private static array $PARAMS = [
-        'checkout_flow', 'payment_options', 'cart_recovery',       // Purchase Flow
-        'express_checkout', 'cod_prominence',                        // Purchase Flow
-        'landing_page',  'product_pages', 'search_ux',              // Page Experience
-        'sticky_atc', 'category_pages',                              // Page Experience
-        'trust_signals', 'returns_policy', 'social_proof',          // Trust & Conversion
-        'review_quality', 'guarantee_signals',                       // Trust & Conversion
-        'cross_sell', 'email_capture', 'whatsapp_marketing',        // Engagement & Retention
-        'schema_markup', 'content_clarity',                          // Agentic Commerce
-        'ai_discoverability', 'conversational_ux',                   // Agentic Commerce
-        'open_graph_quality', 'canonical_health',                    // Agentic Commerce
-        'mobile_ux', 'page_speed',                                   // Technical Foundation
-        'navigation_clarity', 'accessibility',                       // Technical Foundation
+        'checkout_flow', 'payment_options', 'cart_recovery',
+        'express_checkout', 'cod_prominence',
+        'landing_page',  'product_pages', 'search_ux',
+        'sticky_atc', 'category_pages',
+        'trust_signals', 'returns_policy', 'social_proof',
+        'review_quality', 'guarantee_signals',
+        'cross_sell', 'email_capture', 'whatsapp_marketing',
+        'schema_markup', 'content_clarity',
+        'ai_discoverability', 'conversational_ux',
+        'open_graph_quality', 'canonical_health',
+        'mobile_ux', 'page_speed',
+        'navigation_clarity', 'accessibility',
     ];
 
-    public static function analyse(string $url, string $html, ?string $desktop, ?string $mobile): array
+    public static function analyse(string $url, array $pages, ?string $desktop, ?string $mobile): array
     {
-        $messages = self::buildMessages($url, $html, $desktop, $mobile);
+        $messages = self::buildMessages($url, $pages, $desktop, $mobile);
 
         $payload = [
             'model'      => AI_MODEL,
-            'max_tokens' => 400,
+            'max_tokens' => 600,
             'system'     => self::systemPrompt(),
             'messages'   => $messages,
         ];
@@ -47,83 +48,121 @@ class ClaudeProvider
 
     private static function systemPrompt(): string
     {
-        return 'You are an expert CRO analyst specialising in Indian ecommerce. '
-             . 'Score websites on 28 conversion parameters across 6 pillars from 0 to 100. '
-             . 'Always respond with valid JSON only — no explanation, no markdown.';
+        return <<<SYS
+You are a senior CRO analyst benchmarking Indian ecommerce stores against industry standards.
+You will receive HTML crawled from multiple pages of the same store — each section is clearly labelled.
+
+Score each of the 28 parameters from 0 to 100 using this exact rubric:
+  0–20  → Feature absent or critically broken
+  21–40 → Present but poorly implemented — ALSO USE 40 when a parameter CANNOT be verified from the provided pages
+  41–60 → Meets basic standard; average Indian ecommerce performance
+  61–80 → Good implementation; above Indian D2C average
+  81–100 → Best practice; top 10% of Indian ecommerce
+
+CRITICAL RULES:
+1. Score exactly 40 for any parameter marked [UNVERIFIABLE] or whose required page was not provided or is empty.
+2. Indian ecommerce standards apply: COD is an expected feature (not a bonus), UPI is the dominant payment method, WhatsApp marketing is standard practice for Indian D2C.
+3. Benchmark against Indian D2C stores — not Western ecommerce platforms.
+4. Respond with valid JSON only — no explanation, no markdown.
+
+SCORE CALIBRATION ANCHORS:
+• Top Indian store (Mamaearth/Nykaa-tier): checkout_flow≈78, payment_options≈85, trust_signals≈75, product_pages≈80
+• Average Indian D2C store: checkout_flow≈48, payment_options≈58, trust_signals≈45, product_pages≈52
+• Poor performer: checkout_flow≈22, payment_options≈30, trust_signals≈18, product_pages≈25
+SYS;
     }
 
-    private static function buildMessages(string $url, string $html, ?string $desktop, ?string $mobile): array
+    private static function buildMessages(string $url, array $pages, ?string $desktop, ?string $mobile): array
     {
-        $criteria = <<<CRIT
-Score each parameter 0–100:
+        $userText = self::buildUserPrompt($url, $pages);
+        $content  = [['type' => 'text', 'text' => $userText]];
 
-PURCHASE FLOW
-- checkout_flow      : Steps to buy, progress indicators, form length, guest checkout
-- payment_options    : UPI, COD, cards, BNPL (Razorpay/PayU/Simpl/LazyPay)
-- cart_recovery      : Exit-intent, cart persistence, recovery messaging
-- express_checkout   : One-click/instant buy, Google Pay, PhonePe express options
-- cod_prominence     : Cash on Delivery visibility, placement in checkout hierarchy
-
-PAGE EXPERIENCE
-- landing_page       : Above-fold clarity, benefit headline, CTA prominence
-- product_pages      : Image count/quality, reviews, add-to-cart prominence
-- search_ux          : Autocomplete, typo tolerance, search result relevance
-- sticky_atc         : Sticky add-to-cart bar on mobile scroll
-- category_pages     : Filter/sort options, product card quality, listing layout
-
-TRUST & CONVERSION
-- trust_signals      : SSL, trust badges, review count, security logos
-- returns_policy     : Policy visibility, plain language, placement near CTA
-- social_proof       : Review volume, photo/video reviews, UGC presence
-- review_quality     : Review depth, recency, rating distribution, verified buyer badges
-- guarantee_signals  : Money-back guarantee, warranty, risk-reversal copy near CTA
-
-ENGAGEMENT & RETENTION
-- cross_sell         : Upsell/cross-sell modules, bundles, related products
-- email_capture      : Email popup, exit-intent capture, lead magnet quality
-- whatsapp_marketing : WhatsApp opt-in, abandoned cart, order tracking via WhatsApp
-
-AGENTIC COMMERCE (how well AI agents can read and rank this store)
-- schema_markup      : Schema.org Product/Review/FAQ structured data in HTML
-- content_clarity    : Plain language copy, scannable headings for LLM parsing
-- ai_discoverability : Meta descriptions, OG tags, semantic HTML hierarchy
-- conversational_ux  : FAQ sections, chatbot presence, Q&A content depth
-- open_graph_quality : og:title, og:description, og:image presence and quality
-- canonical_health   : Canonical tags on product/category pages, URL de-duplication
-
-TECHNICAL FOUNDATION
-- mobile_ux          : Mobile layout, tap targets, mobile checkout flow
-- page_speed         : Estimated Lighthouse mobile score (0–100), Core Web Vitals signals
-- navigation_clarity : Top-level menu structure, category hierarchy, discoverability
-- accessibility      : Alt text, colour contrast, ARIA labels, keyboard navigation
-
-URL: {$url}
-HTML:
-```
-{$html}
-```
-
-Respond ONLY with:
-{"checkout_flow":0,"payment_options":0,"cart_recovery":0,"express_checkout":0,"cod_prominence":0,"landing_page":0,"product_pages":0,"search_ux":0,"sticky_atc":0,"category_pages":0,"trust_signals":0,"returns_policy":0,"social_proof":0,"review_quality":0,"guarantee_signals":0,"cross_sell":0,"email_capture":0,"whatsapp_marketing":0,"schema_markup":0,"content_clarity":0,"ai_discoverability":0,"conversational_ux":0,"open_graph_quality":0,"canonical_health":0,"mobile_ux":0,"page_speed":0,"navigation_clarity":0,"accessibility":0}
-CRIT;
-
-        $content = [['type' => 'text', 'text' => $criteria]];
-
-        // Claude vision: images come before text in the content array
-        if ($desktop !== null) {
-            array_unshift($content, [
-                'type'   => 'image',
-                'source' => ['type' => 'base64', 'media_type' => 'image/jpeg', 'data' => $desktop],
-            ]);
-        }
+        // Claude: images come before text
         if ($mobile !== null) {
             array_unshift($content, [
                 'type'   => 'image',
                 'source' => ['type' => 'base64', 'media_type' => 'image/jpeg', 'data' => $mobile],
             ]);
         }
+        if ($desktop !== null) {
+            array_unshift($content, [
+                'type'   => 'image',
+                'source' => ['type' => 'base64', 'media_type' => 'image/jpeg', 'data' => $desktop],
+            ]);
+        }
 
         return [['role' => 'user', 'content' => $content]];
+    }
+
+    private static function buildUserPrompt(string $url, array $pages): string
+    {
+        $labels = [
+            'home'     => 'HOME PAGE',
+            'product'  => 'PRODUCT PAGE',
+            'category' => 'CATEGORY / COLLECTION PAGE',
+            'cart'     => 'CART PAGE',
+        ];
+
+        $pagesBlock = '';
+        foreach ($labels as $type => $label) {
+            if (!empty($pages[$type])) {
+                $pagesBlock .= "\n=== {$label} ({$url}) ===\n{$pages[$type]}\n";
+            } else {
+                $pagesBlock .= "\n=== {$label} ===\n[Page not accessible — score {$label}-dependent parameters at 40]\n";
+            }
+        }
+
+        $criteria = <<<CRIT
+Score each parameter using only evidence from the labelled page sections above:
+
+PURCHASE FLOW — draw evidence from CART PAGE
+- checkout_flow      [CART PAGE]: Steps to complete purchase, progress bar, guest checkout option, form length
+- payment_options    [CART PAGE]: UPI (GPay/PhonePe/Paytm), COD, cards, BNPL (Razorpay/Simpl/LazyPay) visibility
+- cart_recovery      [UNVERIFIABLE — score 40]: Requires active session; exit-intent/email recovery cannot be observed
+- express_checkout   [CART PAGE]: One-click buy, Google Pay express, PhonePe instant checkout option
+- cod_prominence     [CART PAGE]: COD badge/label visibility, position in payment method hierarchy
+
+PAGE EXPERIENCE
+- landing_page       [HOME PAGE]: Above-fold clarity, hero headline quality, primary CTA placement & copy
+- product_pages      [PRODUCT PAGE]: Image count/quality, reviews placement, ATC button prominence, product video
+- search_ux          [CATEGORY PAGE]: Search bar, autocomplete quality, typo tolerance, filter/sort controls
+- sticky_atc         [PRODUCT PAGE]: Sticky add-to-cart bar visible while scrolling, mobile-optimised persistence
+- category_pages     [CATEGORY PAGE]: Filter/sort options, product grid quality, listing layout, pagination
+
+TRUST & CONVERSION
+- trust_signals      [HOME PAGE]: SSL indicator, trust badges, review count, security logos near CTA
+- returns_policy     [HOME PAGE]: Returns/refund policy visibility, plain language, placement relative to CTA
+- social_proof       [PRODUCT PAGE]: Review volume, photo/video UGC, rating display, review recency
+- review_quality     [PRODUCT PAGE]: Review depth, rating distribution, verified buyer badges, brand responses
+- guarantee_signals  [PRODUCT PAGE]: Money-back guarantee, warranty, risk-reversal copy near buy button
+
+ENGAGEMENT & RETENTION
+- cross_sell         [PRODUCT PAGE]: Related products, "frequently bought together" modules, bundle offers
+- email_capture      [HOME PAGE]: Email popup, exit-intent capture, lead magnet quality, newsletter signup
+- whatsapp_marketing [HOME PAGE]: WhatsApp opt-in widget, chat button, marketing touchpoint visibility
+
+AGENTIC COMMERCE — how well AI agents can read and rank this store
+- schema_markup      [HOME PAGE]: JSON-LD Product/Review/FAQ/BreadcrumbList structured data present in HTML
+- content_clarity    [HOME PAGE]: Plain-language copy, scannable headings, LLM-parseable structure
+- ai_discoverability [HOME PAGE]: Meta descriptions, semantic HTML hierarchy, heading tag structure
+- conversational_ux  [HOME PAGE]: FAQ section depth, chatbot presence, structured Q&A content
+- open_graph_quality [HOME PAGE]: og:title, og:description, og:image presence and quality
+- canonical_health   [HOME PAGE]: Canonical tags present, URL structure clarity, no obvious duplication
+
+TECHNICAL FOUNDATION
+- mobile_ux          [HOME PAGE]: Viewport meta, mobile layout signals, tap target size indicators
+- page_speed         [PSI API — already injected if available, otherwise estimate from HTML signals]
+- navigation_clarity [HOME PAGE]: Top-level menu structure, category hierarchy, mega-menu quality
+- accessibility      [HOME PAGE]: Alt text on images, colour contrast signals, ARIA labels, semantic HTML
+CRIT;
+
+        $jsonTemplate = '{"checkout_flow":0,"payment_options":0,"cart_recovery":0,"express_checkout":0,"cod_prominence":0,"landing_page":0,"product_pages":0,"search_ux":0,"sticky_atc":0,"category_pages":0,"trust_signals":0,"returns_policy":0,"social_proof":0,"review_quality":0,"guarantee_signals":0,"cross_sell":0,"email_capture":0,"whatsapp_marketing":0,"schema_markup":0,"content_clarity":0,"ai_discoverability":0,"conversational_ux":0,"open_graph_quality":0,"canonical_health":0,"mobile_ux":0,"page_speed":0,"navigation_clarity":0,"accessibility":0}';
+
+        return "Analyse this Indian ecommerce store: {$url}\n"
+             . $pagesBlock . "\n"
+             . $criteria . "\n\n"
+             . "Respond with ONLY this JSON structure (fill in real scores):\n"
+             . $jsonTemplate;
     }
 
     private static function callApi(array $payload): string
@@ -138,7 +177,7 @@ CRIT;
                 'x-api-key: '         . CLAUDE_API_KEY,
                 'anthropic-version: ' . self::$version,
             ],
-            CURLOPT_TIMEOUT        => 45,
+            CURLOPT_TIMEOUT        => 50,
             CURLOPT_SSL_VERIFYPEER => true,
         ]);
 
@@ -150,7 +189,6 @@ CRIT;
             error_log('[OwlEye] Claude cURL error: ' . $curlErr);
             return '';
         }
-
         return $result;
     }
 
@@ -168,10 +206,7 @@ CRIT;
             return ['error' => $msg, 'scores' => $fallback];
         }
 
-        // Claude returns content as array of blocks
         $content = $data['content'][0]['text'] ?? '{}';
-
-        // Strip any accidental markdown fences
         $content = preg_replace('/```[a-z]*\n?|\n?```/', '', $content);
 
         $raw    = json_decode(trim($content), true) ?? [];

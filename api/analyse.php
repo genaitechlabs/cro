@@ -3,7 +3,8 @@
    OWLEYE — api/analyse.php
    Main scoring endpoint.
    POST { url: "https://store.com" }
-   Returns { scores, pillar_scores, owleye_score, scan_token? }
+   Returns { scores, pillar_scores, owleye_score, verified_count,
+             unverified_params, pages_scanned, scan_token? }
    ═══════════════════════════════════════════════════════════════ */
 
 header('Content-Type: application/json');
@@ -14,8 +15,8 @@ header('Access-Control-Allow-Headers: Content-Type');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST')    { http_response_code(405); echo json_encode(['error' => 'Method not allowed']); exit; }
 
-set_time_limit(60);
-ini_set('max_execution_time', 60);
+set_time_limit(90);
+ini_set('max_execution_time', 90);
 
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
@@ -33,7 +34,7 @@ if (!$url || !filter_var($url, FILTER_VALIDATE_URL) || !preg_match('/^https?:\/\
     exit;
 }
 
-$urlNorm = normalizeUrl($url); // bare host for cross-URL matching (e.g. mynykaa.com)
+$urlNorm = normalizeUrl($url);
 
 // ── 2. Rate limit check ──────────────────────────────────────────
 $ip = getClientIp();
@@ -44,9 +45,7 @@ if (defined('RATE_LIMIT_PER_HOUR') && RATE_LIMIT_PER_HOUR > 0 && defined('DB_NAM
             'SELECT COUNT(*) FROM owleye_scans WHERE ip = ? AND created_at > NOW() - INTERVAL 1 HOUR'
         );
         $stmt->execute([$ip]);
-        $scanCount = (int) $stmt->fetchColumn();
-
-        if ($scanCount >= RATE_LIMIT_PER_HOUR) {
+        if ((int) $stmt->fetchColumn() >= RATE_LIMIT_PER_HOUR) {
             http_response_code(429);
             echo json_encode([
                 'error' => 'Rate limit reached. Maximum ' . RATE_LIMIT_PER_HOUR . ' scans per hour. Please try again later.',
@@ -55,22 +54,23 @@ if (defined('RATE_LIMIT_PER_HOUR') && RATE_LIMIT_PER_HOUR > 0 && defined('DB_NAM
         }
     } catch (Exception $e) {
         error_log('[OwlEye] Rate limit check failed: ' . $e->getMessage());
-        // DB unavailable — don't block the scan, just log
     }
 }
 
-// ── 3. Fetch page HTML ───────────────────────────────────────────
-$html = fetchPageHtml($url);
+// ── 3. Multi-page crawl ──────────────────────────────────────────
+// Fetches home + discovers and fetches product, category, cart pages
+$pages = discoverAndFetchPages($url);
 
-// ── 4. Screenshots — null if no key configured yet ───────────────
+// ── 4. Screenshots (homepage only) ───────────────────────────────
 $desktop = ScreenshotAdapter::capture($url, 'desktop');
 $mobile  = ScreenshotAdapter::capture($url, 'mobile');
 
 // ── 5. AI analysis ───────────────────────────────────────────────
-$result = AiAdapter::analyse($url, $html, $desktop, $mobile);
+$result = AiAdapter::analyse($url, $pages, $desktop, $mobile);
 
 // ── 6. PageSpeed Insights — overrides AI estimate for page_speed ─
-if (defined('GOOGLE_PSI_KEY') && GOOGLE_PSI_KEY) {
+$psiConfigured = defined('GOOGLE_PSI_KEY') && GOOGLE_PSI_KEY;
+if ($psiConfigured) {
     require_once __DIR__ . '/pagespeed/PageSpeedAdapter.php';
     $psiScore = PageSpeedAdapter::score($url);
     if ($psiScore !== null && isset($result['scores'])) {
@@ -78,14 +78,20 @@ if (defined('GOOGLE_PSI_KEY') && GOOGLE_PSI_KEY) {
     }
 }
 
-// ── 7. Compute pillar scores + OwlEye total (PHP mirror of owleye-ai.js) ─
+// ── 7. Compute pillar scores + OwlEye total ──────────────────────
 if (isset($result['scores'])) {
     $computed = computeOwleyeScores($result['scores']);
     $result['owleye_score']  = $computed['owleye_score'];
     $result['pillar_scores'] = $computed['pillar_scores'];
 }
 
-// ── 8. Persist to database ───────────────────────────────────────
+// ── 8. Compute verified / unverified params ───────────────────────
+$verification = computeVerification($pages, $psiConfigured);
+$result['verified_count']    = $verification['verified_count'];
+$result['unverified_params'] = $verification['unverified_params'];
+$result['pages_scanned']     = $verification['pages_scanned'];
+
+// ── 9. Persist to database ───────────────────────────────────────
 if (isset($result['scores']) && defined('DB_NAME') && DB_NAME) {
     try {
         $token = generateScanToken();
@@ -118,7 +124,6 @@ if (isset($result['scores']) && defined('DB_NAME') && DB_NAME) {
         }
     } catch (Exception $e) {
         error_log('[OwlEye] Scan save failed: ' . $e->getMessage());
-        // Don't fail the request — scan result still returned
     }
 }
 
@@ -126,58 +131,293 @@ echo json_encode($result);
 
 
 // ════════════════════════════════════════════════════════════════
-// Helper functions
+// Multi-page crawl helpers
 // ════════════════════════════════════════════════════════════════
 
 /**
- * Strip protocol + www + path → bare host for cross-URL deduplication.
- * e.g. https://www.mynykaa.com/sale → mynykaa.com
+ * Orchestrate: fetch home → detect platform → discover page URLs → parallel fetch.
+ * Returns ['home' => html, 'product' => html, 'category' => html, 'cart' => html]
  */
-function normalizeUrl(string $url): string
+function discoverAndFetchPages(string $url): array
 {
-    $host = parse_url(strtolower(trim($url)), PHP_URL_HOST) ?? '';
-    return preg_replace('/^www\./i', '', $host) ?: strtolower(trim($url));
+    $base = preg_replace('/^(https?:\/\/[^\/]+).*$/i', '$1', $url);
+    $base = rtrim($base, '/');
+
+    // Always fetch homepage first
+    $homeHtml = fetchSinglePage($url);
+    if (!$homeHtml) return [];
+
+    $pages = ['home' => cleanHtml($homeHtml, 'home')];
+
+    // Detect platform
+    $platform = detectPlatform($homeHtml);
+
+    // Discover page URLs
+    $urlsToFetch = discoverPageUrls($base, $homeHtml, $platform);
+    if (empty($urlsToFetch)) return $pages;
+
+    // Fetch discovered pages in parallel
+    $fetched = fetchPagesParallel($urlsToFetch);
+    foreach ($fetched as $type => $html) {
+        $pages[$type] = cleanHtml($html, $type);
+    }
+
+    return $pages;
 }
 
 /**
- * Fetch and clean page HTML for AI analysis.
+ * Detect ecommerce platform from homepage HTML signals.
  */
-function fetchPageHtml(string $url): string
+function detectPlatform(string $html): string
+{
+    if (strpos($html, 'cdn.shopify.com') !== false
+     || strpos($html, 'myshopify.com')  !== false
+     || strpos($html, 'Shopify.theme')   !== false) {
+        return 'shopify';
+    }
+    if (strpos($html, 'woocommerce')            !== false
+     || strpos($html, 'wp-content/plugins')     !== false) {
+        return 'woocommerce';
+    }
+    return 'generic';
+}
+
+/**
+ * Discover product, category, and cart URLs based on platform.
+ * Shopify: uses /products.json and /collections.json (no auth required).
+ * WooCommerce/generic: parses homepage links.
+ */
+function discoverPageUrls(string $base, string $html, string $platform): array
+{
+    $urls = [];
+
+    if ($platform === 'shopify') {
+        // Shopify JSON endpoints — unauthenticated, always available
+        $pJson = fetchSinglePage($base . '/products.json?limit=1');
+        $p     = json_decode($pJson, true);
+        if (!empty($p['products'][0]['handle'])) {
+            $urls['product'] = $base . '/products/' . $p['products'][0]['handle'];
+        }
+
+        $cJson = fetchSinglePage($base . '/collections.json?limit=1');
+        $c     = json_decode($cJson, true);
+        if (!empty($c['collections'][0]['handle'])) {
+            $urls['category'] = $base . '/collections/' . $c['collections'][0]['handle'];
+        }
+
+        $urls['cart'] = $base . '/cart';
+
+    } elseif ($platform === 'woocommerce') {
+        // Try standard WooCommerce paths
+        $urls['category'] = $base . '/shop';
+        $urls['cart']     = $base . '/cart';
+
+        // Find product link from homepage
+        $host = parse_url($base, PHP_URL_HOST);
+        preg_match_all('/href=["\']([^"\'#?]*\/product\/[^"\'?#]+)["\']/', $html, $m);
+        $candidates = array_filter($m[1] ?? [], fn($l) => strpos($l, $host) !== false || str_starts_with($l, '/'));
+        if (!empty($candidates)) {
+            $link = reset($candidates);
+            $urls['product'] = str_starts_with($link, 'http') ? $link : $base . $link;
+        }
+
+    } else {
+        // Generic: score all homepage links by pattern
+        preg_match_all('/href=["\']([^"\'#?]{5,})["\']/', $html, $m);
+        $host  = parse_url($base, PHP_URL_HOST);
+        $links = array_unique($m[1] ?? []);
+
+        $productPats  = ['/\/(products?|item|p|pd)\/[^\/]{3,}/i'];
+        $categoryPats = ['/\/(collections?|categor|shop|browse|c)\/[^\/]{2,}/i', '/\/shop\/?$/i'];
+        $cartPats     = ['/\/(cart|checkout|bag)\/?$/i'];
+
+        foreach ($links as $link) {
+            // Normalise to absolute
+            if (!preg_match('/^https?:\/\//i', $link)) {
+                $link = $base . '/' . ltrim($link, '/');
+            }
+            if (strpos($link, $host) === false) continue;
+
+            if (!isset($urls['product'])) {
+                foreach ($productPats as $pat) {
+                    if (preg_match($pat, $link)) { $urls['product'] = $link; break; }
+                }
+            }
+            if (!isset($urls['category'])) {
+                foreach ($categoryPats as $pat) {
+                    if (preg_match($pat, $link)) { $urls['category'] = $link; break; }
+                }
+            }
+            if (!isset($urls['cart'])) {
+                foreach ($cartPats as $pat) {
+                    if (preg_match($pat, $link)) { $urls['cart'] = $link; break; }
+                }
+            }
+        }
+    }
+
+    return $urls;
+}
+
+/**
+ * Fetch multiple URLs in parallel using cURL multi-handle.
+ * Returns ['type' => 'raw html'] — only entries where response > 500 bytes.
+ */
+function fetchPagesParallel(array $urls): array
+{
+    $mh      = curl_multi_init();
+    $handles = [];
+
+    foreach ($urls as $type => $url) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS      => 3,
+            CURLOPT_TIMEOUT        => 10,
+            CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; OwlEye-Scanner/1.0; +https://genaitechlabs.com)',
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_HTTPHEADER     => ['Accept-Language: en-US,en;q=0.9'],
+        ]);
+        curl_multi_add_handle($mh, $ch);
+        $handles[$type] = $ch;
+    }
+
+    $running = null;
+    do {
+        curl_multi_exec($mh, $running);
+        curl_multi_select($mh, 0.1);
+    } while ($running > 0);
+
+    $results = [];
+    foreach ($handles as $type => $ch) {
+        $html = curl_multi_getcontent($ch);
+        if ($html && strlen($html) > 500) {
+            $results[$type] = $html;
+        }
+        curl_multi_remove_handle($mh, $ch);
+        curl_close($ch);
+    }
+    curl_multi_close($mh);
+
+    return $results;
+}
+
+/**
+ * Fetch a single URL synchronously (used for platform/URL discovery).
+ */
+function fetchSinglePage(string $url): string
 {
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_MAXREDIRS      => 5,
-        CURLOPT_TIMEOUT        => 12,
-        CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; OwlEye-Scanner/1.0; +https://genaitechlabs.com/cro)',
+        CURLOPT_MAXREDIRS      => 3,
+        CURLOPT_TIMEOUT        => 8,
+        CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; OwlEye-Scanner/1.0; +https://genaitechlabs.com)',
         CURLOPT_SSL_VERIFYPEER => true,
         CURLOPT_HTTPHEADER     => ['Accept-Language: en-US,en;q=0.9'],
     ]);
-    $html = curl_exec($ch);
+    $html    = curl_exec($ch);
+    $curlErr = curl_error($ch);
     curl_close($ch);
 
-    if (!$html) return '';
+    if ($curlErr) {
+        error_log('[OwlEye] Fetch error for ' . $url . ': ' . $curlErr);
+        return '';
+    }
+    return $html ?: '';
+}
 
-    // Strip noise — keep meaningful text + structure
+/**
+ * Strip scripts/styles/comments and truncate to per-type char limit.
+ */
+function cleanHtml(string $html, string $type): string
+{
     $html = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html);
     $html = preg_replace('/<style\b[^>]*>.*?<\/style>/is',   '', $html);
     $html = preg_replace('/<!--.*?-->/s',                     '', $html);
     $html = preg_replace('/\s{2,}/',                          ' ', $html);
 
-    // Truncate to 8 000 chars — enough context, manageable token count
-    return mb_substr(trim($html), 0, 8000);
+    $limits = ['home' => 6000, 'product' => 4000, 'category' => 3000, 'cart' => 3000];
+    return mb_substr(trim($html), 0, $limits[$type] ?? 3000);
+}
+
+
+// ════════════════════════════════════════════════════════════════
+// Scoring helpers
+// ════════════════════════════════════════════════════════════════
+
+/**
+ * Which page type is required to verify each parameter.
+ * null  = always unverifiable (behaviour/session dependent)
+ * 'psi' = verified via Google PSI API
+ */
+const PARAM_PAGE_REQUIREMENT = [
+    'checkout_flow'      => 'cart',
+    'payment_options'    => 'cart',
+    'cart_recovery'      => null,      // session/behaviour — always unverifiable
+    'express_checkout'   => 'cart',
+    'cod_prominence'     => 'cart',
+    'landing_page'       => 'home',
+    'product_pages'      => 'product',
+    'search_ux'          => 'category',
+    'sticky_atc'         => 'product',
+    'category_pages'     => 'category',
+    'trust_signals'      => 'home',
+    'returns_policy'     => 'home',
+    'social_proof'       => 'product',
+    'review_quality'     => 'product',
+    'guarantee_signals'  => 'product',
+    'cross_sell'         => 'product',
+    'email_capture'      => 'home',
+    'whatsapp_marketing' => 'home',
+    'schema_markup'      => 'home',
+    'content_clarity'    => 'home',
+    'ai_discoverability' => 'home',
+    'conversational_ux'  => 'home',
+    'open_graph_quality' => 'home',
+    'canonical_health'   => 'home',
+    'mobile_ux'          => 'home',
+    'page_speed'         => 'psi',
+    'navigation_clarity' => 'home',
+    'accessibility'      => 'home',
+];
+
+/**
+ * Compute which params are verified vs unverified based on pages fetched.
+ */
+function computeVerification(array $pages, bool $psiConfigured): array
+{
+    $fetched    = array_keys($pages);
+    $verified   = [];
+    $unverified = [];
+
+    foreach (PARAM_PAGE_REQUIREMENT as $param => $req) {
+        $ok = match (true) {
+            $req === null            => false,
+            $req === 'psi'           => $psiConfigured,
+            in_array($req, $fetched) => true,
+            default                  => false,
+        };
+        if ($ok) $verified[] = $param;
+        else     $unverified[] = $param;
+    }
+
+    return [
+        'verified_params'   => $verified,
+        'unverified_params' => $unverified,
+        'verified_count'    => count($verified),
+        'pages_scanned'     => count($pages),
+    ];
 }
 
 /**
  * PHP mirror of owleye-ai.js getPillarScores() + calcOwleyeTotal().
  * Weights must stay in sync with OWLEYE_PILLARS in owleye-ai.js.
- *
- * Returns ['pillar_scores' => [p1,…,p6], 'owleye_score' => int]
  */
 function computeOwleyeScores(array $scores): array
 {
-    // [pillar_weight, [[param_key, param_weight], ...]]
     static $PILLARS = [
         [28, [['checkout_flow',1.0],['payment_options',1.0],['cart_recovery',0.6],
                ['express_checkout',0.6],['cod_prominence',1.0]]],
@@ -191,7 +431,7 @@ function computeOwleyeScores(array $scores): array
         [10, [['mobile_ux',1.0],['page_speed',1.0],['navigation_clarity',0.6],['accessibility',0.6]]],
     ];
 
-    $pillarScores   = [];
+    $pillarScores     = [];
     $totalWeightedSum = 0;
     $totalWeight      = 0;
 
@@ -214,12 +454,21 @@ function computeOwleyeScores(array $scores): array
 }
 
 /**
+ * Strip protocol + www + path → bare host for cross-URL deduplication.
+ */
+function normalizeUrl(string $url): string
+{
+    $host = parse_url(strtolower(trim($url)), PHP_URL_HOST) ?? '';
+    return preg_replace('/^www\./i', '', $host) ?: strtolower(trim($url));
+}
+
+/**
  * Generate a UUID v4 scan token.
  */
 function generateScanToken(): string
 {
     $b    = random_bytes(16);
-    $b[6] = chr(ord($b[6]) & 0x0f | 0x40); // version 4
-    $b[8] = chr(ord($b[8]) & 0x3f | 0x80); // variant bits
+    $b[6] = chr(ord($b[6]) & 0x0f | 0x40);
+    $b[8] = chr(ord($b[8]) & 0x3f | 0x80);
     return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($b), 4));
 }

@@ -491,6 +491,8 @@
         <div class="score-radar-row">
           <canvas id="scoreRadar"></canvas>
         </div>
+        <!-- Verified badge — populated by JS after AI scan -->
+        <div id="verifiedBadge" class="verified-badge" style="display:none"></div>
 
         <!-- 3-col row: Report Summary | Revenue Upside | Top 3 Wins -->
         <div class="score-three-col">
@@ -526,7 +528,7 @@
 
         <!-- Full-width Get Full Report -->
         <div class="gate-prompt" id="gatePrompt" style="max-width:520px;margin:20px auto 0">
-          <p>🔒 <strong style="color:var(--white)">Get your full report</strong><br>All 6 pillar scores + fix recommendations across 28 parameters</p>
+          <p id="gatePromptDesc">🔒 <strong style="color:var(--white)">Get your full report</strong><br>All 6 pillar scores + fix recommendations across 28 parameters</p>
           <div class="gate-form">
             <input type="text" placeholder="Your name" id="gateName">
             <input type="email" placeholder="Work email" id="gateEmail">

@@ -272,12 +272,15 @@ async function fetchRealScores(url) {
     const s = data.scores || {};
     // Convert named object → array in PARAM_ORDER (matches generateDemoScores format)
     return {
-      scores: PARAM_ORDER.map(k => (typeof s[k] === 'number' ? s[k] : 50)),
-      previousScore: typeof data.previous_score === 'number' ? data.previous_score : null,
+      scores:           PARAM_ORDER.map(k => (typeof s[k] === 'number' ? s[k] : 50)),
+      previousScore:    typeof data.previous_score === 'number' ? data.previous_score : null,
+      verifiedCount:    typeof data.verified_count === 'number'  ? data.verified_count  : null,
+      unverifiedParams: Array.isArray(data.unverified_params)    ? data.unverified_params : [],
+      pagesScanned:     typeof data.pages_scanned  === 'number'  ? data.pages_scanned   : null,
     };
   } catch (err) {
     console.warn('[OwlEye] API error, using demo scores:', err.message);
-    return { scores: generateDemoScores(url), previousScore: null }; // graceful fallback
+    return { scores: generateDemoScores(url), previousScore: null, verifiedCount: null, unverifiedParams: [], pagesScanned: null };
   }
 }
 
@@ -513,9 +516,12 @@ async function showScoreResults() {
   const url = document.getElementById('scoreUrl').value;
 
   // Await real AI scores (fetch started at scan begin — should already be resolved)
-  const apiData = await (_scoresPromise || Promise.resolve({ scores: generateDemoScores(url), previousScore: null }));
-  const scores = apiData.scores;
-  const previousScore = apiData.previousScore;
+  const apiData = await (_scoresPromise || Promise.resolve({ scores: generateDemoScores(url), previousScore: null, verifiedCount: null, unverifiedParams: [], pagesScanned: null }));
+  const scores          = apiData.scores;
+  const previousScore   = apiData.previousScore;
+  const verifiedCount   = apiData.verifiedCount;
+  const unverifiedParams = apiData.unverifiedParams || [];
+  const pagesScanned    = apiData.pagesScanned;
   const total = calcOwleyeTotal(scores);
   const upside = calcRevenueUpside(total);
   const band = getScoreBand(total);
@@ -534,7 +540,11 @@ async function showScoreResults() {
   const scanOvEl = document.getElementById('scanOverlay');
   scanOvEl.style.background = 'rgba(5,10,20,.72)';
   scanOvEl.style.backdropFilter = 'blur(2px)';
-  scanOvEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px"><div class="score-number" id="scoreNumber" style="font-family:\'Roboto\',sans-serif;font-size:4rem;font-weight:900;line-height:1">0</div><div style="font-size:.85rem;color:rgba(248,249,255,.6);margin-top:2px">out of 100</div><div class="score-band" id="scoreBand">—</div></div>';
+  scanOvEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px">' +
+    (verifiedCount !== null ? '<div style="font-size:.65rem;color:rgba(248,249,255,.45);font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:-2px">Estimated</div>' : '') +
+    '<div class="score-number" id="scoreNumber" style="font-family:\'Roboto\',sans-serif;font-size:4rem;font-weight:900;line-height:1">0</div>' +
+    '<div style="font-size:.85rem;color:rgba(248,249,255,.6);margin-top:2px">out of 100</div>' +
+    '<div class="score-band" id="scoreBand">—</div></div>';
 
   const resultsEl = document.getElementById('scoreResults');
   resultsEl.style.display = 'block';
@@ -562,6 +572,25 @@ async function showScoreResults() {
     // Radar shows 6 pillar scores — parameters are secret ingredients
     drawRadar('scoreRadar', getPillarScores(scores), null, Math.min(360, available));
   }, 300);
+
+  // Verified badge — shows how many of 28 params were directly observed
+  const vbEl = document.getElementById('verifiedBadge');
+  if (vbEl && verifiedCount !== null) {
+    const unvCount = 28 - verifiedCount;
+    vbEl.innerHTML =
+      `<span class="verified-badge-check">✓ ${verifiedCount}/28 parameters verified</span>` +
+      (unvCount > 0 ? `<span class="verified-gap">${unvCount} estimated from page signals</span>` : '');
+    vbEl.style.display = 'flex';
+  }
+
+  // Gate prompt — surface unverified params as audit hook
+  const gpdEl = document.getElementById('gatePromptDesc');
+  if (gpdEl && unverifiedParams.length > 0) {
+    const sample = unverifiedParams.slice(0, 3).map(p => p.replace(/_/g, ' ')).join(', ');
+    gpdEl.innerHTML =
+      `🔒 <strong style="color:var(--white)">Get your full report</strong><br>` +
+      `${unverifiedParams.length} parameters (${sample}${unverifiedParams.length > 3 ? '…' : ''}) couldn't be verified in this automated scan. Get a complete 28-parameter hands-on audit.`;
+  }
 
   // Pillar bars
   const barsEl = document.getElementById('pillarBars');
@@ -653,6 +682,9 @@ function resetScan() {
   // Clear score change notice
   const noticeEl = document.getElementById('scoreChangeNotice');
   if (noticeEl) noticeEl.style.display = 'none';
+  // Clear verified badge
+  const vbEl2 = document.getElementById('verifiedBadge');
+  if (vbEl2) vbEl2.style.display = 'none';
   // Focus URL input for quick re-entry
   document.getElementById('scoreUrl').focus();
 }
