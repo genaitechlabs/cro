@@ -277,10 +277,11 @@ async function fetchRealScores(url) {
       verifiedCount:    typeof data.verified_count === 'number'  ? data.verified_count  : null,
       unverifiedParams: Array.isArray(data.unverified_params)    ? data.unverified_params : [],
       pagesScanned:     typeof data.pages_scanned  === 'number'  ? data.pages_scanned   : null,
+      jsRendered:       !!data.js_rendered,
     };
   } catch (err) {
     console.warn('[OwlEye] Network/parse error, using demo scores:', err.message);
-    return { scores: generateDemoScores(url), previousScore: null, verifiedCount: null, unverifiedParams: [], pagesScanned: null };
+    return { scores: generateDemoScores(url), previousScore: null, verifiedCount: null, unverifiedParams: [], pagesScanned: null, jsRendered: false };
   }
 }
 
@@ -544,6 +545,7 @@ async function showScoreResults() {
   const verifiedCount   = apiData.verifiedCount;
   const unverifiedParams = apiData.unverifiedParams || [];
   const pagesScanned    = apiData.pagesScanned;
+  const jsRendered      = apiData.jsRendered || false;
   const total = calcOwleyeTotal(scores);
   const upside = calcRevenueUpside(total);
   const band = getScoreBand(total);
@@ -603,6 +605,18 @@ async function showScoreResults() {
       `<span class="verified-badge-check">✓ ${verifiedCount}/28 parameters verified</span>` +
       (unvCount > 0 ? `<span class="verified-gap">${unvCount} estimated from page signals</span>` : '');
     vbEl.style.display = 'flex';
+  }
+
+  // JS-rendered site disclaimer
+  const existingJsBanner = document.getElementById('jsRenderedBanner');
+  if (existingJsBanner) existingJsBanner.remove();
+  if (jsRendered) {
+    const jsBanner = document.createElement('div');
+    jsBanner.id = 'jsRenderedBanner';
+    jsBanner.style.cssText = 'display:flex;align-items:flex-start;gap:8px;background:rgba(255,79,46,.07);border:1px solid rgba(255,79,46,.2);border-radius:10px;padding:10px 14px;font-size:.78rem;color:rgba(248,249,255,.65);line-height:1.6;margin-top:10px';
+    jsBanner.innerHTML = '⚡ <span>Your store\'s dynamic content couldn\'t be fully crawled. Some scores are estimated. <a href="https://topmate.io/productmentor/1026755" target="_blank" rel="noopener" style="color:var(--coral);font-weight:700;text-decoration:none">Book an Audit Call →</a> for a complete review.</span>';
+    const vbEl = document.getElementById('verifiedBadge');
+    if (vbEl && vbEl.parentNode) vbEl.parentNode.insertBefore(jsBanner, vbEl.nextSibling);
   }
 
   // Gate prompt — surface unverified params as audit hook

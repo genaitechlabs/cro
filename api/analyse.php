@@ -73,7 +73,11 @@ if (defined('RATE_LIMIT_PER_HOUR') && RATE_LIMIT_PER_HOUR > 0 && defined('DB_NAM
 // Fetches home + discovers and fetches product, category, cart pages
 $pages = discoverAndFetchPages($url);
 
-// ── 3b. Ecommerce store check ─────────────────────────────────────
+// ── 3b. Extract JS-rendered flag before passing pages to AI ──────
+$jsRendered = !empty($pages['_js_rendered']);
+unset($pages['_js_rendered']);
+
+// ── 3c. Ecommerce store check ─────────────────────────────────────
 if (!isEcommerceStore($pages)) {
     $host = parse_url($url, PHP_URL_HOST) ?? $url;
     http_response_code(400);
@@ -149,6 +153,7 @@ if (isset($result['scores']) && defined('DB_NAME') && DB_NAME) {
     }
 }
 
+$result['js_rendered'] = $jsRendered;
 echo json_encode($result);
 
 
@@ -206,6 +211,7 @@ function discoverAndFetchPages(string $url): array
     if (!$homeHtml) return [];
 
     $pages = ['home' => cleanHtml($homeHtml, 'home')];
+    if (detectJsRendered($homeHtml)) $pages['_js_rendered'] = true;
 
     // Detect platform
     $platform = detectPlatform($homeHtml);
@@ -413,17 +419,61 @@ function fetchSinglePage(string $url): string
 }
 
 /**
- * Strip scripts/styles/comments and truncate to per-type char limit.
+ * Strip scripts/styles/comments, preserve JSON-LD + __NEXT_DATA__, truncate.
+ * JSON-LD and hydration state are server-rendered even on Next.js/Shopify Hydrogen
+ * sites, giving the AI real signals when the visible HTML is otherwise empty.
  */
 function cleanHtml(string $html, string $type): string
 {
+    $extras = '';
+
+    // ── Preserve JSON-LD structured data (Product, Review, FAQ, BreadcrumbList…)
+    preg_match_all(
+        '/<script[^>]+type=["\']application\/ld\+json["\'][^>]*>(.*?)<\/script>/is',
+        $html, $ldMatches
+    );
+    foreach ($ldMatches[1] as $ldRaw) {
+        $ldRaw = trim($ldRaw);
+        if ($ldRaw) $extras .= "\n[JSON-LD] " . $ldRaw;
+    }
+    $extras = mb_substr($extras, 0, 2000); // cap at 2 000 chars
+
+    // ── Preserve __NEXT_DATA__ page props (Next.js — always server-rendered)
+    if (preg_match('/<script[^>]+id=["\']__NEXT_DATA__["\'][^>]*>(.*?)<\/script>/is', $html, $ndMatch)) {
+        $nd = json_decode(trim($ndMatch[1]), true);
+        if (!empty($nd['props']['pageProps'])) {
+            $extras .= "\n[PAGE_STATE] " . mb_substr(json_encode($nd['props']['pageProps']), 0, 2000);
+        }
+    }
+
+    // ── Strip scripts / styles / comments
     $html = preg_replace('/<script\b[^>]*>.*?<\/script>/is', '', $html);
     $html = preg_replace('/<style\b[^>]*>.*?<\/style>/is',   '', $html);
     $html = preg_replace('/<!--.*?-->/s',                     '', $html);
     $html = preg_replace('/\s{2,}/',                          ' ', $html);
 
-    $limits = ['home' => 12000, 'product' => 8000, 'category' => 6000, 'cart' => 6000, 'returns' => 6000];
-    return mb_substr(trim($html), 0, $limits[$type] ?? 6000);
+    $limits = ['home' => 10000, 'product' => 6000, 'category' => 5000, 'cart' => 5000, 'returns' => 5000];
+    return mb_substr(trim($html), 0, $limits[$type] ?? 5000) . $extras;
+}
+
+/**
+ * Detect whether a page is JavaScript-rendered (thin server-side HTML).
+ * Checks framework fingerprints in raw HTML before scripts are stripped.
+ */
+function detectJsRendered(string $rawHtml): bool
+{
+    foreach ([
+        '__NEXT_DATA__',        // Next.js
+        'data-reactroot',       // React SSR
+        '"__nuxt"',             // Nuxt.js
+        'ng-version=',          // Angular
+        '__GATSBY',             // Gatsby
+        'data-server-rendered', // Vue SSR
+    ] as $signal) {
+        if (strpos($rawHtml, $signal) !== false) return true;
+    }
+    // Fallback: very thin visible text after stripping tags
+    return strlen(trim(preg_replace('/\s+/', ' ', strip_tags($rawHtml)))) < 500;
 }
 
 
