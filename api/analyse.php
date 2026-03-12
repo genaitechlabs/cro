@@ -253,8 +253,8 @@ function discoverAndFetchPages(string $url): array
     // Empty response = site unreachable, down, or blocking — signal to caller
     if (!$homeHtml) return ['_unreachable' => true];
 
-    // Detect agentic signals (WhatsApp, chat widgets, FAQ) before cleaning
-    $agenticHint = detectAgenticSignals($homeHtml);
+    // Detect agentic signals (WhatsApp, chat widgets, FAQ, UCP endpoint, Shopify MCP)
+    $agenticHint = detectAgenticSignals($homeHtml, $base);
     $pages = ['home' => cleanHtml($homeHtml, 'home') . $agenticHint];
     if (detectJsRendered($homeHtml)) $pages['_js_rendered'] = true;
 
@@ -507,7 +507,28 @@ function fetchSinglePage(string $url): string
  *   Smartsupp        : smartsupp.com — HIGH
  *   Chatbot.com      : chatbot.com — MED (generic domain)
  */
-function detectAgenticSignals(string $rawHtml): string
+/**
+ * Quick HEAD/GET to a URL — 3-second timeout, returns body or empty string.
+ * Used for lightweight endpoint presence checks (UCP, MCP) without the 8s
+ * timeout of fetchSinglePage(), which would add too much serial latency.
+ */
+function probeEndpoint(string $url): string
+{
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_TIMEOUT        => 3,
+        CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; OwlEye-Scanner/1.0; +https://genaitechlabs.com)',
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_HTTPHEADER     => ['Accept: application/json'],
+    ]);
+    $body = curl_exec($ch);
+    curl_close($ch);
+    return $body ?: '';
+}
+
+function detectAgenticSignals(string $rawHtml, string $base = ''): string
 {
     $html = strtolower($rawHtml);
     $signals = [];
@@ -520,6 +541,7 @@ function detectAgenticSignals(string $rawHtml): string
     }
 
     // ── Live Chat / Support widgets ───────────────────────────────
+    // Signal memory — add new platforms here as more stores are tested:
     $chatPlatforms = [
         'embed.tawk.to'          => 'tawk.to',
         'widget.intercom.io'     => 'intercom',
@@ -553,6 +575,41 @@ function detectAgenticSignals(string $rawHtml): string
         strpos($html, 'questions and answers')   !== false ||
         strpos($rawHtml, '"@type":"FAQPage"')    !== false) {
         $signals[] = 'faq_section=true';
+    }
+
+    // ── Endpoint-based agentic commerce detection ─────────────────
+    // These checks run with a 3s timeout so they don't block the main scan.
+    if ($base) {
+        // UCP (Universal Commerce Protocol) — open standard co-developed by Google,
+        // Shopify, Walmart, Target, Etsy. Enables AI agents (ChatGPT, Gemini, Copilot)
+        // to discover, query, and checkout from a store without custom integration.
+        // Spec: https://ucp.dev/specification/overview/
+        // Discovery: GET /.well-known/ucp → JSON with 'capabilities' or 'services' array
+        $ucpBody = probeEndpoint($base . '/.well-known/ucp');
+        if ($ucpBody) {
+            $ucp = json_decode($ucpBody, true);
+            if (!empty($ucp['capabilities']) || !empty($ucp['services']) || !empty($ucp['version'])) {
+                $signals[] = 'ucp_endpoint=true';
+            }
+        }
+
+        // Shopify MCP (Model Context Protocol) storefront endpoint —
+        // Shopify's native agentic commerce implementation. Active on all modern
+        // Shopify stores and exposes product catalogue + checkout via MCP protocol.
+        // Spec: https://shopify.dev/docs/agents/catalog/storefront-mcp
+        // Detection: cdn.shopify.com in HTML + /api/mcp returns 200 with MCP structure
+        $isShopify = strpos($html, 'cdn.shopify.com') !== false
+                  || strpos($html, 'myshopify.com')   !== false;
+        if ($isShopify) {
+            $mcpBody = probeEndpoint($base . '/api/mcp');
+            if ($mcpBody && strlen($mcpBody) > 20) {
+                $mcp = json_decode($mcpBody, true);
+                // MCP response includes 'tools' or 'jsonrpc' or 'protocolVersion'
+                if (!empty($mcp['tools']) || isset($mcp['jsonrpc']) || isset($mcp['protocolVersion'])) {
+                    $signals[] = 'shopify_mcp=true';
+                }
+            }
+        }
     }
 
     if (empty($signals)) return '';
