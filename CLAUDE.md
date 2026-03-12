@@ -246,3 +246,18 @@ This keeps context fresh across sessions without relying on git log archaeology.
 - Do not add npm/webpack/bundlers — keep it static
 - Do not commit `api/config.php` (contains DB credentials and API keys)
 - Do not change the OwlEye Score™ brand name formatting
+
+## AI Provider Sync Rule (CRITICAL)
+
+**Both `api/ai/claude.php` and `api/ai/openai.php` must always be kept in parity.**
+
+Any change to scoring logic, signal rules, parameter criteria, or pillar names in one file **must be applied to the other file in the same commit.**
+
+This includes:
+- `$criteria` HEREDOC — scoring instructions per parameter
+- Signal floor rules (`[PURCHASE_SIGNALS]`, `[AGENTIC_SIGNALS]`)
+- Pillar names and parameter labels
+- `$PARAMS` array order or contents
+- `systemPrompt()` calibration anchors
+
+The only intentional differences are API-specific (endpoint URL, auth headers, payload format, `response_format` for OpenAI, image placement for Claude).

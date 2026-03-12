@@ -38,10 +38,11 @@ class ClaudeProvider
         $messages = self::buildMessages($url, $pages, $desktop, $mobile);
 
         $payload = [
-            'model'      => AI_MODEL,
-            'max_tokens' => 600,
-            'system'     => self::systemPrompt(),
-            'messages'   => $messages,
+            'model'       => AI_MODEL,
+            'max_tokens'  => 600,
+            'temperature' => 0.3,
+            'system'      => self::systemPrompt(),
+            'messages'    => $messages,
         ];
 
         $raw = self::callApi($payload);
