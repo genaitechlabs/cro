@@ -49,7 +49,10 @@ section{padding:80px 5%}
 
 /* ════ NAV ════ */
 nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:18px 5%;display:flex;align-items:center;justify-content:space-between;background:rgba(11,17,32,.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
-.logo{font-family:'Roboto',sans-serif;font-size:1.25rem;font-weight:900;color:var(--white);text-decoration:none;display:flex;align-items:center;gap:9px}
+.logo{font-family:'Roboto',sans-serif;color:var(--white);text-decoration:none;display:flex;align-items:center;gap:9px}
+.logo-text{display:flex;flex-direction:column;gap:2px}
+.logo-name{font-size:1.25rem;font-weight:900;line-height:1.1}
+.logo-tagline{font-size:.6rem;font-weight:400;color:#848790;letter-spacing:.03em;line-height:1}
 .logo-icon{width:32px;height:32px;border-radius:8px;object-fit:contain;display:block}
 .nav-links{display:flex;align-items:center;gap:24px}
 .nav-links a{color:var(--muted);text-decoration:none;font-size:.86rem;font-weight:500;transition:color .2s}
