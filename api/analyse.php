@@ -253,7 +253,9 @@ function discoverAndFetchPages(string $url): array
     // Empty response = site unreachable, down, or blocking — signal to caller
     if (!$homeHtml) return ['_unreachable' => true];
 
-    $pages = ['home' => cleanHtml($homeHtml, 'home')];
+    // Detect agentic signals (WhatsApp, chat widgets, FAQ) before cleaning
+    $agenticHint = detectAgenticSignals($homeHtml);
+    $pages = ['home' => cleanHtml($homeHtml, 'home') . $agenticHint];
     if (detectJsRendered($homeHtml)) $pages['_js_rendered'] = true;
 
     // Detect platform
@@ -475,6 +477,86 @@ function fetchSinglePage(string $url): string
         return '';
     }
     return $html ?: '';
+}
+
+/**
+ * Detect agentic commerce signals from raw homepage HTML.
+ * Returns a compact hint string injected into the cleaned HTML so the AI
+ * can score conversational_ux and whatsapp_marketing with higher confidence.
+ *
+ * Confidence levels:
+ *   HIGH  — unique CDN/script domain that unambiguously identifies the tool
+ *   MED   — common patterns that may have false positives
+ *
+ * Signal memory (add new detections here as more stores are tested):
+ *   WhatsApp widget  : wa.me/, api.whatsapp.com, widget.wati.io — HIGH
+ *   Tawk.to          : embed.tawk.to — HIGH
+ *   Intercom         : widget.intercom.io, intercomcdn.com — HIGH
+ *   Crisp Chat       : client.crisp.chat — HIGH
+ *   Freshchat        : wchat.freshchat.com, freshbots — HIGH
+ *   Tidio            : code.tidio.co — HIGH
+ *   Drift            : js.driftt.com — HIGH
+ *   Zendesk Chat     : static.zdassets.com, zopim — HIGH
+ *   Kommunicate      : widget.kommunicate.io — HIGH
+ *   Verloop          : verloop.io — HIGH
+ *   Yellow.ai        : cloud.yellow.ai, yellowmessenger.com — HIGH
+ *   BotPenguin       : botpenguin.com — HIGH
+ *   Gorgias          : config.gorgias.chat — HIGH (Shopify CS)
+ *   LiveChat         : livechatinc.com — HIGH
+ *   Jivochat         : jivosite.com — HIGH
+ *   Smartsupp        : smartsupp.com — HIGH
+ *   Chatbot.com      : chatbot.com — MED (generic domain)
+ */
+function detectAgenticSignals(string $rawHtml): string
+{
+    $html = strtolower($rawHtml);
+    $signals = [];
+
+    // ── WhatsApp ──────────────────────────────────────────────────
+    if (strpos($html, 'wa.me/')           !== false ||
+        strpos($html, 'api.whatsapp.com') !== false ||
+        strpos($html, 'widget.wati.io')   !== false) {
+        $signals[] = 'whatsapp_widget=true';
+    }
+
+    // ── Live Chat / Support widgets ───────────────────────────────
+    $chatPlatforms = [
+        'embed.tawk.to'          => 'tawk.to',
+        'widget.intercom.io'     => 'intercom',
+        'intercomcdn.com'        => 'intercom',
+        'client.crisp.chat'      => 'crisp',
+        'wchat.freshchat.com'    => 'freshchat',
+        'code.tidio.co'          => 'tidio',
+        'js.driftt.com'          => 'drift',
+        'static.zdassets.com'    => 'zendesk',
+        'zopim.com'              => 'zendesk',
+        'widget.kommunicate.io'  => 'kommunicate',
+        'verloop.io'             => 'verloop',
+        'cloud.yellow.ai'        => 'yellow.ai',
+        'yellowmessenger.com'    => 'yellow.ai',
+        'botpenguin.com'         => 'botpenguin',
+        'config.gorgias.chat'    => 'gorgias',
+        'livechatinc.com'        => 'livechat',
+        'jivosite.com'           => 'jivochat',
+        'smartsupp.com'          => 'smartsupp',
+    ];
+    foreach ($chatPlatforms as $needle => $platform) {
+        if (strpos($html, $needle) !== false) {
+            $signals[] = 'chat_widget=' . $platform;
+            break; // one platform is enough
+        }
+    }
+
+    // ── FAQ / Q&A sections ────────────────────────────────────────
+    if (strpos($html, 'faq')                    !== false ||
+        strpos($html, 'frequently asked')        !== false ||
+        strpos($html, 'questions and answers')   !== false ||
+        strpos($rawHtml, '"@type":"FAQPage"')    !== false) {
+        $signals[] = 'faq_section=true';
+    }
+
+    if (empty($signals)) return '';
+    return "\n[AGENTIC_SIGNALS] " . implode(' | ', $signals);
 }
 
 /**
