@@ -97,6 +97,14 @@ if (!isEcommerceStore($pages)) {
     exit;
 }
 
+// ── 3e. Purchase flow signal detection ────────────────────────────
+// Detects payment methods, CRM tools, COD, express checkout, email capture
+// signals from all crawled pages — injected into home page for AI scoring
+$purchaseHint = detectPurchaseFlowSignals($pages);
+if ($purchaseHint) {
+    $pages['home'] = ($pages['home'] ?? '') . $purchaseHint;
+}
+
 // ── 4. Screenshots (homepage only) ───────────────────────────────
 $desktop = ScreenshotAdapter::capture($url, 'desktop');
 $mobile  = ScreenshotAdapter::capture($url, 'mobile');
@@ -617,6 +625,119 @@ function detectAgenticSignals(string $rawHtml, string $base = ''): string
 }
 
 /**
+ * Detect purchase flow signals from all crawled pages.
+ * Returns a compact hint string injected into home page HTML so the AI
+ * can score Purchase Flow params with higher confidence.
+ *
+ * Covers parameters that are otherwise estimated (~est.) because cart pages
+ * are often gated. Scans homepage + product page HTML for payment method
+ * references, CRM/email tools, COD text, and express checkout scripts.
+ *
+ * Signal memory:
+ *   email_crm={tool}          : Klaviyo/Mailchimp/WebEngage/MoEngage → infer cart recovery flows
+ *   cod_available=true        : "cash on delivery" / "COD" text on product or home page
+ *   upi_available=true        : GPay/PhonePe/Paytm/UPI text anywhere
+ *   bnpl_available=true       : Simpl/LazyPay/ZestMoney/Snapmint or "buy now pay later" text
+ *   payment_gateway=detected  : Razorpay/Cashfree/PayU/CCAvenue script or text
+ *   express_checkout_signal=true : PhonePe express, Razorpay Magic Checkout, Shopify dynamic-checkout
+ *   push_capture=true         : OneSignal/iZooto/PushOwl/Omnisend — email/push capture tools
+ *   sticky_atc_signal=true    : sticky/fixed CSS class near add-to-cart context in product HTML
+ */
+function detectPurchaseFlowSignals(array $pages): string
+{
+    // Combine all crawled pages for signal search (lowercased for English signals)
+    $rawAll  = ($pages['home'] ?? '') . ($pages['product'] ?? '') . ($pages['category'] ?? '');
+    $html    = strtolower($rawAll);
+
+    $signals = [];
+
+    // ── Email CRM / Cart Recovery ──────────────────────────────────────────────
+    // Presence of email CRM = store almost certainly has abandoned cart flows
+    $crmTools = [
+        'a.klaviyo.com'      => 'klaviyo',
+        'static.klaviyo.com' => 'klaviyo',
+        'chimpstatic.com'    => 'mailchimp',
+        'list-manage.com'    => 'mailchimp',
+        'cdn.webengage.com'  => 'webengage',
+        'cdn.moengage.com'   => 'moengage',
+        'sdk.moengage.com'   => 'moengage',
+        'wzrkt.com'          => 'clevertap',    // CleverTap
+        'netcorecloud.net'   => 'netcore',
+        'omnisend.com'       => 'omnisend',
+        'sendx.io'           => 'sendx',
+    ];
+    foreach ($crmTools as $needle => $tool) {
+        if (strpos($html, $needle) !== false) {
+            $signals[] = 'email_crm=' . $tool;
+            break;
+        }
+    }
+
+    // ── COD (Cash on Delivery) ─────────────────────────────────────────────────
+    if (strpos($html, 'cash on delivery') !== false ||
+        strpos($html, 'cod available')    !== false ||
+        strpos($html, 'pay on delivery')  !== false ||
+        preg_match('/\bcod\b/', $html)) {
+        $signals[] = 'cod_available=true';
+    }
+
+    // ── UPI (Unified Payments Interface) ──────────────────────────────────────
+    if (strpos($html, 'gpay')       !== false ||
+        strpos($html, 'google pay') !== false ||
+        strpos($html, 'phonepe')    !== false ||
+        strpos($html, 'paytm')      !== false ||
+        preg_match('/\bupi\b/', $html)) {
+        $signals[] = 'upi_available=true';
+    }
+
+    // ── BNPL (Buy Now Pay Later) ───────────────────────────────────────────────
+    if (strpos($html, 'simpl')               !== false ||
+        strpos($html, 'lazypay')             !== false ||
+        strpos($html, 'zestmoney')           !== false ||
+        strpos($html, 'snapmint')            !== false ||
+        strpos($html, 'buy now pay later')   !== false ||
+        preg_match('/\bbnpl\b/', $html)) {
+        $signals[] = 'bnpl_available=true';
+    }
+
+    // ── Payment Gateway ────────────────────────────────────────────────────────
+    if (strpos($html, 'razorpay') !== false ||
+        strpos($html, 'cashfree') !== false ||
+        strpos($html, 'payugbiz') !== false ||
+        strpos($html, 'ccavenue') !== false) {
+        $signals[] = 'payment_gateway=detected';
+    }
+
+    // ── Express Checkout ───────────────────────────────────────────────────────
+    // PhonePe express, Razorpay Magic Checkout, Shopify accelerated/dynamic checkout
+    if (strpos($html, 'magic checkout')      !== false ||
+        strpos($html, 'dynamic-checkout')    !== false ||
+        strpos($html, 'shopify-payment-button') !== false) {
+        $signals[] = 'express_checkout_signal=true';
+    }
+
+    // ── Email / Push Capture Tools ─────────────────────────────────────────────
+    if (strpos($html, 'onesignal.com') !== false ||
+        strpos($html, 'izooto.com')    !== false ||
+        strpos($html, 'pushowl.com')   !== false ||
+        strpos($html, 'omnisend.com')  !== false) {
+        $signals[] = 'push_capture=true';
+    }
+
+    // ── Sticky ATC ─────────────────────────────────────────────────────────────
+    // Sticky/fixed class found near add-to-cart context in product page HTML
+    $productHtml = strtolower($pages['product'] ?? '');
+    if ($productHtml &&
+        (strpos($productHtml, 'sticky') !== false || strpos($productHtml, 'position:fixed') !== false) &&
+        (strpos($productHtml, 'add-to-cart') !== false || strpos($productHtml, 'add_to_cart') !== false || strpos($productHtml, 'addtocart') !== false)) {
+        $signals[] = 'sticky_atc_signal=true';
+    }
+
+    if (empty($signals)) return '';
+    return "\n[PURCHASE_SIGNALS] " . implode(' | ', $signals);
+}
+
+/**
  * Strip scripts/styles/comments, preserve JSON-LD + __NEXT_DATA__, truncate.
  * JSON-LD and hydration state are server-rendered even on Next.js/Shopify Hydrogen
  * sites, giving the AI real signals when the visible HTML is otherwise empty.
@@ -710,7 +831,7 @@ function computeVerification(array $pages, bool $psiConfigured): array
         'ai_discoverability' => 'home',
         'conversational_ux'  => 'home',
         'open_graph_quality' => 'home',
-        'canonical_health'   => 'home',
+        'canonical_health'   => 'any_crawled',  // checks home + product + category
         'mobile_ux'          => 'home',
         'page_speed'         => 'psi',
         'navigation_clarity' => 'home',
@@ -725,6 +846,7 @@ function computeVerification(array $pages, bool $psiConfigured): array
         $ok = match (true) {
             $req === null            => false,
             $req === 'psi'           => $psiConfigured,
+            $req === 'any_crawled'   => count(array_intersect(['home', 'product', 'category'], $fetched)) > 0,
             in_array($req, $fetched) => true,
             default                  => false,
         };
