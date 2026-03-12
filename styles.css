@@ -243,6 +243,7 @@ h1.hero-h1{font-family:'Roboto',sans-serif;font-size:clamp(2.2rem,4.5vw,3.8rem);
 .pillar-score-bar-wrap{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden}
 .pillar-score-bar{height:100%;border-radius:3px;background:var(--coral);transition:width 1s ease}
 .pillar-score-val{font-size:.75rem;font-weight:700;color:var(--white);width:40px;text-align:right;flex-shrink:0}
+.pillar-est-tag{font-size:.6rem;font-weight:600;color:rgba(248,249,255,.32);letter-spacing:.02em;margin-left:2px;vertical-align:middle;font-style:italic}
 .top-fixes{margin-bottom:0}
 .top-fixes h4{font-size:1rem;font-weight:700;color:var(--white);margin-bottom:12px;text-align:center}
 .fix-item{background:rgba(255,79,46,.06);border:1px solid rgba(255,79,46,.15);border-radius:10px;padding:12px 16px;margin-bottom:8px;font-size:.82rem}

@@ -242,13 +242,13 @@ setInterval(() => {
 // ─────────────────────────────────────────
 // Parameter order must match OWLEYE_PILLARS.flatMap in owleye-ai.js (28 params × 6 pillars)
 const PARAM_ORDER = [
-  'checkout_flow', 'payment_options', 'cart_recovery',          // Purchase Flow
-  'express_checkout', 'cod_prominence',                         // Purchase Flow
-  'landing_page',  'product_pages', 'search_ux',               // Page Experience
+  'landing_page', 'product_pages', 'search_ux',                // Page Experience
   'sticky_atc', 'category_pages',                               // Page Experience
+  'cross_sell', 'email_capture', 'whatsapp_marketing',          // Engagement & Retention
   'trust_signals', 'returns_policy', 'social_proof',            // Trust & Conversion
   'review_quality', 'guarantee_signals',                        // Trust & Conversion
-  'cross_sell', 'email_capture', 'whatsapp_marketing',          // Engagement & Retention
+  'checkout_flow', 'payment_options', 'cart_recovery',          // Purchase Flow
+  'express_checkout', 'cod_prominence',                         // Purchase Flow
   'schema_markup', 'content_clarity',                           // Agentic Commerce
   'ai_discoverability', 'conversational_ux',                    // Agentic Commerce
   'open_graph_quality', 'canonical_health',                     // Agentic Commerce
@@ -289,8 +289,9 @@ async function fetchRealScores(url) {
   } catch (err) {
     clearTimeout(timeoutId);
     console.warn('[OwlEye] Fetch error:', err.message);
+    const host = (() => { try { return new URL(url).hostname; } catch(e) { return url; } })();
     const msg = err.name === 'AbortError'
-      ? 'The scan timed out. The target site may be temporarily unavailable or very slow. Please try again in a moment.'
+      ? `The target site (${host}) is not reachable. OwlEye scan can't perform the evaluation at this time. Please retry.`
       : 'The scan could not complete. Please check your connection and try again.';
     return { apiError: msg, scores: null };
   }
@@ -300,32 +301,31 @@ async function fetchRealScores(url) {
 // OWLEYE SCORE TOOL
 // ─────────────────────────────────────────
 const SCAN_PARAMS = [
-  // Page Experience — first impression (scanned first)
+  // Page Experience (5) — first impression, scanned first
   { name: 'Landing Page',       icon: '📄', msgs: ['Reading above-fold content…',       'Scoring CTA placement…',             'Evaluating headline clarity…'] },
-  { name: 'Payment Options',    icon: '💳', msgs: ['Detecting payment methods…',        'Checking UPI/COD support…',          'Validating payment UX…'] },
-  // Purchase Flow (remaining 4)
-  { name: 'Checkout Flow',      icon: '🛒', msgs: ['Mapping checkout steps…',          'Counting form fields…',              'Checking progress indicators…'] },
-  { name: 'Cart Recovery',      icon: '🔄', msgs: ['Scanning cart behaviour…',          'Checking abandonment triggers…',     'Analysing recovery flows…'] },
-  { name: 'Express Checkout',   icon: '⚡', msgs: ['Checking one-click buy options…',   'Testing guest checkout flow…',       'Scanning express payment presence…'] },
-  { name: 'COD Prominence',     icon: '💵', msgs: ['Scanning COD visibility…',          'Checking payment hierarchy…',        'Measuring COD prominence near CTA…'] },
-  // Page Experience (remaining 4)
   { name: 'Product Pages',      icon: '🖼️', msgs: ['Inspecting product images…',        'Checking reviews section…',          'Analysing buy-button area…'] },
   { name: 'Search UX',          icon: '🔍', msgs: ['Testing site search experience…',   'Checking autocomplete quality…',     'Evaluating search result relevance…'] },
   { name: 'Sticky Add-to-Cart', icon: '📌', msgs: ['Checking sticky add-to-cart…',      'Testing scroll behaviour on mobile…','Evaluating CTA persistence…'] },
   { name: 'Category Pages',     icon: '🗂️', msgs: ['Evaluating category page layout…',  'Checking filter & sort options…',    'Scoring product card quality…'] },
+  // Engagement & Retention (3)
+  { name: 'Cross-sell & Upsell',icon: '🔁', msgs: ['Detecting upsell modules…',         'Checking bundle offers…',            'Scoring AOV optimisation…'] },
+  { name: 'Email Capture',      icon: '📧', msgs: ['Checking email capture mechanisms…','Evaluating popup timing…',           'Scoring lead magnet quality…'] },
+  { name: 'WhatsApp Marketing', icon: '💬', msgs: ['Checking WhatsApp touchpoints…',    'Scanning opt-in flows…',             'Evaluating messaging integration…'] },
   // Trust & Conversion (5)
   { name: 'Trust Signals',      icon: '🤝', msgs: ['Looking for trust badges…',         'Scanning security indicators…',      'Checking social proof…'] },
   { name: 'Returns Policy',     icon: '📋', msgs: ['Locating returns policy…',           'Evaluating visibility…',             'Scoring policy clarity…'] },
   { name: 'Social Proof',       icon: '⭐', msgs: ['Counting review volume…',            'Checking photo/video reviews…',      'Evaluating social proof placement…'] },
   { name: 'Review Quality',     icon: '💬', msgs: ['Analysing review depth…',            'Checking rating distribution…',      'Scanning review recency…'] },
   { name: 'Guarantee Signals',  icon: '🛡️', msgs: ['Looking for money-back guarantee…', 'Checking warranty information…',     'Scoring risk-reversal copy…'] },
-  // Engagement & Retention (3)
-  { name: 'Cross-sell & Upsell',    icon: '🔁', msgs: ['Detecting upsell modules…',         'Checking bundle offers…',            'Scoring AOV optimisation…'] },
-  { name: 'Email Capture',      icon: '📧', msgs: ['Checking email capture mechanisms…','Evaluating popup timing…',            'Scoring lead magnet quality…'] },
-  { name: 'WhatsApp Marketing', icon: '💬', msgs: ['Checking WhatsApp touchpoints…',    'Scanning opt-in flows…',             'Evaluating messaging integration…'] },
+  // Purchase Flow (5) — checkout/payment scanned after content is assessed
+  { name: 'Checkout Flow',      icon: '🛒', msgs: ['Mapping checkout steps…',           'Counting form fields…',              'Checking progress indicators…'] },
+  { name: 'Payment Options',    icon: '💳', msgs: ['Detecting payment methods…',        'Checking UPI/COD support…',          'Validating payment UX…'] },
+  { name: 'Cart Recovery',      icon: '🔄', msgs: ['Scanning cart behaviour…',          'Checking abandonment triggers…',     'Analysing recovery flows…'] },
+  { name: 'Express Checkout',   icon: '⚡', msgs: ['Checking one-click buy options…',   'Testing guest checkout flow…',       'Scanning express payment presence…'] },
+  { name: 'COD Prominence',     icon: '💵', msgs: ['Scanning COD visibility…',          'Checking payment hierarchy…',        'Measuring COD prominence near CTA…'] },
   // Agentic Commerce (6)
   { name: 'Schema Markup',      icon: '🔮', msgs: ['Checking schema markup…',           'Scanning structured data tags…',     'Validating JSON-LD implementation…'] },
-  { name: 'Content Clarity',    icon: '🔮', msgs: ['Analysing copy for LLM readability…','Scoring plain-language usage…',      'Testing AI content parsing…'] },
+  { name: 'Content Clarity',    icon: '🔮', msgs: ['Analysing copy for LLM readability…','Scoring plain-language usage…',     'Testing AI content parsing…'] },
   { name: 'AI Discoverability', icon: '🔮', msgs: ['Testing AI search signals…',        'Checking meta structure…',           'Scanning semantic HTML hierarchy…'] },
   { name: 'Conversational UX',  icon: '🔮', msgs: ['Looking for FAQ sections…',         'Checking assistant presence…',       'Scanning Q&A content depth…'] },
   { name: 'Open Graph Quality', icon: '🔮', msgs: ['Checking OG tags…',                 'Validating social share previews…',  'Testing OG image quality…'] },
@@ -338,36 +338,36 @@ const SCAN_PARAMS = [
 ];
 
 const FIXES_DB = [
-  // Purchase Flow
-  { param: 'Checkout Flow',      fix: 'Add a progress indicator to checkout — reduces abandonment by up to 18%.' },
-  { param: 'Payment Options',    fix: 'Add UPI and COD — 62% of Indian shoppers abandon without their preferred payment.' },
-  { param: 'Cart Recovery',      fix: 'Set up exit-intent popup + 3-email abandoned cart sequence (1h, 24h, 72h).' },
-  { param: 'Express Checkout',   fix: 'Add Google Pay or PhonePe express checkout — reduces checkout to 2 taps for 45% of buyers.' },
-  { param: 'COD Prominence',     fix: 'Display "Cash on Delivery available" on product pages — converts 38% of hesitant buyers.' },
-  // Page Experience
+  // Page Experience (indices 0–4, matches PARAM_ORDER)
   { param: 'Landing Page',       fix: 'Move primary CTA above the fold with a benefit-led headline. 73% of visitors never scroll.' },
   { param: 'Product Pages',      fix: 'Add 4+ images, a video, and size guide — lifts conversion by 24%.' },
   { param: 'Search UX',          fix: 'Add autocomplete with product images — 43% of site searchers have higher purchase intent.' },
   { param: 'Sticky Add-to-Cart', fix: 'Add a sticky add-to-cart bar on mobile — lifts conversions by 10–20% on long product pages.' },
   { param: 'Category Pages',     fix: 'Add filter and sort on category pages — 67% of shoppers use filters to find the right product.' },
-  // Trust & Conversion
+  // Engagement & Retention (indices 5–7)
+  { param: 'Cross-sell & Upsell',fix: 'Add "Frequently bought together" bundles — average 12–18% AOV uplift.' },
+  { param: 'Email Capture',      fix: 'Add a welcome offer popup (10% off) — email captures convert at 3–5% when incentivised.' },
+  { param: 'WhatsApp Marketing', fix: 'Add a WhatsApp opt-in at checkout — WhatsApp campaigns have 98% open rate vs 22% email.' },
+  // Trust & Conversion (indices 8–12)
   { param: 'Trust Signals',      fix: 'Display verified photo reviews and trust badges near the buy button.' },
   { param: 'Returns Policy',     fix: 'Show "30-day easy returns" prominently near CTA — removes the #1 objection.' },
   { param: 'Social Proof',       fix: 'Add customer review count ("2,400+ reviews") near hero CTA — reduces purchase anxiety immediately.' },
   { param: 'Review Quality',     fix: 'Actively collect reviews post-purchase — fresh, detailed reviews convert 3× better.' },
   { param: 'Guarantee Signals',  fix: 'Add a visible money-back guarantee — risk reversal increases conversions by up to 25%.' },
-  // Engagement & Retention
-  { param: 'Cross-sell & Upsell',    fix: 'Add "Frequently bought together" bundles — average 12–18% AOV uplift.' },
-  { param: 'Email Capture',      fix: 'Add a welcome offer popup (10% off) — email captures convert at 3–5% when incentivised.' },
-  { param: 'WhatsApp Marketing', fix: 'Add a WhatsApp opt-in at checkout — WhatsApp campaigns have 98% open rate vs 22% email.' },
-  // Agentic Commerce
+  // Purchase Flow (indices 13–17)
+  { param: 'Checkout Flow',      fix: 'Add a progress indicator to checkout — reduces abandonment by up to 18%.' },
+  { param: 'Payment Options',    fix: 'Add UPI and COD — 62% of Indian shoppers abandon without their preferred payment.' },
+  { param: 'Cart Recovery',      fix: 'Set up exit-intent popup + 3-email abandoned cart sequence (1h, 24h, 72h).' },
+  { param: 'Express Checkout',   fix: 'Add Google Pay or PhonePe express checkout — reduces checkout to 2 taps for 45% of buyers.' },
+  { param: 'COD Prominence',     fix: 'Display "Cash on Delivery available" on product pages — converts 38% of hesitant buyers.' },
+  // Agentic Commerce (indices 18–23)
   { param: 'Schema Markup',      fix: 'Add Schema.org Product + Review markup — lets AI agents accurately read your catalogue.' },
   { param: 'Content Clarity',    fix: 'Rewrite product descriptions in plain language — AI agents relay these to shoppers verbatim.' },
   { param: 'AI Discoverability', fix: 'Fix missing meta descriptions — ChatGPT Search and Perplexity pull these directly.' },
   { param: 'Conversational UX',  fix: 'Add a structured FAQ page — the primary source LLMs cite when answering product questions.' },
   { param: 'Open Graph Quality', fix: 'Add og:title, og:description, and og:image to all product pages — required for WhatsApp and Facebook previews.' },
   { param: 'Canonical Health',   fix: 'Add canonical tags to all product/category pages — prevents duplicate content diluting AI rankings.' },
-  // Technical Foundation
+  // Technical Foundation (indices 24–27)
   { param: 'Mobile UX',          fix: 'Reduce mobile checkout to 2 screens. 67% of Indian ecommerce traffic is mobile.' },
   { param: 'Page Speed',         fix: 'Compress images and remove render-blocking scripts — a 1s slowdown reduces conversion by 7%.' },
   { param: 'Navigation Clarity', fix: 'Simplify navigation to max 7 top-level items — cognitive overload reduces browsing conversion by 35%.' },
@@ -532,13 +532,16 @@ function runScoreAnalysis() {
     setTimeout(scanNext, 400);
   }
 
-  // Fetch store screenshot via thum.io (free, no API key)
+  // Fetch store screenshot via thum.io (free, no API key).
+  // Screenshot loads in background — scan starts immediately so there's no dead wait.
+  // When thum.io responds the image naturally appears through the semi-transparent overlay.
   const screenshotImg = document.getElementById('scanScreenshot');
   screenshotImg.style.display = 'none';
-  screenshotImg.onload = () => { screenshotImg.style.display = 'block'; beginScan(); };
-  screenshotImg.onerror = () => setTimeout(beginScan, 300);
-  setTimeout(() => beginScan(), 6000); // max wait fallback
+  screenshotImg.onload = () => { screenshotImg.style.display = 'block'; };
+  screenshotImg.onerror = () => {};
   screenshotImg.src = 'https://image.thum.io/get/width/800/crop/500/' + url;
+  // Start scan immediately — no wait for screenshot
+  beginScan();
 }
 
 async function showScoreResults() {
@@ -663,6 +666,7 @@ async function showScoreResults() {
   }
 
   // Pillar bars
+  const unverifiedSet = new Set(unverifiedParams);
   const barsEl = document.getElementById('pillarBars');
   barsEl.innerHTML = '';
   OWLEYE_PILLARS.forEach(pillar => {
@@ -671,9 +675,12 @@ async function showScoreResults() {
       .reduce((a, p) => a + p.parameters.length, 0);
     const pScores = pillar.parameters.map((_, pi) => scores[globalBase + pi]);
     const pAvg = Math.round(pScores.reduce((a, b) => a + b, 0) / pScores.length);
+    // Show ~est. tag if any param in this pillar was estimated (not directly crawled)
+    const hasEst = pillar.parameters.some(p => unverifiedSet.has(p.id));
+    const estTag = hasEst ? '<span class="pillar-est-tag" title="Some parameters estimated from page signals">~est.</span>' : '';
     barsEl.innerHTML += `
       <div class="pillar-score-row">
-        <span class="pillar-score-name">${pillar.icon} ${pillar.name}</span>
+        <span class="pillar-score-name">${pillar.icon} ${pillar.name}${estTag}</span>
         <div class="pillar-score-bar-wrap"><div class="pillar-score-bar" style="width:0%" data-w="${pAvg}"></div></div>
         <span class="pillar-score-val">${pAvg}/100</span>
       </div>`;
@@ -701,9 +708,32 @@ async function showScoreResults() {
     document.getElementById('upsideAnnual').innerHTML = '<span style="color:var(--lime);font-weight:900">↑</span> ₹' + formatNum(upside.annualUpside);
   }
 
-  // Top 3 fixes — use curated recommendation pool (recommendations.js) where
-  // available; fall back to FIXES_DB for low-confidence parameters
-  const sorted = scores.map((s, i) => ({ s, i })).sort((a, b) => a.s - b.s).slice(0, 3);
+  // Top 3 fixes — prefer params with curated recommendations (verifiable, non-payment).
+  // Checkout/payment params are unverifiable from a server-side crawl so we deprioritise
+  // them here even if their scores are low — the audit call CTA handles them instead.
+  const allScoredItems = scores.map((s, i) => ({ s, i }));
+
+  // Items with curated (high-confidence) recommendations sorted by score ascending
+  const verifiableItems = allScoredItems
+    .filter(item => {
+      const rec = (typeof getRecommendation === 'function')
+        ? getRecommendation(PARAM_ORDER[item.i], item.s)
+        : null;
+      return rec !== null;
+    })
+    .sort((a, b) => a.s - b.s);
+
+  // Remaining items as fallback (only used if < 3 verifiable recs exist)
+  const fallbackItems = allScoredItems
+    .filter(item => {
+      const rec = (typeof getRecommendation === 'function')
+        ? getRecommendation(PARAM_ORDER[item.i], item.s)
+        : null;
+      return rec === null;
+    })
+    .sort((a, b) => a.s - b.s);
+
+  const sorted = [...verifiableItems, ...fallbackItems].slice(0, 3);
   const fixesEl = document.getElementById('topFixes');
   fixesEl.innerHTML = '<h4>🎯 Top 3 Quick Wins (Free)</h4>';
   sorted.forEach((item, rank) => {

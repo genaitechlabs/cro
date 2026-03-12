@@ -15,20 +15,22 @@ class ClaudeProvider
     private static string $endpoint = 'https://api.anthropic.com/v1/messages';
     private static string $version  = '2023-06-01';
 
-    // Must match OWLEYE_PILLARS flatMap order in owleye-ai.js
+    // Must match OWLEYE_PILLARS flatMap order in owleye-ai.js AND PARAM_ORDER in main.js
+    // Order: Page Experience → Engagement & Retention → Trust & Conversion →
+    //        Purchase Flow → Agentic Commerce → Technical Foundation
     private static array $PARAMS = [
-        'checkout_flow', 'payment_options', 'cart_recovery',
-        'express_checkout', 'cod_prominence',
-        'landing_page',  'product_pages', 'search_ux',
-        'sticky_atc', 'category_pages',
-        'trust_signals', 'returns_policy', 'social_proof',
-        'review_quality', 'guarantee_signals',
-        'cross_sell', 'email_capture', 'whatsapp_marketing',
-        'schema_markup', 'content_clarity',
-        'ai_discoverability', 'conversational_ux',
-        'open_graph_quality', 'canonical_health',
-        'mobile_ux', 'page_speed',
-        'navigation_clarity', 'accessibility',
+        'landing_page', 'product_pages', 'search_ux',          // Page Experience
+        'sticky_atc', 'category_pages',                         // Page Experience
+        'cross_sell', 'email_capture', 'whatsapp_marketing',    // Engagement & Retention
+        'trust_signals', 'returns_policy', 'social_proof',      // Trust & Conversion
+        'review_quality', 'guarantee_signals',                   // Trust & Conversion
+        'checkout_flow', 'payment_options', 'cart_recovery',    // Purchase Flow
+        'express_checkout', 'cod_prominence',                    // Purchase Flow
+        'schema_markup', 'content_clarity',                      // Agentic Commerce
+        'ai_discoverability', 'conversational_ux',               // Agentic Commerce
+        'open_graph_quality', 'canonical_health',                // Agentic Commerce
+        'mobile_ux', 'page_speed',                               // Technical Foundation
+        'navigation_clarity', 'accessibility',                   // Technical Foundation
     ];
 
     public static function analyse(string $url, array $pages, ?string $desktop, ?string $mobile): array
@@ -148,11 +150,23 @@ ENGAGEMENT & RETENTION
 - email_capture      [HOME PAGE]: Email popup, exit-intent capture, lead magnet quality, newsletter signup
 - whatsapp_marketing [HOME PAGE]: WhatsApp opt-in widget, chat button, marketing touchpoint visibility
 
-AGENTIC COMMERCE — how well AI agents can read and rank this store
-- schema_markup      [HOME PAGE]: JSON-LD Product/Review/FAQ/BreadcrumbList structured data present in HTML
-- content_clarity    [HOME PAGE]: Plain-language copy, scannable headings, LLM-parseable structure
-- ai_discoverability [HOME PAGE]: Meta descriptions, semantic HTML hierarchy, heading tag structure
-- conversational_ux  [HOME PAGE]: FAQ section depth, chatbot presence, structured Q&A content
+AGENTIC COMMERCE — how well AI agents (ChatGPT, Perplexity, Gemini) can discover, read, and transact with this store
+NOTE: The HOME PAGE section may contain an [AGENTIC_SIGNALS] line — use it as confirmed evidence.
+- schema_markup      [HOME PAGE]: JSON-LD Product/Review/FAQ/BreadcrumbList structured data present.
+                     [AGENTIC_SIGNALS] ucp_endpoint=true  → UCP (Universal Commerce Protocol) implemented — store exposes /.well-known/ucp for AI agent checkout → score 82+
+                     [AGENTIC_SIGNALS] shopify_mcp=true   → Shopify MCP /api/mcp endpoint active — agents can query product catalogue and initiate checkout → score 78+
+                     Absent structured data with no UCP/MCP → score ≤30
+- content_clarity    [HOME PAGE]: Plain-language copy, scannable headings, LLM-parseable structure.
+                     AI agents relay product descriptions verbatim — vague/keyword-stuffed copy → low score.
+- ai_discoverability [HOME PAGE]: Unique meta descriptions per page, semantic H1→H2→H3 hierarchy, sitemap signals.
+                     [AGENTIC_SIGNALS] ucp_endpoint=true → store is machine-discoverable via UCP standard → add 15 pts to base score
+- conversational_ux  [HOME PAGE]: FAQ section depth, chatbot/virtual agent presence, structured Q&A content.
+                     [AGENTIC_SIGNALS] chat_widget={platform} → live chat widget confirmed → score 58+ (presence alone = 58; quality of FAQ/chat integration can raise to 80+)
+                     [AGENTIC_SIGNALS] faq_section=true        → FAQ content present → score 50+ (depth determines how much higher)
+                     No chat widget AND no FAQ → score ≤30
+- whatsapp_marketing [HOME PAGE]: WhatsApp opt-in widget, chat button, broadcast/marketing touchpoint.
+                     [AGENTIC_SIGNALS] whatsapp_widget=true → WhatsApp widget confirmed on page → score 62+ (integration quality determines final score)
+                     Not detected → score based on any WhatsApp mentions or opt-in text in HTML
 - open_graph_quality [HOME PAGE]: og:title, og:description, og:image presence and quality
 - canonical_health   [HOME PAGE]: Canonical tags present, URL structure clarity, no obvious duplication
 

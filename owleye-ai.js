@@ -30,81 +30,6 @@ const OWLEYE_BENCHMARKS = {
 // ─────────────────────────────────────────
 const OWLEYE_PILLARS = [
   {
-    id: 'purchase_flow',
-    name: 'Purchase Flow',
-    icon: '🛒',
-    weight: 28,
-    color: '#FF4F2E',
-    description: 'The most critical pillar — covers the end-to-end buying journey from cart to confirmation.',
-    parameters: [
-      {
-        id: 'checkout_flow',
-        name: 'Checkout Flow',
-        weight: 1.0,
-        max_pts: 12,
-        industry_avg: 70,
-        scan_msgs: ['Mapping checkout steps…', 'Counting form fields…', 'Checking progress indicators…'],
-        fixes: {
-          low:  'Add a progress indicator to checkout — reduces abandonment by up to 18%.',
-          mid:  'Reduce checkout to 2 screens max; auto-fill address from PIN code.',
-          high: 'Checkout flow is strong. Consider adding 1-click reorder for repeat buyers.',
-        }
-      },
-      {
-        id: 'payment_options',
-        name: 'Payment Options',
-        weight: 1.0,
-        max_pts: 10,
-        industry_avg: 68,
-        scan_msgs: ['Detecting payment methods…', 'Checking UPI/COD support…', 'Validating payment UX…'],
-        fixes: {
-          low:  'Add UPI and COD — 62% of Indian shoppers abandon without their preferred payment.',
-          mid:  'Add BNPL options (Simpl, LazyPay). They lift AOV 20–30%.',
-          high: 'Payment options are comprehensive. Test "Pay Later" upsells at checkout.',
-        }
-      },
-      {
-        id: 'cart_recovery',
-        name: 'Cart Recovery',
-        weight: 1.0,
-        max_pts: 8,
-        industry_avg: 65,
-        scan_msgs: ['Scanning cart behaviour…', 'Checking abandonment triggers…', 'Analysing recovery flows…'],
-        fixes: {
-          low:  'Implement exit-intent popup + 3-email abandoned cart sequence (1h, 24h, 72h).',
-          mid:  'Add cart persistence across sessions. 43% return to buy within 24h.',
-          high: 'Recovery flows are set up. Test WhatsApp recovery — 3× higher open rate than email.',
-        }
-      },
-      {
-        id: 'express_checkout',
-        name: 'Express Checkout',
-        weight: 1.0,
-        max_pts: 10,
-        industry_avg: 42,
-        scan_msgs: ['Checking one-click buy options…', 'Testing guest checkout flow…', 'Scanning express payment presence…'],
-        fixes: {
-          low:  'Add Google Pay or PhonePe express checkout — reduces checkout to 2 taps for 45% of buyers.',
-          mid:  'Enable instant buy on product pages. Cuts checkout from 5 steps to 1.',
-          high: 'Express checkout is live. Test placing the express button above the standard checkout.',
-        }
-      },
-      {
-        id: 'cod_prominence',
-        name: 'COD Prominence',
-        weight: 1.0,
-        max_pts: 8,
-        industry_avg: 65,
-        scan_msgs: ['Scanning COD visibility…', 'Checking payment hierarchy…', 'Measuring COD prominence near CTA…'],
-        fixes: {
-          low:  'Display "Cash on Delivery available" on product pages — converts 38% of hesitant buyers.',
-          mid:  'Move COD to first position in checkout — preferred by 45% of Tier 2/3 buyers.',
-          high: 'COD is prominent. Add "No prepayment needed" near add-to-cart to reduce anxiety.',
-        }
-      },
-    ]
-  },
-  {
     id: 'page_experience',
     name: 'Page Experience',
     icon: '🗒️',
@@ -175,6 +100,55 @@ const OWLEYE_PILLARS = [
           low:  'Add filter and sort on category pages — 67% of shoppers use filters to find the right product.',
           mid:  'Show review star ratings on product cards in listing pages. Proven 15% CTR lift.',
           high: 'Category pages are well-structured. Test infinite scroll vs pagination for your audience.',
+        }
+      },
+    ]
+  },
+  {
+    id: 'engagement_retention',
+    name: 'Engagement & Retention',
+    icon: '⚡',
+    weight: 12,
+    color: '#F5C518',
+    description: 'Maximising revenue per visit through intelligent cross-sell, upsell and re-engagement.',
+    parameters: [
+      {
+        id: 'cross_sell',
+        name: 'Cross-sell & Upsell',
+        weight: 1.0,
+        max_pts: 15,
+        industry_avg: 66,
+        scan_msgs: ['Detecting upsell modules…', 'Checking bundle offers…', 'Scoring AOV optimisation…'],
+        fixes: {
+          low:  'Add "Frequently bought together" bundles — average 12–18% AOV uplift.',
+          mid:  'Add post-purchase upsell page. Highest-converting touchpoint — buyer trust is peak.',
+          high: 'Cross-sell is active. Test AI-personalised recommendations vs rule-based.',
+        }
+      },
+      {
+        id: 'email_capture',
+        name: 'Email Capture',
+        weight: 1.0,
+        max_pts: 10,
+        industry_avg: 55,
+        scan_msgs: ['Checking email capture mechanisms…', 'Evaluating popup timing…', 'Scoring lead magnet quality…'],
+        fixes: {
+          low:  'Add a welcome offer popup (10% off) — email captures convert at 3–5% when incentivised correctly.',
+          mid:  'Switch to exit-intent email capture — shown to 3× opt-in rates vs time-based popups.',
+          high: 'Email capture is active. Segment by product category for better lifecycle targeting.',
+        }
+      },
+      {
+        id: 'whatsapp_marketing',
+        name: 'WhatsApp Marketing',
+        weight: 1.0,
+        max_pts: 10,
+        industry_avg: 40,
+        scan_msgs: ['Checking WhatsApp touchpoints…', 'Scanning opt-in flows…', 'Evaluating messaging integration…'],
+        fixes: {
+          low:  'Add a WhatsApp opt-in at checkout — WhatsApp campaigns have 98% open rate vs 22% email.',
+          mid:  'Set up WhatsApp abandoned cart messages. 3× higher recovery rate than email for Indian shoppers.',
+          high: 'WhatsApp integration is active. Add "Track Order on WhatsApp" to confirmation emails.',
         }
       },
     ]
@@ -255,50 +229,76 @@ const OWLEYE_PILLARS = [
     ]
   },
   {
-    id: 'engagement_retention',
-    name: 'Engagement & Retention',
-    icon: '⚡',
-    weight: 12,
-    color: '#F5C518',
-    description: 'Maximising revenue per visit through intelligent cross-sell, upsell and re-engagement.',
+    id: 'purchase_flow',
+    name: 'Purchase Flow',
+    icon: '🛒',
+    weight: 28,
+    color: '#FF4F2E',
+    description: 'The most critical pillar — covers the end-to-end buying journey from cart to confirmation.',
     parameters: [
       {
-        id: 'cross_sell',
-        name: 'Cross-sell & Upsell',
+        id: 'checkout_flow',
+        name: 'Checkout Flow',
         weight: 1.0,
-        max_pts: 15,
-        industry_avg: 66,
-        scan_msgs: ['Detecting upsell modules…', 'Checking bundle offers…', 'Scoring AOV optimisation…'],
+        max_pts: 12,
+        industry_avg: 70,
+        scan_msgs: ['Mapping checkout steps…', 'Counting form fields…', 'Checking progress indicators…'],
         fixes: {
-          low:  'Add "Frequently bought together" bundles — average 12–18% AOV uplift.',
-          mid:  'Add post-purchase upsell page. Highest-converting touchpoint — buyer trust is peak.',
-          high: 'Cross-sell is active. Test AI-personalised recommendations vs rule-based.',
+          low:  'Add a progress indicator to checkout — reduces abandonment by up to 18%.',
+          mid:  'Reduce checkout to 2 screens max; auto-fill address from PIN code.',
+          high: 'Checkout flow is strong. Consider adding 1-click reorder for repeat buyers.',
         }
       },
       {
-        id: 'email_capture',
-        name: 'Email Capture',
+        id: 'payment_options',
+        name: 'Payment Options',
         weight: 1.0,
         max_pts: 10,
-        industry_avg: 55,
-        scan_msgs: ['Checking email capture mechanisms…', 'Evaluating popup timing…', 'Scoring lead magnet quality…'],
+        industry_avg: 68,
+        scan_msgs: ['Detecting payment methods…', 'Checking UPI/COD support…', 'Validating payment UX…'],
         fixes: {
-          low:  'Add a welcome offer popup (10% off) — email captures convert at 3–5% when incentivised correctly.',
-          mid:  'Switch to exit-intent email capture — shown to 3× opt-in rates vs time-based popups.',
-          high: 'Email capture is active. Segment by product category for better lifecycle targeting.',
+          low:  'Add UPI and COD — 62% of Indian shoppers abandon without their preferred payment.',
+          mid:  'Add BNPL options (Simpl, LazyPay). They lift AOV 20–30%.',
+          high: 'Payment options are comprehensive. Test "Pay Later" upsells at checkout.',
         }
       },
       {
-        id: 'whatsapp_marketing',
-        name: 'WhatsApp Marketing',
+        id: 'cart_recovery',
+        name: 'Cart Recovery',
+        weight: 1.0,
+        max_pts: 8,
+        industry_avg: 65,
+        scan_msgs: ['Scanning cart behaviour…', 'Checking abandonment triggers…', 'Analysing recovery flows…'],
+        fixes: {
+          low:  'Implement exit-intent popup + 3-email abandoned cart sequence (1h, 24h, 72h).',
+          mid:  'Add cart persistence across sessions. 43% return to buy within 24h.',
+          high: 'Recovery flows are set up. Test WhatsApp recovery — 3× higher open rate than email.',
+        }
+      },
+      {
+        id: 'express_checkout',
+        name: 'Express Checkout',
         weight: 1.0,
         max_pts: 10,
-        industry_avg: 40,
-        scan_msgs: ['Checking WhatsApp touchpoints…', 'Scanning opt-in flows…', 'Evaluating messaging integration…'],
+        industry_avg: 42,
+        scan_msgs: ['Checking one-click buy options…', 'Testing guest checkout flow…', 'Scanning express payment presence…'],
         fixes: {
-          low:  'Add a WhatsApp opt-in at checkout — WhatsApp campaigns have 98% open rate vs 22% email.',
-          mid:  'Set up WhatsApp abandoned cart messages. 3× higher recovery rate than email for Indian shoppers.',
-          high: 'WhatsApp integration is active. Add "Track Order on WhatsApp" to confirmation emails.',
+          low:  'Add Google Pay or PhonePe express checkout — reduces checkout to 2 taps for 45% of buyers.',
+          mid:  'Enable instant buy on product pages. Cuts checkout from 5 steps to 1.',
+          high: 'Express checkout is live. Test placing the express button above the standard checkout.',
+        }
+      },
+      {
+        id: 'cod_prominence',
+        name: 'COD Prominence',
+        weight: 1.0,
+        max_pts: 8,
+        industry_avg: 65,
+        scan_msgs: ['Scanning COD visibility…', 'Checking payment hierarchy…', 'Measuring COD prominence near CTA…'],
+        fixes: {
+          low:  'Display "Cash on Delivery available" on product pages — converts 38% of hesitant buyers.',
+          mid:  'Move COD to first position in checkout — preferred by 45% of Tier 2/3 buyers.',
+          high: 'COD is prominent. Add "No prepayment needed" near add-to-cart to reduce anxiety.',
         }
       },
     ]

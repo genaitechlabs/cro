@@ -78,7 +78,7 @@ if (!empty($pages['_unreachable'])) {
     $host = parse_url($url, PHP_URL_HOST) ?? $url;
     http_response_code(400);
     echo json_encode([
-        'error' => "The target site ({$host}) is not reachable. OwlEye scan can't perform the evaluation at this time. Please check the URL or try again later.",
+        'error' => "The target site ({$host}) is not reachable. OwlEye scan can't perform the evaluation at this time. Please retry.",
     ]);
     exit;
 }
@@ -194,27 +194,45 @@ function isEcommerceStore(array $pages): bool
         if (strpos($html, $p) !== false) return true;
     }
 
-    // Cart / checkout actions — English (very strong signals)
-    $cartSignals = ['add to cart', 'add-to-cart', 'addtocart', '/cart', '/checkout',
-                    'buy now', 'add to bag', '/basket', 'proceed to checkout'];
+    // ── Cart / checkout actions — English (very strong signals) ──────────────
+    // Covers: Shopify, WooCommerce, custom stores, D2C brands, health-tech stores
+    // "shop now" / "buy online" / "order now" — common D2C CTAs (beatoapp, kapiva, etc.)
+    // "/store" — health-tech and D2C brands often have a dedicated /store section
+    $cartSignals = [
+        'add to cart', 'add-to-cart', 'addtocart',
+        '/cart', '/checkout', '/basket',
+        'buy now', 'buy online', 'order now',
+        'shop now', 'shop the range',
+        'add to bag', 'add to basket',
+        'proceed to checkout',
+        '/store',      // beatoapp, health-tech, D2C brands with store sections
+    ];
     foreach ($cartSignals as $s) {
         if (strpos($html, $s) !== false) return true;
     }
 
-    // Hindi ecommerce signals — strong signals for Indian stores
-    // खरीदें = Buy/Purchase | कार्ट = Cart | अभी खरीदें = Buy Now | डालें = Add (to cart)
+    // ── Hindi ecommerce signals — Indian stores ───────────────────────────────
+    // खरीदें = Buy/Purchase | कार्ट = Cart | अभी खरीदें = Buy Now | कार्ट में = In cart
+    // Covers: myupchar, 1mg, netmeds, any Hindi-language store
     foreach (['खरीदें', 'कार्ट', 'अभी खरीदें', 'कार्ट में'] as $s) {
         if (strpos($rawHtml, $s) !== false) return true;
     }
 
-    // ₹ appearing 3+ times = multiple product prices → very strong ecommerce signal
-    if (substr_count($rawHtml, '₹') >= 3) return true;
+    // ── ₹ price signals ───────────────────────────────────────────────────────
+    // ₹ ×2 = multiple product prices visible → strong ecommerce (kapiva, beatoapp, etc.)
+    if (substr_count($rawHtml, '₹') >= 2) return true;
 
-    // Product / price signals — require 2+ to reduce false positives
+    // ── Composite product/price signals — require 2+ to reduce false positives ─
+    // Each alone is weak; any combination of 2 is strong enough
+    // 'free shipping' + 'in stock' → almost certainly a store
+    // 'mrp' + '₹' → price listing on product/category page
     $count = 0;
-    foreach (['₹', 'mrp', '/products/', '/collections/', 'product-page',
-              'free shipping', 'cash on delivery', ' cod ', 'add to wishlist',
-              'out of stock', 'in stock', 'pincode', 'delivery charges'] as $s) {
+    foreach ([
+        '₹', 'mrp', '/products/', '/collections/', 'product-page',
+        'free shipping', 'cash on delivery', ' cod ', 'add to wishlist',
+        'out of stock', 'in stock', 'pincode', 'delivery charges',
+        'express delivery', 'same day delivery', 'seller',
+    ] as $s) {
         if (strpos($html, $s) !== false && ++$count >= 2) return true;
     }
 
@@ -235,7 +253,9 @@ function discoverAndFetchPages(string $url): array
     // Empty response = site unreachable, down, or blocking — signal to caller
     if (!$homeHtml) return ['_unreachable' => true];
 
-    $pages = ['home' => cleanHtml($homeHtml, 'home')];
+    // Detect agentic signals (WhatsApp, chat widgets, FAQ, UCP endpoint, Shopify MCP)
+    $agenticHint = detectAgenticSignals($homeHtml, $base);
+    $pages = ['home' => cleanHtml($homeHtml, 'home') . $agenticHint];
     if (detectJsRendered($homeHtml)) $pages['_js_rendered'] = true;
 
     // Detect platform
@@ -317,8 +337,24 @@ function discoverPageUrls(string $base, string $html, string $platform): array
         $host  = parse_url($base, PHP_URL_HOST);
         $links = array_unique($m[1] ?? []);
 
-        $productPats  = ['/\/(products?|item|p|pd)\/[^\/]{3,}/i'];
-        $categoryPats = ['/\/(collections?|categor|shop|browse|c)\/[^\/]{2,}/i', '/\/shop\/?$/i'];
+        $productPats  = [
+            // Standard ecommerce (Shopify-style, WooCommerce, generic)
+            '/\/(products?|item|p|pd)\/[^\/]{3,}/i',
+            // Health / pharmacy stores (myupchar, pharmeasy, 1mg, netmeds, etc.)
+            '/\/(medicine|medicines|drug|drugs|supplement|supplements|health-product|lab-test|labs?|otc)\/[^\/]{3,}/i',
+            // Health-tech / device stores (beatoapp — glucometer, strips, lancets, etc.)
+            '/\/(device|devices|glucometer|monitor|kit|combo|pack|buy)\/[^\/]{3,}/i',
+        ];
+        $categoryPats = [
+            // Standard ecommerce category URLs
+            '/\/(collections?|categor|shop|browse|c)\/[^\/]{2,}/i',
+            '/\/shop\/?$/i',
+            // Health pharmacy category pages (myupchar, netmeds, pharmeasy)
+            '/\/(pharmacy|health-products?|vitamins?|wellness|ayurved)\/?/i',
+            // D2C / health-tech store sections (beatoapp, etc.)
+            '/\/store\/?$/i',
+            '/\/store\//i',
+        ];
         $cartPats     = ['/\/(cart|checkout|bag)\/?$/i'];
 
         foreach ($links as $link) {
@@ -441,6 +477,143 @@ function fetchSinglePage(string $url): string
         return '';
     }
     return $html ?: '';
+}
+
+/**
+ * Detect agentic commerce signals from raw homepage HTML.
+ * Returns a compact hint string injected into the cleaned HTML so the AI
+ * can score conversational_ux and whatsapp_marketing with higher confidence.
+ *
+ * Confidence levels:
+ *   HIGH  — unique CDN/script domain that unambiguously identifies the tool
+ *   MED   — common patterns that may have false positives
+ *
+ * Signal memory (add new detections here as more stores are tested):
+ *   WhatsApp widget  : wa.me/, api.whatsapp.com, widget.wati.io — HIGH
+ *   Tawk.to          : embed.tawk.to — HIGH
+ *   Intercom         : widget.intercom.io, intercomcdn.com — HIGH
+ *   Crisp Chat       : client.crisp.chat — HIGH
+ *   Freshchat        : wchat.freshchat.com, freshbots — HIGH
+ *   Tidio            : code.tidio.co — HIGH
+ *   Drift            : js.driftt.com — HIGH
+ *   Zendesk Chat     : static.zdassets.com, zopim — HIGH
+ *   Kommunicate      : widget.kommunicate.io — HIGH
+ *   Verloop          : verloop.io — HIGH
+ *   Yellow.ai        : cloud.yellow.ai, yellowmessenger.com — HIGH
+ *   BotPenguin       : botpenguin.com — HIGH
+ *   Gorgias          : config.gorgias.chat — HIGH (Shopify CS)
+ *   LiveChat         : livechatinc.com — HIGH
+ *   Jivochat         : jivosite.com — HIGH
+ *   Smartsupp        : smartsupp.com — HIGH
+ *   Chatbot.com      : chatbot.com — MED (generic domain)
+ */
+/**
+ * Quick HEAD/GET to a URL — 3-second timeout, returns body or empty string.
+ * Used for lightweight endpoint presence checks (UCP, MCP) without the 8s
+ * timeout of fetchSinglePage(), which would add too much serial latency.
+ */
+function probeEndpoint(string $url): string
+{
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_TIMEOUT        => 3,
+        CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; OwlEye-Scanner/1.0; +https://genaitechlabs.com)',
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_HTTPHEADER     => ['Accept: application/json'],
+    ]);
+    $body = curl_exec($ch);
+    curl_close($ch);
+    return $body ?: '';
+}
+
+function detectAgenticSignals(string $rawHtml, string $base = ''): string
+{
+    $html = strtolower($rawHtml);
+    $signals = [];
+
+    // ── WhatsApp ──────────────────────────────────────────────────
+    if (strpos($html, 'wa.me/')           !== false ||
+        strpos($html, 'api.whatsapp.com') !== false ||
+        strpos($html, 'widget.wati.io')   !== false) {
+        $signals[] = 'whatsapp_widget=true';
+    }
+
+    // ── Live Chat / Support widgets ───────────────────────────────
+    // Signal memory — add new platforms here as more stores are tested:
+    $chatPlatforms = [
+        'embed.tawk.to'          => 'tawk.to',
+        'widget.intercom.io'     => 'intercom',
+        'intercomcdn.com'        => 'intercom',
+        'client.crisp.chat'      => 'crisp',
+        'wchat.freshchat.com'    => 'freshchat',
+        'code.tidio.co'          => 'tidio',
+        'js.driftt.com'          => 'drift',
+        'static.zdassets.com'    => 'zendesk',
+        'zopim.com'              => 'zendesk',
+        'widget.kommunicate.io'  => 'kommunicate',
+        'verloop.io'             => 'verloop',
+        'cloud.yellow.ai'        => 'yellow.ai',
+        'yellowmessenger.com'    => 'yellow.ai',
+        'botpenguin.com'         => 'botpenguin',
+        'config.gorgias.chat'    => 'gorgias',
+        'livechatinc.com'        => 'livechat',
+        'jivosite.com'           => 'jivochat',
+        'smartsupp.com'          => 'smartsupp',
+    ];
+    foreach ($chatPlatforms as $needle => $platform) {
+        if (strpos($html, $needle) !== false) {
+            $signals[] = 'chat_widget=' . $platform;
+            break; // one platform is enough
+        }
+    }
+
+    // ── FAQ / Q&A sections ────────────────────────────────────────
+    if (strpos($html, 'faq')                    !== false ||
+        strpos($html, 'frequently asked')        !== false ||
+        strpos($html, 'questions and answers')   !== false ||
+        strpos($rawHtml, '"@type":"FAQPage"')    !== false) {
+        $signals[] = 'faq_section=true';
+    }
+
+    // ── Endpoint-based agentic commerce detection ─────────────────
+    // These checks run with a 3s timeout so they don't block the main scan.
+    if ($base) {
+        // UCP (Universal Commerce Protocol) — open standard co-developed by Google,
+        // Shopify, Walmart, Target, Etsy. Enables AI agents (ChatGPT, Gemini, Copilot)
+        // to discover, query, and checkout from a store without custom integration.
+        // Spec: https://ucp.dev/specification/overview/
+        // Discovery: GET /.well-known/ucp → JSON with 'capabilities' or 'services' array
+        $ucpBody = probeEndpoint($base . '/.well-known/ucp');
+        if ($ucpBody) {
+            $ucp = json_decode($ucpBody, true);
+            if (!empty($ucp['capabilities']) || !empty($ucp['services']) || !empty($ucp['version'])) {
+                $signals[] = 'ucp_endpoint=true';
+            }
+        }
+
+        // Shopify MCP (Model Context Protocol) storefront endpoint —
+        // Shopify's native agentic commerce implementation. Active on all modern
+        // Shopify stores and exposes product catalogue + checkout via MCP protocol.
+        // Spec: https://shopify.dev/docs/agents/catalog/storefront-mcp
+        // Detection: cdn.shopify.com in HTML + /api/mcp returns 200 with MCP structure
+        $isShopify = strpos($html, 'cdn.shopify.com') !== false
+                  || strpos($html, 'myshopify.com')   !== false;
+        if ($isShopify) {
+            $mcpBody = probeEndpoint($base . '/api/mcp');
+            if ($mcpBody && strlen($mcpBody) > 20) {
+                $mcp = json_decode($mcpBody, true);
+                // MCP response includes 'tools' or 'jsonrpc' or 'protocolVersion'
+                if (!empty($mcp['tools']) || isset($mcp['jsonrpc']) || isset($mcp['protocolVersion'])) {
+                    $signals[] = 'shopify_mcp=true';
+                }
+            }
+        }
+    }
+
+    if (empty($signals)) return '';
+    return "\n[AGENTIC_SIGNALS] " . implode(' | ', $signals);
 }
 
 /**
