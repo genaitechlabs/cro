@@ -31,7 +31,7 @@ const OWLEYE_BENCHMARKS = {
 const OWLEYE_PILLARS = [
   {
     id: 'page_experience',
-    name: 'Page Experience',
+    name: 'User Experience',
     icon: '🗒️',
     weight: 22,
     color: '#0EA5E9',
