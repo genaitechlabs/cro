@@ -101,10 +101,11 @@ SYS;
     {
         $labels = [
             'home'     => 'HOME PAGE',
-            'product'  => 'PRODUCT PAGE',
+            'product'  => 'PRODUCT PAGE (may include multiple products)',
             'category' => 'CATEGORY / COLLECTION PAGE',
             'cart'     => 'CART PAGE',
             'returns'  => 'RETURNS / REFUND POLICY PAGE',
+            'search'   => 'SEARCH RESULTS PAGE',
         ];
 
         $pagesBlock = '';
@@ -119,7 +120,8 @@ SYS;
         $criteria = <<<CRIT
 Score each parameter using only evidence from the labelled page sections above:
 
-NOTE: The HOME PAGE section may contain a [PURCHASE_SIGNALS] line — use it as confirmed hardware evidence for Purchase Flow parameters.
+NOTE: The HOME PAGE section may contain [PURCHASE_SIGNALS], [TRUST_SIGNALS], and [CONTENT_SIGNALS] lines — use them as confirmed hardware evidence when scoring the relevant parameters.
+NOTE: PRODUCT PAGE may include HTML from multiple product pages (up to 5) concatenated — score reviews, schema, and UGC across all products shown.
 
 PURCHASE FLOW — draw evidence from CART PAGE and [PURCHASE_SIGNALS]
 - checkout_flow      [CART PAGE]: Steps to complete purchase, progress bar, guest checkout option, form length
@@ -143,7 +145,10 @@ PURCHASE FLOW — draw evidence from CART PAGE and [PURCHASE_SIGNALS]
 USER EXPERIENCE
 - landing_page       [HOME PAGE]: Above-fold clarity, hero headline quality, primary CTA placement & copy
 - product_pages      [PRODUCT PAGE]: Image count/quality, reviews placement, ATC button prominence, product video
-- search_ux          [CATEGORY PAGE]: Search bar, autocomplete quality, typo tolerance, filter/sort controls
+                     Score across all products shown — if multiple products concatenated, reward consistency
+- search_ux          [SEARCH RESULTS PAGE]: Search bar presence, result relevance, filter/sort controls, autocomplete signals, zero-results handling
+                     Also check [CATEGORY PAGE] if no search page available
+                     No search page accessible → score based on category page search bar signals; default 40 if neither available
 - sticky_atc         [PRODUCT PAGE]: Sticky add-to-cart bar visible while scrolling, mobile-optimised persistence
                      [PURCHASE_SIGNALS] sticky_atc_signal=true → sticky/fixed CSS confirmed near ATC → score 68+
 - category_pages     [CATEGORY PAGE]: Filter/sort options, product grid quality, listing layout, pagination
@@ -169,6 +174,7 @@ TRUST & CONVERSION
 
 ENGAGEMENT & RETENTION
 - cross_sell         [PRODUCT PAGE]: Related products, "frequently bought together" modules, bundle offers
+                     [PURCHASE_SIGNALS] wishlist_feature=true → wishlist/save-for-later confirmed → score 60+ (drives return visits and purchase intent)
 - email_capture      [HOME PAGE]: Email popup, exit-intent capture, lead magnet quality, newsletter signup
                      [PURCHASE_SIGNALS] email_crm={tool} → CRM tool confirmed (Klaviyo/Mailchimp/etc.) → score 68+
                      [PURCHASE_SIGNALS] push_capture=true → push notification tool (OneSignal/iZooto) → score 62+
@@ -182,12 +188,16 @@ NOTE: The HOME PAGE section may contain an [AGENTIC_SIGNALS] line — use it as 
                      Absent structured data with no UCP/MCP → score ≤30
 - content_clarity    [HOME PAGE]: Plain-language copy, scannable headings, LLM-parseable structure.
                      AI agents relay product descriptions verbatim — vague/keyword-stuffed copy → low score.
+                     [CONTENT_SIGNALS] blog_howto=true → how-to/guide content found in blog → score 62+ (structured helpful content aids AI readability)
+                     [CONTENT_SIGNALS] blog_schema=true → Article/BlogPosting JSON-LD confirmed → score 68+ (AI can index and cite content)
 - ai_discoverability [HOME PAGE]: Unique meta descriptions per page, semantic H1→H2→H3 hierarchy, sitemap signals.
                      [AGENTIC_SIGNALS] ucp_endpoint=true → store is machine-discoverable via UCP standard → add 15 pts to base score
+                     [CONTENT_SIGNALS] blog_schema=true → structured blog content boosts AI indexability → score +5 pts
 - conversational_ux  [HOME PAGE]: FAQ section depth, chatbot/virtual agent presence, structured Q&A content.
                      [AGENTIC_SIGNALS] chat_widget={platform} → live chat widget confirmed → score 58+ (presence alone = 58; quality of FAQ/chat integration can raise to 80+)
                      [AGENTIC_SIGNALS] faq_section=true        → FAQ content present → score 50+ (depth determines how much higher)
-                     No chat widget AND no FAQ → score ≤30
+                     [CONTENT_SIGNALS] blog_faq=true           → FAQ-style content in blog → score 55+ (Q&A content is LLM-citable)
+                     No chat widget AND no FAQ AND no blog_faq → score ≤30
 - whatsapp_marketing [HOME PAGE]: WhatsApp opt-in widget, chat button, broadcast/marketing touchpoint.
                      [AGENTIC_SIGNALS] whatsapp_widget=true → WhatsApp widget confirmed on page → score 62+ (integration quality determines final score)
                      Not detected → score based on any WhatsApp mentions or opt-in text in HTML
