@@ -147,6 +147,16 @@ Converts previously estimated (~est.) Purchase Flow params into signal-verified 
 
 ---
 
+## Scan DB Persistence (`analyse.php`)
+- JSON encoded with `JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE` — prevents silent INSERT failures when crawled HTML contains Hindi/multilingual content
+- `social_proof` verification type: `home_or_product` — verified if either home OR product page crawled
+- Product page HTML limit: 9000 chars (up from 6000) — captures reviews deeper in page
+
+## Returns Policy Discovery (`discoverPageUrls()` in `api/analyse.php`)
+After homepage `<a href>` regex scan, probes these custom platform paths before generic fallback:
+`/home/refund_policy`, `/home/return-policy`, `/help/refund`, `/help/returns`, `/support/refund-policy`, `/pages/return-policy`, `/pages/returns`
+Fixes health/pharma stores (myupchar) where footer is JS-rendered and refund link not in raw HTML.
+
 ## AI Scoring Guidance (`api/ai/claude.php`)
 
 ### PARAM_ORDER (scan + AI scoring order)

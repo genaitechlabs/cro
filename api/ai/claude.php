@@ -157,7 +157,8 @@ TRUST & CONVERSION
     21–40:  Very restrictive — refund case-by-case, no clear timeline, complex or undisclosed conditions; cancellation not clearly allowed
     0–20:   No refund policy stated, all sales final, or page not found
     If page is missing, score 40.
-- social_proof       [PRODUCT PAGE]: Review volume, photo/video UGC, rating display, review recency
+- social_proof       [PRODUCT PAGE or HOME PAGE]: Review volume, photo/video UGC, testimonials, rating display, review recency.
+                     Indian stores often display UGC video testimonials, trust counts ("1 lakh+ customers"), and press mentions on the homepage — score these too.
 - review_quality     [PRODUCT PAGE]: Review depth, rating distribution, verified buyer badges, brand responses
 - guarantee_signals  [PRODUCT PAGE]: Money-back guarantee, warranty, risk-reversal copy near buy button
 
