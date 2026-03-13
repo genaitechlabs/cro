@@ -521,21 +521,24 @@ function runScoreAnalysis() {
     }, 44);
   }
 
-  // Once screenshot is ready, make overlay semi-transparent and begin scan
+  // Begin scan — overlay stays fully dark during scanning so CDN interstitial
+  // pages (Cloudflare challenges, etc.) never show through the semi-transparent overlay.
+  // Screenshot loads in background; it will appear only after results are rendered.
   let scanStarted = false;
   function beginScan() {
     if (scanStarted) return;
     scanStarted = true;
-    // Transition overlay: screenshot shows through, scan overlay floats on top
-    scanOvEl.style.background = 'rgba(5,10,20,.65)';
-    scanOvEl.style.backdropFilter = 'blur(1px)';
+    // Keep overlay opaque during scan — screenshot reveals only once results are shown
+    scanOvEl.style.background = 'rgba(5,10,20,.93)';
+    scanOvEl.style.backdropFilter = '';
     scanOvEl.innerHTML = '<div style="width:36px;height:36px;border:3px solid rgba(255,79,46,.3);border-top-color:var(--coral);border-radius:50%;animation:spin .8s linear infinite"></div><div style="font-size:.76rem;color:var(--coral);font-weight:700" id="scanStatusText">Connecting…</div>';
     setTimeout(scanNext, 400);
   }
 
   // Fetch store screenshot via thum.io (free, no API key).
-  // Screenshot loads in background — scan starts immediately so there's no dead wait.
-  // When thum.io responds the image naturally appears through the semi-transparent overlay.
+  // Loads in background — scan starts immediately, no dead wait.
+  // Screenshot is kept hidden during scan to avoid showing CDN interstitial pages.
+  // Only displayed once results overlay is rendered (at 0.72 opacity).
   const screenshotImg = document.getElementById('scanScreenshot');
   screenshotImg.style.display = 'none';
   screenshotImg.onload = () => { screenshotImg.style.display = 'block'; };
