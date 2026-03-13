@@ -47,6 +47,9 @@ if (!$url || !filter_var($url, FILTER_VALIDATE_URL) || !preg_match('/^https?:\/\
 }
 
 $urlNorm = normalizeUrl($url);
+// Store homepage base — strips leaf paths (products, collections…) to domain root,
+// but preserves shop-subdirectory roots like /shop or /store, and always keeps subdomains.
+$urlBase = extractStoreBase($url);
 
 // ── 2. Rate limit check ──────────────────────────────────────────
 $ip = getClientIp();
@@ -123,11 +126,13 @@ if ($trustHint) {
 }
 
 // ── 4. Screenshots (homepage only) ───────────────────────────────
-$desktop = ScreenshotAdapter::capture($url, 'desktop');
-$mobile  = ScreenshotAdapter::capture($url, 'mobile');
+// Always screenshot the homepage (base URL) — not a product/category URL the user may have pasted.
+$desktop = ScreenshotAdapter::capture($urlBase, 'desktop');
+$mobile  = ScreenshotAdapter::capture($urlBase, 'mobile');
 
 // ── 5. AI analysis ───────────────────────────────────────────────
-$result = AiAdapter::analyse($url, $pages, $desktop, $mobile);
+// Pass the base URL so the AI always refers to the store root, not a deep path.
+$result = AiAdapter::analyse($urlBase, $pages, $desktop, $mobile);
 
 // ── 6. PageSpeed Insights — overrides AI estimate for page_speed ─
 $psiConfigured = defined('GOOGLE_PSI_KEY') && GOOGLE_PSI_KEY;
@@ -275,11 +280,12 @@ function isEcommerceStore(array $pages): bool
  */
 function discoverAndFetchPages(string $url): array
 {
-    $base = preg_replace('/^(https?:\/\/[^\/]+).*$/i', '$1', $url);
-    $base = rtrim($base, '/');
+    $base = extractStoreBase($url);
 
-    // Always fetch homepage first
-    $homeHtml = fetchSinglePage($url);
+    // Always fetch the BASE (homepage), not the submitted URL.
+    // Users often paste product/category URLs — using the domain root ensures
+    // correct platform detection, homepage signal analysis, and link discovery.
+    $homeHtml = fetchSinglePage($base);
     // Empty response = site unreachable, down, or blocking — signal to caller
     if (!$homeHtml) return ['_unreachable' => true];
 
@@ -353,8 +359,12 @@ function detectPlatform(string $html): string
  */
 function discoverPageUrls(string $base, string $html, string $platform): array
 {
-    $urls = [];
-    $host = parse_url($base, PHP_URL_HOST);
+    $urls       = [];
+    $host       = parse_url($base, PHP_URL_HOST);
+    // Domain root (scheme + host, no subdirectory path) — needed for WooCommerce
+    // where cart/checkout/policy pages live at the domain root even when the shop
+    // is hosted in a subdirectory like /shop or /store.
+    $domainRoot = parse_url($base, PHP_URL_SCHEME) . '://' . $host;
 
     if ($platform === 'shopify') {
         // ── Products: up to 5 via JSON API ────────────────────────────────────
@@ -387,9 +397,15 @@ function discoverPageUrls(string $base, string $html, string $platform): array
             : $base . '/blogs/news';
 
     } elseif ($platform === 'woocommerce') {
-        // Try standard WooCommerce paths
-        $urls['category'] = $base . '/shop';
-        $urls['cart']     = $base . '/cart';
+        // Category / shop listing page:
+        //   - If $base already has a path (e.g. domain.com/shop), use $base itself as the listing.
+        //   - Otherwise append /shop (standard WooCommerce at root layout).
+        $basePath = trim(parse_url($base, PHP_URL_PATH) ?? '', '/');
+        $urls['category'] = $basePath !== '' ? $base : $base . '/shop';
+
+        // Cart and returns are always at the domain root for WooCommerce,
+        // even when the shop lives in a /shop or /store subdirectory.
+        $urls['cart'] = $domainRoot . '/cart';
 
         // Find up to 5 product links from homepage
         preg_match_all('/href=["\']([^"\'#?]*\/product\/[^"\'?#]+)["\']/', $html, $m);
@@ -514,7 +530,8 @@ function discoverPageUrls(string $base, string $html, string $platform): array
 
         if (!isset($urls['returns'])) {
             $urls['returns'] = match ($platform) {
-                'woocommerce' => $base . '/refund_policy',
+                // WooCommerce policy pages live at domain root, not under a /shop subdirectory
+                'woocommerce' => $domainRoot . '/refund_policy',
                 default       => $base . '/refund-policy',
             };
         }
@@ -1153,6 +1170,42 @@ function normalizeUrl(string $url): string
 {
     $host = parse_url(strtolower(trim($url)), PHP_URL_HOST) ?? '';
     return preg_replace('/^www\./i', '', $host) ?: strtolower(trim($url));
+}
+
+/**
+ * Extract the store homepage base URL from any submitted URL.
+ *
+ * Handles three cases:
+ *   1. Subdomain stores  — shop.domain.com/products/x  → https://shop.domain.com
+ *   2. Subdirectory shop — domain.com/shop/products/x  → https://domain.com/shop
+ *                          domain.com/store/anything   → https://domain.com/store
+ *   3. Leaf page URLs    — domain.com/products/x       → https://domain.com
+ *                          domain.com/collections/y    → https://domain.com
+ *
+ * Only /shop and /store are treated as shop-root subdirectories.
+ * All other first path segments (products, collections, category, pages…)
+ * are treated as leaf pages and stripped back to the domain root.
+ */
+function extractStoreBase(string $url): string
+{
+    $scheme     = parse_url($url, PHP_URL_SCHEME) ?: 'https';
+    $host       = parse_url($url, PHP_URL_HOST)   ?: '';
+    $path       = trim(parse_url($url, PHP_URL_PATH) ?? '', '/');
+    $domainRoot = $scheme . '://' . $host;
+
+    if (!$path) return $domainRoot;
+
+    $firstSeg = strtolower(explode('/', $path)[0]);
+
+    // Known shop-subdirectory names — store homepage lives at domain.com/<seg>
+    // Common for WooCommerce sites where the WordPress blog occupies the root.
+    if (in_array($firstSeg, ['shop', 'store'], true)) {
+        return $domainRoot . '/' . $firstSeg;
+    }
+
+    // Everything else (products, collections, category, pages, blogs, cart…)
+    // is a leaf page — strip back to the domain root.
+    return $domainRoot;
 }
 
 /**
