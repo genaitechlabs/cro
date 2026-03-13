@@ -284,6 +284,7 @@ async function fetchRealScores(url) {
       unverifiedParams: Array.isArray(data.unverified_params)    ? data.unverified_params : [],
       pagesScanned:     typeof data.pages_scanned  === 'number'  ? data.pages_scanned   : null,
       jsRendered:       !!data.js_rendered,
+      isNonEnglish:     !!data.is_non_english,
       scanToken:        typeof data.scan_token === 'string'       ? data.scan_token       : null,
     };
   } catch (err) {
@@ -581,6 +582,7 @@ async function showScoreResults() {
   const unverifiedParams = apiData.unverifiedParams || [];
   const pagesScanned    = apiData.pagesScanned;
   const jsRendered      = apiData.jsRendered || false;
+  const isNonEnglish    = apiData.isNonEnglish || false;
   // Store scan token so the gate form can attach it to the lead
   window._lastScanToken = apiData.scanToken || '';
   const total = calcOwleyeTotal(scores);
@@ -654,6 +656,22 @@ async function showScoreResults() {
     jsBanner.innerHTML = '⚡ <span>Your store\'s dynamic content couldn\'t be fully crawled. Some scores are estimated. <a href="https://topmate.io/productmentor/1026755" target="_blank" rel="noopener" style="color:var(--coral);font-weight:700;text-decoration:none">Book an Audit Call →</a> for a complete review.</span>';
     const vbEl = document.getElementById('verifiedBadge');
     if (vbEl && vbEl.parentNode) vbEl.parentNode.insertBefore(jsBanner, vbEl.nextSibling);
+  }
+
+  // Disclaimer banners — language and/or estimated params
+  const existingDisclaimer = document.getElementById('scanDisclaimer');
+  if (existingDisclaimer) existingDisclaimer.remove();
+  const unvCount = 28 - (verifiedCount ?? 28);
+  if (isNonEnglish || unvCount > 0) {
+    const disc = document.createElement('div');
+    disc.id = 'scanDisclaimer';
+    disc.style.cssText = 'display:flex;align-items:flex-start;gap:8px;background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.18);border-radius:10px;padding:10px 14px;font-size:.78rem;color:rgba(248,249,255,.65);line-height:1.6;margin-top:10px';
+    const msg = isNonEnglish
+      ? '🌐 <span>OwlEye Scan works best with stores in English. Some parameters are estimated. <a href="https://topmate.io/productmentor/1026755" target="_blank" rel="noopener" style="color:var(--coral);font-weight:700;text-decoration:none">Get a manual audit →</a> for best results.</span>'
+      : '📊 <span>Some parameters are estimated from page signals. <a href="https://topmate.io/productmentor/1026755" target="_blank" rel="noopener" style="color:var(--coral);font-weight:700;text-decoration:none">Get a manual audit →</a> for best results.</span>';
+    disc.innerHTML = msg;
+    const vbEl3 = document.getElementById('verifiedBadge');
+    if (vbEl3 && vbEl3.parentNode) vbEl3.parentNode.insertBefore(disc, vbEl3.nextSibling);
   }
 
   // Gate prompt — surface unverified params as audit hook
