@@ -87,6 +87,15 @@ if (!empty($pages['_unreachable'])) {
 $jsRendered = !empty($pages['_js_rendered']);
 unset($pages['_js_rendered']);
 
+// ── 3c.5. Detect non-English (Hindi-primary) store ───────────────
+// If homepage contains Hindi ecommerce text, flag for UI disclaimer
+$_homeRaw    = $pages['home'] ?? '';
+$isNonEnglish = false;
+foreach (['खरीदें', 'कार्ट', 'अभी खरीदें', 'कार्ट में', 'मुफ्त', 'शिपिंग', 'रुपये'] as $_hs) {
+    if (strpos($_homeRaw, $_hs) !== false) { $isNonEnglish = true; break; }
+}
+unset($_homeRaw, $_hs);
+
 // ── 3d. Ecommerce store check ─────────────────────────────────────
 if (!isEcommerceStore($pages)) {
     $host = parse_url($url, PHP_URL_HOST) ?? $url;
@@ -175,7 +184,8 @@ if (isset($result['scores']) && defined('DB_NAME') && DB_NAME) {
     }
 }
 
-$result['js_rendered'] = $jsRendered;
+$result['js_rendered']   = $jsRendered;
+$result['is_non_english'] = $isNonEnglish;
 echo json_encode($result);
 
 
@@ -797,7 +807,7 @@ function cleanHtml(string $html, string $type): string
     $html = preg_replace('/<!--.*?-->/s',                     '', $html);
     $html = preg_replace('/\s{2,}/',                          ' ', $html);
 
-    $limits = ['home' => 10000, 'product' => 9000, 'category' => 5000, 'cart' => 5000, 'returns' => 5000];
+    $limits = ['home' => 10000, 'product' => 18000, 'category' => 5000, 'cart' => 5000, 'returns' => 5000];
     return mb_substr(trim($html), 0, $limits[$type] ?? 5000) . $extras;
 }
 
