@@ -132,6 +132,17 @@ Converts previously estimated (~est.) Purchase Flow params into signal-verified 
 
 > Multiple payment signals stack: `upi_available + cod_available + bnpl_available` → `payment_options` 82+
 
+### Trust Signal Detection (`detectTrustSignals()` in `api/analyse.php`)
+
+Called after all pages fetched. Injects `[TRUST_SIGNALS]` into `pages['home']` before AI scoring.
+Surfaces press coverage, testimonial sections, and large customer count proof that the AI should reward.
+
+| Signal | Detection | Param(s) it improves |
+|--------|-----------|---------------------|
+| `press_coverage=true` | "featured in" / "as seen in" text OR 2+ outlet names (NDTV, BBC, ET, Inc42, etc.) | `trust_signals` → 68+, `social_proof` → 62+ |
+| `testimonial_section=true` | "testimonials" / "what our customers say" / "customer stories" keywords | `social_proof` → 65+ |
+| `trust_count=true` | "X lakh+ customers/orders" or formatted Indian numbers ≥ 6 digits (1,00,000+) | `trust_signals` → 65+, `social_proof` → 60+ |
+
 ---
 
 ### Scan pipeline (3 steps)

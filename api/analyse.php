@@ -114,6 +114,14 @@ if ($purchaseHint) {
     $pages['home'] = ($pages['home'] ?? '') . $purchaseHint;
 }
 
+// ── 3f. Trust signal detection ────────────────────────────────────
+// Detects press/media coverage, testimonial sections, and trust counts
+// Injected into home page for AI scoring of trust_signals + social_proof
+$trustHint = detectTrustSignals($pages);
+if ($trustHint) {
+    $pages['home'] = ($pages['home'] ?? '') . $trustHint;
+}
+
 // ── 4. Screenshots (homepage only) ───────────────────────────────
 $desktop = ScreenshotAdapter::capture($url, 'desktop');
 $mobile  = ScreenshotAdapter::capture($url, 'mobile');
@@ -809,6 +817,72 @@ function cleanHtml(string $html, string $type): string
 
     $limits = ['home' => 10000, 'product' => 18000, 'category' => 5000, 'cart' => 5000, 'returns' => 5000];
     return mb_substr(trim($html), 0, $limits[$type] ?? 5000) . $extras;
+}
+
+/**
+ * Detect trust signals: press/media coverage, testimonial sections, and large trust counts.
+ * Called after all pages are fetched. Injects [TRUST_SIGNALS] into pages['home'].
+ *
+ * Signals:
+ *   press_coverage=true     : "featured in", "as seen in" + outlet names (NDTV, BBC, etc.)
+ *   testimonial_section=true: testimonials/customer-stories section on home or product page
+ *   trust_count=true        : large customer/order counts (1 lakh+, 1,00,000+)
+ */
+function detectTrustSignals(array $pages): string
+{
+    $rawAll = ($pages['home'] ?? '') . ($pages['product'] ?? '') . ($pages['category'] ?? '');
+    $html   = strtolower($rawAll);
+
+    $signals = [];
+
+    // ── Press / Media Coverage ─────────────────────────────────────────────────
+    // Primary: explicit "featured in" / "as seen in" sections
+    foreach (['featured in', 'as seen in', 'in the news', 'media coverage', 'press coverage'] as $kw) {
+        if (strpos($html, $kw) !== false) {
+            $signals[] = 'press_coverage=true';
+            break;
+        }
+    }
+    // Fallback: 2+ known outlet names present anywhere on page (logo strips, footers)
+    if (!in_array('press_coverage=true', $signals)) {
+        $outlets  = ['ndtv', 'republic tv', 'bbc', 'economic times', 'business standard',
+                     'hindustan times', 'inc42', 'yourstory', 'forbes', 'mint.com',
+                     'cnbc', 'bloomberg', 'the week', 'livemint', 'techcrunch', 'financial express'];
+        $outletHits = 0;
+        foreach ($outlets as $o) {
+            if (strpos($html, $o) !== false) $outletHits++;
+        }
+        if ($outletHits >= 2) $signals[] = 'press_coverage=true';
+    }
+
+    // ── Testimonial Section ────────────────────────────────────────────────────
+    $testimonialKws = [
+        'testimonial', 'what our customers say', 'what customers say',
+        'what people say', 'customer stories', 'customer love',
+        'what our users say', 'real customers', 'hear from our customers',
+        'happy customers', 'our customers',
+    ];
+    foreach ($testimonialKws as $kw) {
+        if (strpos($html, $kw) !== false) {
+            $signals[] = 'testimonial_section=true';
+            break;
+        }
+    }
+
+    // ── Trust Count (large customer / order numbers) ───────────────────────────
+    // Matches: "1 lakh+ customers", "5 crore users", "10 million orders"
+    if (preg_match('/\d[\d,]*\+?\s*(lakh|crore|million|lac)\+?\s*(customer|user|order|patient|member)/i', $rawAll)) {
+        $signals[] = 'trust_count=true';
+    }
+    // Matches formatted Indian numbers: "1,00,000+" "10,00,000+" (≥ 6 digits)
+    if (!in_array('trust_count=true', $signals)) {
+        if (preg_match('/[1-9]\d{0,2}(?:,\d{2,3}){2,}\+/', $rawAll)) {
+            $signals[] = 'trust_count=true';
+        }
+    }
+
+    if (empty($signals)) return '';
+    return "\n\n[TRUST_SIGNALS]: " . implode(', ', $signals);
 }
 
 /**

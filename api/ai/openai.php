@@ -149,6 +149,8 @@ USER EXPERIENCE
 
 TRUST & CONVERSION
 - trust_signals      [HOME PAGE]: SSL indicator, trust badges, review count, security logos near CTA
+                     [TRUST_SIGNALS] press_coverage=true → media/press mentions confirmed → score 68+
+                     [TRUST_SIGNALS] trust_count=true → large customer/order count confirmed → score 65+
 - returns_policy     [RETURNS / REFUND POLICY PAGE]: Score based on actual policy content —
     81–100: 100% refund (money back to original payment) with simple process and clear timeline (7–15 days); easy cancellation before dispatch with full refund
     61–80:  Refund with reasonable conditions (unused item, original packaging, within stated timeframe); cancellation allowed with minor restrictions
@@ -158,6 +160,9 @@ TRUST & CONVERSION
     If page is missing, score 40.
 - social_proof       [PRODUCT PAGE or HOME PAGE]: Review volume, photo/video UGC, testimonials, rating display, review recency.
                      Indian stores often display UGC video testimonials, trust counts ("1 lakh+ customers"), and press mentions on the homepage — score these too.
+                     [TRUST_SIGNALS] testimonial_section=true → customer testimonials section confirmed → score 65+
+                     [TRUST_SIGNALS] press_coverage=true → media features confirmed → score 62+
+                     [TRUST_SIGNALS] trust_count=true → large customer count confirmed → score 60+
 - review_quality     [PRODUCT PAGE]: Review depth, rating distribution, verified buyer badges, brand responses
 - guarantee_signals  [PRODUCT PAGE]: Money-back guarantee, warranty, risk-reversal copy near buy button
 
