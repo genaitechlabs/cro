@@ -301,6 +301,31 @@ function discoverAndFetchPages(string $url): array
         $pages[$type] = cleanHtml($html, $type);
     }
 
+    // ── Merge extra product pages (product1–4) into primary product ───────────
+    // Each extra product is cleaned at a smaller limit; merged total capped at 24000.
+    // This gives the AI multi-product review and schema coverage without exploding prompt size.
+    $productParts = [$pages['product'] ?? ''];
+    for ($i = 1; $i <= 4; $i++) {
+        $key = "product{$i}";
+        if (!empty($pages[$key])) {
+            $productParts[] = "\n\n--- PRODUCT " . ($i + 1) . " ---\n" . $pages[$key];
+            unset($pages[$key]);
+        }
+    }
+    $combined = implode('', $productParts);
+    if (strlen($combined) > 0) {
+        $pages['product'] = mb_substr($combined, 0, 24000);
+    }
+
+    // ── Extract blog/content signals then discard (blog not sent to AI directly) ─
+    if (!empty($pages['blog'])) {
+        $blogHint = detectBlogSignals($pages['blog']);
+        if ($blogHint) {
+            $pages['home'] = ($pages['home'] ?? '') . $blogHint;
+        }
+        unset($pages['blog']);
+    }
+
     return $pages;
 }
 
@@ -329,13 +354,18 @@ function detectPlatform(string $html): string
 function discoverPageUrls(string $base, string $html, string $platform): array
 {
     $urls = [];
+    $host = parse_url($base, PHP_URL_HOST);
 
     if ($platform === 'shopify') {
-        // Shopify JSON endpoints — unauthenticated, always available
-        $pJson = fetchSinglePage($base . '/products.json?limit=1');
+        // ── Products: up to 5 via JSON API ────────────────────────────────────
+        $pJson = fetchSinglePage($base . '/products.json?limit=5');
         $p     = json_decode($pJson, true);
-        if (!empty($p['products'][0]['handle'])) {
-            $urls['product'] = $base . '/products/' . $p['products'][0]['handle'];
+        if (!empty($p['products'])) {
+            foreach (array_slice($p['products'], 0, 5) as $i => $prod) {
+                if (empty($prod['handle'])) continue;
+                $key          = $i === 0 ? 'product' : "product{$i}";
+                $urls[$key]   = $base . '/products/' . $prod['handle'];
+            }
         }
 
         $cJson = fetchSinglePage($base . '/collections.json?limit=1');
@@ -345,58 +375,75 @@ function discoverPageUrls(string $base, string $html, string $platform): array
         }
 
         $urls['cart']    = $base . '/cart';
-        $urls['returns'] = $base . '/policies/refund-policy'; // always present on Shopify
+        $urls['returns'] = $base . '/policies/refund-policy';
+
+        // ── Search ─────────────────────────────────────────────────────────────
+        $urls['search'] = $base . '/search?q=*&type=product';
+
+        // ── Blog: prefer link from homepage, fallback to /blogs/news ──────────
+        preg_match('/href=["\']([^"\'#?]*\/blogs\/[^"\'?#]+)["\']/', $html, $bm);
+        $urls['blog'] = !empty($bm[1])
+            ? (preg_match('/^https?:/i', $bm[1]) ? $bm[1] : $base . '/' . ltrim($bm[1], '/'))
+            : $base . '/blogs/news';
 
     } elseif ($platform === 'woocommerce') {
         // Try standard WooCommerce paths
         $urls['category'] = $base . '/shop';
         $urls['cart']     = $base . '/cart';
 
-        // Find product link from homepage
-        $host = parse_url($base, PHP_URL_HOST);
+        // Find up to 5 product links from homepage
         preg_match_all('/href=["\']([^"\'#?]*\/product\/[^"\'?#]+)["\']/', $html, $m);
-        $candidates = array_filter($m[1] ?? [], fn($l) => strpos($l, $host) !== false || str_starts_with($l, '/'));
-        if (!empty($candidates)) {
-            $link = reset($candidates);
-            $urls['product'] = str_starts_with($link, 'http') ? $link : $base . $link;
+        $candidates = array_values(array_filter(
+            array_unique($m[1] ?? []),
+            fn($l) => strpos($l, $host) !== false || str_starts_with($l, '/')
+        ));
+        foreach (array_slice($candidates, 0, 5) as $i => $link) {
+            $abs = str_starts_with($link, 'http') ? $link : $base . $link;
+            $urls[$i === 0 ? 'product' : "product{$i}"] = $abs;
         }
+
+        // ── Search ─────────────────────────────────────────────────────────────
+        $urls['search'] = $base . '/?s=*&post_type=product';
+
+        // ── Blog ───────────────────────────────────────────────────────────────
+        $urls['blog'] = $base . '/blog';
 
     } else {
         // Generic: score all homepage links by pattern
         preg_match_all('/href=["\']([^"\'#?]{5,})["\']/', $html, $m);
-        $host  = parse_url($base, PHP_URL_HOST);
         $links = array_unique($m[1] ?? []);
 
         $productPats  = [
-            // Standard ecommerce (Shopify-style, WooCommerce, generic)
             '/\/(products?|item|p|pd)\/[^\/]{3,}/i',
-            // Health / pharmacy stores (myupchar, pharmeasy, 1mg, netmeds, etc.)
             '/\/(medicine|medicines|drug|drugs|supplement|supplements|health-product|lab-test|labs?|otc)\/[^\/]{3,}/i',
-            // Health-tech / device stores (beatoapp — glucometer, strips, lancets, etc.)
             '/\/(device|devices|glucometer|monitor|kit|combo|pack|buy)\/[^\/]{3,}/i',
         ];
         $categoryPats = [
-            // Standard ecommerce category URLs
             '/\/(collections?|categor|shop|browse|c)\/[^\/]{2,}/i',
             '/\/shop\/?$/i',
-            // Health pharmacy category pages (myupchar, netmeds, pharmeasy)
             '/\/(pharmacy|health-products?|vitamins?|wellness|ayurved)\/?/i',
-            // D2C / health-tech store sections (beatoapp, etc.)
             '/\/store\/?$/i',
             '/\/store\//i',
         ];
         $cartPats     = ['/\/(cart|checkout|bag)\/?$/i'];
+        $blogPats     = ['/\/(blog|news|articles?|learn|tips|reads?)\/[^\/]{3,}/i', '/\/blog\/?$/i'];
+        $searchPats   = ['/\/(search|find|query)\/?/i'];
 
+        $productCount = 0;
         foreach ($links as $link) {
-            // Normalise to absolute
             if (!preg_match('/^https?:\/\//i', $link)) {
                 $link = $base . '/' . ltrim($link, '/');
             }
             if (strpos($link, $host) === false) continue;
 
-            if (!isset($urls['product'])) {
+            if ($productCount < 5) {
                 foreach ($productPats as $pat) {
-                    if (preg_match($pat, $link)) { $urls['product'] = $link; break; }
+                    if (preg_match($pat, $link)) {
+                        $key = $productCount === 0 ? 'product' : "product{$productCount}";
+                        $urls[$key] = $link;
+                        $productCount++;
+                        break;
+                    }
                 }
             }
             if (!isset($urls['category'])) {
@@ -409,7 +456,22 @@ function discoverPageUrls(string $base, string $html, string $platform): array
                     if (preg_match($pat, $link)) { $urls['cart'] = $link; break; }
                 }
             }
+            if (!isset($urls['blog'])) {
+                foreach ($blogPats as $pat) {
+                    if (preg_match($pat, $link)) { $urls['blog'] = $link; break; }
+                }
+            }
+            if (!isset($urls['search'])) {
+                foreach ($searchPats as $pat) {
+                    if (preg_match($pat, $link)) { $urls['search'] = $link; break; }
+                }
+            }
         }
+
+        // Search fallback
+        if (!isset($urls['search'])) $urls['search'] = $base . '/search?q=*';
+        // Blog fallback
+        if (!isset($urls['blog']))   $urls['blog']   = $base . '/blog';
     }
 
     // Returns / refund policy — scan homepage links first, then platform defaults
@@ -777,6 +839,24 @@ function detectPurchaseFlowSignals(array $pages): string
         $signals[] = 'sticky_atc_signal=true';
     }
 
+    // ── Wishlist / Save for Later ───────────────────────────────────────────────
+    // Wishlist = engagement/retention feature; signals cross-sell capability.
+    // Also catches Swym (popular Shopify wishlist app) and Growave (Indian loyalty+wishlist).
+    foreach ([
+        'add to wishlist', 'save for later', 'add to favourites', 'add to favorites',
+        'save to wishlist', 'swym', 'growave',
+    ] as $wk) {
+        if (strpos($html, $wk) !== false) {
+            $signals[] = 'wishlist_feature=true';
+            break;
+        }
+    }
+    if (!in_array('wishlist_feature=true', $signals)) {
+        if (preg_match('/href=["\'][^"\']*\/(wishlist|favourites?|favorites?)["\']/', $rawAll)) {
+            $signals[] = 'wishlist_feature=true';
+        }
+    }
+
     if (empty($signals)) return '';
     return "\n[PURCHASE_SIGNALS] " . implode(' | ', $signals);
 }
@@ -815,7 +895,19 @@ function cleanHtml(string $html, string $type): string
     $html = preg_replace('/<!--.*?-->/s',                     '', $html);
     $html = preg_replace('/\s{2,}/',                          ' ', $html);
 
-    $limits = ['home' => 10000, 'product' => 18000, 'category' => 5000, 'cart' => 5000, 'returns' => 5000];
+    $limits = [
+        'home'         => 10000,
+        'product'      => 18000,  // primary product; merged total capped at 24000 in discoverAndFetchPages
+        'product1'     => 3000,   // extra product pages (merged before AI call)
+        'product2'     => 3000,
+        'product3'     => 3000,
+        'product4'     => 3000,
+        'category'     => 5000,
+        'cart'         => 5000,
+        'returns'      => 5000,
+        'search'       => 5000,   // search results page — used to score search_ux
+        'blog'         => 6000,   // blog page — signals extracted, not sent to AI directly
+    ];
     return mb_substr(trim($html), 0, $limits[$type] ?? 5000) . $extras;
 }
 
@@ -886,6 +978,45 @@ function detectTrustSignals(array $pages): string
 }
 
 /**
+ * Extract content signals from a fetched blog/content page.
+ * Returns a [CONTENT_SIGNALS] hint injected into pages['home'] before AI scoring.
+ * The blog page itself is NOT sent to the AI — only the signals extracted here.
+ *
+ * Signals:
+ *   blog_howto=true   : how-to guides, step-by-step tutorials, tips content
+ *   blog_faq=true     : FAQ-style content (question headings, Q&A format)
+ *   blog_schema=true  : Article or BlogPosting JSON-LD structured data
+ */
+function detectBlogSignals(string $blogHtml): string
+{
+    $html    = strtolower($blogHtml);
+    $signals = [];
+
+    // ── How-to / Guide / Tips content ─────────────────────────────────────────
+    if (preg_match('/how[\s\-]to|step[\s\-]\d|beginner.?guide|tips\s+for|what\s+is|best\s+\w+\s+for/i', $blogHtml)) {
+        $signals[] = 'blog_howto=true';
+    }
+
+    // ── FAQ-style blog content ────────────────────────────────────────────────
+    // Look for question headings (H2/H3 ending with ?) or explicit FAQ sections
+    if (strpos($html, 'faq') !== false ||
+        strpos($html, 'frequently asked') !== false ||
+        preg_match('/<h[23][^>]*>[^<]*\?<\/h[23]>/i', $blogHtml)) {
+        $signals[] = 'blog_faq=true';
+    }
+
+    // ── Article / BlogPosting schema ──────────────────────────────────────────
+    if (strpos($blogHtml, '"@type":"Article"')     !== false ||
+        strpos($blogHtml, '"@type":"BlogPosting"') !== false ||
+        strpos($blogHtml, '"@type": "Article"')    !== false) {
+        $signals[] = 'blog_schema=true';
+    }
+
+    if (empty($signals)) return '';
+    return "\n\n[CONTENT_SIGNALS]: " . implode(', ', $signals);
+}
+
+/**
  * Detect whether a page is JavaScript-rendered (thin server-side HTML).
  * Checks framework fingerprints in raw HTML before scripts are stripped.
  */
@@ -925,7 +1056,7 @@ function computeVerification(array $pages, bool $psiConfigured): array
         'cod_prominence'     => 'cart',
         'landing_page'       => 'home',
         'product_pages'      => 'product',
-        'search_ux'          => 'category',
+        'search_ux'          => 'search_or_category',
         'sticky_atc'         => 'product',
         'category_pages'     => 'category',
         'trust_signals'      => 'home',
@@ -957,8 +1088,9 @@ function computeVerification(array $pages, bool $psiConfigured): array
             $req === null               => false,
             $req === 'psi'              => $psiConfigured,
             $req === 'any_crawled'      => count(array_intersect(['home', 'product', 'category'], $fetched)) > 0,
-            $req === 'home_or_product'  => in_array('home', $fetched) || in_array('product', $fetched),
-            in_array($req, $fetched)    => true,
+            $req === 'home_or_product'    => in_array('home', $fetched) || in_array('product', $fetched),
+            $req === 'search_or_category' => in_array('search', $fetched) || in_array('category', $fetched),
+            in_array($req, $fetched)      => true,
             default                     => false,
         };
         if ($ok) $verified[] = $param;

@@ -113,6 +113,9 @@ Signals used to confirm a URL is an ecommerce store before scoring:
 - Health/pharmacy: `/medicine/`, `/drug/`, `/supplement/`, `/lab-test/`, `/pharmacy/`, `/health-products/`, `/wellness/`, `/ayurved/`
 - Health-tech/devices: `/device/`, `/glucometer/`, `/monitor/`, `/kit/`, `/combo/`, `/buy/`
 - Sections: `/store`, `/store/*`
+- **Search page**: `/search?q=*&type=product` (Shopify), `/search?q=*` (generic)
+- **Blog page**: Scanned from homepage `<a href>` links matching `/blog|news|articles?|learn|tips` patterns; fallback `/blogs/news` (Shopify) or `/blog` (generic)
+- **Up to 5 product pages**: Shopify via `/products.json?limit=5` API; WooCommerce via `/?orderby=popularity`; generic via regex on homepage links
 
 ### Purchase Flow Signal Detection (`detectPurchaseFlowSignals()` in `api/analyse.php`)
 
@@ -129,6 +132,7 @@ Converts previously estimated (~est.) Purchase Flow params into signal-verified 
 | `express_checkout_signal=true` | Magic Checkout / Shopify dynamic-checkout | `express_checkout` → 72+ |
 | `push_capture=true` | OneSignal/iZooto/PushOwl/Omnisend | `email_capture` → 62+ |
 | `sticky_atc_signal=true` | sticky/fixed CSS near add-to-cart in product HTML | `sticky_atc` → 68+ |
+| `wishlist_feature=true` | "add to wishlist", "save for later", Swym/Growave scripts, or `/wishlist` href | `cross_sell` → 60+ |
 
 > Multiple payment signals stack: `upi_available + cod_available + bnpl_available` → `payment_options` 82+
 
@@ -143,11 +147,21 @@ Surfaces press coverage, testimonial sections, and large customer count proof th
 | `testimonial_section=true` | "testimonials" / "what our customers say" / "customer stories" keywords | `social_proof` → 65+ |
 | `trust_count=true` | "X lakh+ customers/orders" or formatted Indian numbers ≥ 6 digits (1,00,000+) | `trust_signals` → 65+, `social_proof` → 60+ |
 
+### Blog Signal Detection (`detectBlogSignals()` in `api/analyse.php`)
+
+Blog page is fetched, signals extracted, then **discarded** (not sent to AI — saves tokens). Signals injected as `[CONTENT_SIGNALS]` into `pages['home']`.
+
+| Signal | Detection | Param(s) it improves |
+|--------|-----------|---------------------|
+| `blog_howto=true` | "how to", "step 1", "beginner guide", "tips for", "what is" in blog HTML | `content_clarity` → 62+ |
+| `blog_faq=true` | "faq" / "frequently asked" text OR `<h2>?</h2>` heading pattern | `conversational_ux` → 55+ |
+| `blog_schema=true` | `"@type":"Article"` or `"@type":"BlogPosting"` JSON-LD present | `content_clarity` → 68+, `ai_discoverability` → +5 pts |
+
 ---
 
 ### Scan pipeline (3 steps)
 1. **Fetch homepage** — screenshot (thum.io, background) + raw HTML
-2. **Generic URL Discovery** — scan homepage links for known patterns above; crawl matched product/category/cart pages to accumulate more HTML signals
+2. **Expanded URL Discovery** — scan homepage links; crawl up to 5 product pages, search page, category/cart/returns/blog pages
 3. **Signal Check (`isEcommerceStore()`)** — run against all collected HTML:
    - JSON-LD `@type:Product` present
    - `add to cart` / `buy now` in HTML
@@ -161,7 +175,22 @@ Surfaces press coverage, testimonial sections, and large customer count proof th
 ## Scan DB Persistence (`analyse.php`)
 - JSON encoded with `JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE` — prevents silent INSERT failures when crawled HTML contains Hindi/multilingual content
 - `social_proof` verification type: `home_or_product` — verified if either home OR product page crawled
-- Product page HTML limit: 9000 chars (up from 6000) — captures reviews deeper in page
+- `search_ux` verification type: `search_or_category` — verified if search OR category page crawled
+
+### `cleanHtml()` size limits (chars)
+| Page key | Limit | Notes |
+|----------|-------|-------|
+| `home` | 10,000 | Full homepage |
+| `product` | 18,000 | Primary product; merged total capped at 24,000 |
+| `product1`–`product4` | 3,000 each | Extra products; merged into `product` before AI call |
+| `category` | 5,000 | |
+| `cart` | 5,000 | |
+| `returns` | 5,000 | |
+| `search` | 5,000 | Sent to AI for `search_ux` scoring |
+| `blog` | 6,000 | Signals extracted only; page discarded before AI call |
+
+### Multi-product merge strategy
+Up to 5 products fetched (keys `product`, `product1`–`product4`). Each extra product cleaned at 3,000 chars, then concatenated with `--- PRODUCT N ---` separator into `pages['product']`, capped at 24,000 chars total. Extra keys deleted before AI call.
 
 ## Returns Policy Discovery (`discoverPageUrls()` in `api/analyse.php`)
 After homepage `<a href>` regex scan, probes these custom platform paths before generic fallback:
