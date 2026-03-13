@@ -144,14 +144,18 @@ if (isset($result['scores']) && defined('DB_NAME') && DB_NAME) {
              (scan_token, url, url_normalized, ip, owleye_score, pillar_scores, param_scores)
              VALUES (?, ?, ?, ?, ?, ?, ?)'
         );
+        // Use JSON_UNESCAPED_UNICODE + JSON_INVALID_UTF8_SUBSTITUTE so Hindi/multilingual
+        // content from crawled pages never causes json_encode() to return false and
+        // silently break the INSERT (which would leave scan_token missing from the response).
+        $flags = JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE;
         $stmt->execute([
             $token,
             $url,
             $urlNorm,
             $ip,
             $result['owleye_score'] ?? 0,
-            json_encode($result['pillar_scores'] ?? []),
-            json_encode($result['scores']),
+            json_encode($result['pillar_scores'] ?? [], $flags),
+            json_encode($result['scores'],              $flags),
         ]);
         $result['scan_token'] = $token;
 
@@ -406,6 +410,28 @@ function discoverPageUrls(string $base, string $html, string $platform): array
                 break;
             }
         }
+        // Custom platform fallbacks — health/pharma stores (e.g. myupchar uses /home/refund_policy)
+        // which rarely appear as plain <a href> in server-rendered HTML (JS footer).
+        // Probe common paths before falling back to a generic guess.
+        if (!isset($urls['returns'])) {
+            $customReturnPaths = [
+                '/home/refund_policy',
+                '/home/return-policy',
+                '/help/refund',
+                '/help/returns',
+                '/support/refund-policy',
+                '/pages/return-policy',
+                '/pages/returns',
+            ];
+            foreach ($customReturnPaths as $path) {
+                $probe = fetchSinglePage($base . $path);
+                if (strlen($probe) > 500) {
+                    $urls['returns'] = $base . $path;
+                    break;
+                }
+            }
+        }
+
         if (!isset($urls['returns'])) {
             $urls['returns'] = match ($platform) {
                 'woocommerce' => $base . '/refund_policy',
@@ -771,7 +797,7 @@ function cleanHtml(string $html, string $type): string
     $html = preg_replace('/<!--.*?-->/s',                     '', $html);
     $html = preg_replace('/\s{2,}/',                          ' ', $html);
 
-    $limits = ['home' => 10000, 'product' => 6000, 'category' => 5000, 'cart' => 5000, 'returns' => 5000];
+    $limits = ['home' => 10000, 'product' => 9000, 'category' => 5000, 'cart' => 5000, 'returns' => 5000];
     return mb_substr(trim($html), 0, $limits[$type] ?? 5000) . $extras;
 }
 
@@ -820,7 +846,7 @@ function computeVerification(array $pages, bool $psiConfigured): array
         'category_pages'     => 'category',
         'trust_signals'      => 'home',
         'returns_policy'     => 'returns',
-        'social_proof'       => 'product',
+        'social_proof'       => 'home_or_product',  // UGC/testimonials often on homepage (e.g. myupchar)
         'review_quality'     => 'product',
         'guarantee_signals'  => 'product',
         'cross_sell'         => 'product',
@@ -844,11 +870,12 @@ function computeVerification(array $pages, bool $psiConfigured): array
 
     foreach ($PARAM_PAGE_REQUIREMENT as $param => $req) {
         $ok = match (true) {
-            $req === null            => false,
-            $req === 'psi'           => $psiConfigured,
-            $req === 'any_crawled'   => count(array_intersect(['home', 'product', 'category'], $fetched)) > 0,
-            in_array($req, $fetched) => true,
-            default                  => false,
+            $req === null               => false,
+            $req === 'psi'              => $psiConfigured,
+            $req === 'any_crawled'      => count(array_intersect(['home', 'product', 'category'], $fetched)) > 0,
+            $req === 'home_or_product'  => in_array('home', $fetched) || in_array('product', $fetched),
+            in_array($req, $fetched)    => true,
+            default                     => false,
         };
         if ($ok) $verified[] = $param;
         else     $unverified[] = $param;
