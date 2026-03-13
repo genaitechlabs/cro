@@ -47,6 +47,9 @@ if (!$url || !filter_var($url, FILTER_VALIDATE_URL) || !preg_match('/^https?:\/\
 }
 
 $urlNorm = normalizeUrl($url);
+// Base URL (scheme + host only) — used for screenshots and to ensure homepage is always scanned
+// even when the user submits a product/category/blog URL.
+$urlBase = rtrim(parse_url($url, PHP_URL_SCHEME) . '://' . parse_url($url, PHP_URL_HOST), '/');
 
 // ── 2. Rate limit check ──────────────────────────────────────────
 $ip = getClientIp();
@@ -123,11 +126,13 @@ if ($trustHint) {
 }
 
 // ── 4. Screenshots (homepage only) ───────────────────────────────
-$desktop = ScreenshotAdapter::capture($url, 'desktop');
-$mobile  = ScreenshotAdapter::capture($url, 'mobile');
+// Always screenshot the homepage (base URL) — not a product/category URL the user may have pasted.
+$desktop = ScreenshotAdapter::capture($urlBase, 'desktop');
+$mobile  = ScreenshotAdapter::capture($urlBase, 'mobile');
 
 // ── 5. AI analysis ───────────────────────────────────────────────
-$result = AiAdapter::analyse($url, $pages, $desktop, $mobile);
+// Pass the base URL so the AI always refers to the store root, not a deep path.
+$result = AiAdapter::analyse($urlBase, $pages, $desktop, $mobile);
 
 // ── 6. PageSpeed Insights — overrides AI estimate for page_speed ─
 $psiConfigured = defined('GOOGLE_PSI_KEY') && GOOGLE_PSI_KEY;
@@ -278,8 +283,10 @@ function discoverAndFetchPages(string $url): array
     $base = preg_replace('/^(https?:\/\/[^\/]+).*$/i', '$1', $url);
     $base = rtrim($base, '/');
 
-    // Always fetch homepage first
-    $homeHtml = fetchSinglePage($url);
+    // Always fetch the BASE (homepage), not the submitted URL.
+    // Users often paste product/category URLs — using the domain root ensures
+    // correct platform detection, homepage signal analysis, and link discovery.
+    $homeHtml = fetchSinglePage($base);
     // Empty response = site unreachable, down, or blocking — signal to caller
     if (!$homeHtml) return ['_unreachable' => true];
 

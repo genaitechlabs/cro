@@ -543,7 +543,9 @@ function runScoreAnalysis() {
   screenshotImg.style.display = 'none';
   screenshotImg.onload = () => { screenshotImg.style.display = 'block'; };
   screenshotImg.onerror = () => {};
-  screenshotImg.src = 'https://image.thum.io/get/width/800/crop/500/' + url;
+  // Always screenshot the homepage (origin) even if user pasted a product/category URL
+  const screenshotBase = new URL(url).origin;
+  screenshotImg.src = 'https://image.thum.io/get/width/800/crop/500/' + screenshotBase;
   // Start scan immediately — no wait for screenshot
   beginScan();
 }
