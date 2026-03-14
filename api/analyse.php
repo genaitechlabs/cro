@@ -224,10 +224,17 @@ function isEcommerceStore(array $pages): bool
     $rawHtml = ($pages['home'] ?? '') . ($pages['product'] ?? '') .
                ($pages['category'] ?? '') . ($pages['cart'] ?? '');
 
-    // JSON-LD Product schema — definitive regardless of language/platform
-    if (stripos($rawHtml, '"@type":"product"') !== false ||
-        stripos($rawHtml, '"@type": "product"') !== false) {
-        return true;
+    // JSON-LD transactional schema — definitive regardless of platform/language
+    // Covers: product stores, booking/hospitality, events, courses, services
+    $transactionalTypes = [
+        '"@type":"product"', '"@type": "product"',
+        '"@type":"lodgingbusiness"', '"@type":"hotel"',
+        '"@type":"accommodation"', '"@type":"vacationrental"',
+        '"@type":"touristattraction"', '"@type":"lodgingreservation"',
+        '"@type":"event"', '"@type":"course"', '"@type":"foodestablishment"',
+    ];
+    foreach ($transactionalTypes as $t) {
+        if (stripos($rawHtml, $t) !== false) return true;
     }
 
     // Work on lowercased ASCII-safe copy for English signal checks
@@ -253,6 +260,19 @@ function isEcommerceStore(array $pages): bool
     ];
     foreach ($cartSignals as $s) {
         if (strpos($html, $s) !== false) return true;
+    }
+
+    // ── Booking / hospitality / rental CTAs — villa rentals, hotels, tours, etc. ─
+    // Covers: elivaas.com, makemytrip, oyo, airbnb-style custom platforms
+    // "book now" alone is weak (many stores use it), but combined with pricing/dates it's definitive
+    $bookingSignals = [
+        'book now', 'reserve now', 'instant booking', 'book your stay',
+        'check availability', 'check dates', 'enquire now', 'request booking',
+        'per night', '/night', 'per stay',   // rental pricing formats
+    ];
+    $bookingHits = 0;
+    foreach ($bookingSignals as $s) {
+        if (strpos($html, $s) !== false && ++$bookingHits >= 2) return true;
     }
 
     // ── Hindi ecommerce signals — Indian stores ───────────────────────────────
@@ -316,18 +336,30 @@ function discoverAndFetchPages(string $url): array
     // a different product. This is critical for JS-heavy Shopify stores where the
     // homepage has thin server-rendered HTML — the submitted product URL has rich
     // content (reviews, images, ATC button) that drives accurate AI scoring.
+    // Also covers booking/hospitality item pages: /villa-in-goa/slug, /property/slug
     if ($url !== $base) {
         $submittedPath = strtolower(parse_url($url, PHP_URL_PATH) ?? '');
-        if (preg_match('/\/(products?|item|items?|pd?)\//i', $submittedPath)) {
+        if (preg_match(
+            '/\/(products?|item|items?|pd?|villa|property|apartment|room|tour|package|hotel|listing|experience|course)[\-\/][^\/\s]{3,}/i',
+            $submittedPath
+        )) {
             // Shift any already-discovered product to product1 so we don't lose it
             if (isset($urlsToFetch['product']) && $urlsToFetch['product'] !== $url) {
                 $urlsToFetch['product1'] = $urlsToFetch['product'];
             }
             $urlsToFetch['product'] = $url;
-        } elseif (preg_match('/\/(collections?|categor|browse)\//i', $submittedPath)
+        } elseif (preg_match('/\/(collections?|categor|browse|villas?|properties|listings?|apartments?|tours?|packages?)\//i', $submittedPath)
                && !isset($urlsToFetch['category'])) {
             $urlsToFetch['category'] = $url;
         }
+    }
+
+    // ── Inject platform context for booking/hospitality platforms ─────────────
+    // Tells the AI this is a booking site so it interprets checkout_flow,
+    // product_pages, and category_pages correctly (reservation flow, property
+    // detail pages, and listings browse page respectively).
+    if ($platform === 'booking') {
+        $pages['home'] .= "\n[PLATFORM_CONTEXT] platform=booking_rental: This is a booking/hospitality/rental platform (villas, hotels, tours, stays). Score parameters contextually — checkout_flow=booking_reservation_flow, product_pages=property_or_item_detail_pages, category_pages=listings_browse_with_filters, cart_recovery=booking_abandonment_flows.";
     }
 
     // Fetch discovered pages in parallel
@@ -378,6 +410,20 @@ function detectPlatform(string $html): string
      || strpos($html, 'wp-content/plugins')     !== false) {
         return 'woocommerce';
     }
+
+    // ── Booking / hospitality / rental platform ────────────────────────────
+    // Requires 2+ strong booking signals to avoid false positives
+    // (e.g. a Shopify store that uses "Book Now" for an appointment — already
+    // caught above, but being conservative here for the generic fallback).
+    $lower = strtolower($html);
+    $bk = 0;
+    if (strpos($lower, 'per night')         !== false || strpos($lower, '/night')          !== false) $bk++;
+    if (strpos($lower, 'check-in')          !== false || strpos($lower, 'check in date')   !== false) $bk++;
+    if (strpos($lower, 'check availability') !== false || strpos($lower, 'check dates')    !== false) $bk++;
+    if (strpos($lower, 'instant booking')   !== false || strpos($lower, 'book your stay')  !== false) $bk++;
+    if (strpos($lower, 'guests')            !== false && strpos($lower, 'bedrooms')        !== false) $bk++;
+    if ($bk >= 2) return 'booking';
+
     return 'generic';
 }
 
@@ -517,6 +563,71 @@ function discoverPageUrls(string $base, string $html, string $platform): array
         if (!isset($urls['search'])) $urls['search'] = $base . '/search?q=*';
         // Blog fallback
         if (!isset($urls['blog']))   $urls['blog']   = $base . '/blog';
+
+        // ── Probe-based listing discovery for JS-heavy / custom platforms ─────
+        // Link scraping above works for server-rendered HTML (WooCommerce, custom PHP).
+        // For React/Next.js SPAs (elivaas, custom booking sites), the homepage has
+        // almost no <a href> tags — direct path probing is the only way to find pages.
+        if (!isset($urls['category'])) {
+            $listingPaths = [
+                '/villas', '/properties', '/listings', '/apartments', '/rooms',
+                '/tours', '/packages', '/experiences', '/courses', '/services',
+                '/catalogue', '/catalog',
+            ];
+            foreach ($listingPaths as $lp) {
+                if (headCheckUrl($base . $lp)) {
+                    $urls['category'] = $base . $lp;
+                    break;
+                }
+            }
+        }
+
+        // ── Secondary item discovery from listing page ────────────────────────
+        // Listing pages are SEO-server-rendered even on Next.js SPAs — much more
+        // reliable for link scraping than the homepage. Fetch up to 3 item pages.
+        if (isset($urls['category']) && !isset($urls['product'])) {
+            $listingHtml = fetchSinglePage($urls['category']);
+            if ($listingHtml) {
+                preg_match_all('/href=["\']([^"\'#?]{10,})["\']/', $listingHtml, $lm);
+                $itemPats = [
+                    // Booking/hospitality: /villa-NAME, /property/NAME, /hotel-NAME
+                    '/\/(villa|property|apartment|room|tour|package|experience|course|service|listing|hotel|resort)[\-\/][^\/\s]{3,}/i',
+                    // City-slug format: /villa-in-goa/property-name  (elivaas pattern)
+                    '/\/[a-z]+-in-[a-z][a-z\-]+\/[a-z0-9\-]{8,}/i',
+                    // Generic deep slug: /item/NAME or /p/NAME
+                    '/\/(item|p|pd|detail)\/[^\/\s]{3,}/i',
+                ];
+                $itemCount = 0;
+                foreach (array_unique($lm[1] ?? []) as $iLink) {
+                    if ($itemCount >= 3) break;
+                    if (!preg_match('/^https?:\/\//i', $iLink)) {
+                        $iLink = $base . '/' . ltrim($iLink, '/');
+                    }
+                    if (strpos($iLink, $host) === false) continue;
+                    foreach ($itemPats as $pat) {
+                        if (preg_match($pat, $iLink)) {
+                            $key = $itemCount === 0 ? 'product' : "product{$itemCount}";
+                            if (!isset($urls[$key])) {
+                                $urls[$key] = $iLink;
+                                $itemCount++;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── Probe-based booking/cart page ─────────────────────────────────────
+        // Booking platforms use /booking or /reserve instead of /cart
+        if (!isset($urls['cart'])) {
+            foreach (['/booking', '/book', '/reserve'] as $bp) {
+                if (headCheckUrl($base . $bp)) {
+                    $urls['cart'] = $base . $bp;
+                    break;
+                }
+            }
+        }
     }
 
     // Returns / refund policy — scan homepage links first, then platform defaults
@@ -549,6 +660,10 @@ function discoverPageUrls(string $base, string $html, string $platform): array
                 '/support/refund-policy',
                 '/pages/return-policy',
                 '/pages/returns',
+                // Booking/hospitality platforms use cancellation instead of refund
+                '/cancellation-policy',
+                '/cancellation',
+                '/terms-and-conditions',
             ];
             foreach ($customReturnPaths as $path) {
                 if (headCheckUrl($base . $path)) {

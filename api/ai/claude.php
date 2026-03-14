@@ -122,6 +122,7 @@ Score each parameter using only evidence from the labelled page sections above:
 
 NOTE: The HOME PAGE section may contain [PURCHASE_SIGNALS], [TRUST_SIGNALS], and [CONTENT_SIGNALS] lines — use them as confirmed hardware evidence when scoring the relevant parameters.
 NOTE: PRODUCT PAGE may include HTML from multiple product pages (up to 5) concatenated — score reviews, schema, and UGC across all products shown.
+NOTE: If HOME PAGE contains [PLATFORM_CONTEXT] platform=booking_rental, this is a booking/hospitality site (villas, hotels, tours). Interpret parameters contextually: checkout_flow=booking_reservation_UX, product_pages=property_detail_pages, category_pages=listings_browse_with_filters, cart_recovery=booking_abandonment. Score COD prominence lower (less relevant for hospitality) and trust/reviews higher.
 
 PURCHASE FLOW — draw evidence from CART PAGE and [PURCHASE_SIGNALS]
 - checkout_flow      [CART PAGE]: Steps to complete purchase, progress bar, guest checkout option, form length
