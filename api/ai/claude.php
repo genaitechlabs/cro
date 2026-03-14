@@ -16,7 +16,7 @@ class ClaudeProvider
     private static string $version  = '2023-06-01';
 
     // Must match OWLEYE_PILLARS flatMap order in owleye-ai.js AND PARAM_ORDER in main.js
-    // Order: Page Experience → Engagement & Retention → Trust & Conversion →
+    // Order: User Experience → Engagement & Retention → Trust & Conversion →
     //        Purchase Flow → Agentic Commerce → Technical Foundation
     private static array $PARAMS = [
         'landing_page', 'product_pages', 'search_ux',          // User Experience
@@ -66,7 +66,7 @@ CRITICAL RULES:
 1. Score exactly 40 for any parameter marked [UNVERIFIABLE] or whose required page was not provided or is empty.
 2. Indian ecommerce standards apply: COD is an expected feature (not a bonus), UPI is the dominant payment method, WhatsApp marketing is standard practice for Indian D2C.
 3. Benchmark against Indian D2C stores — not Western ecommerce platforms.
-4. Respond with valid JSON only — no explanation, no markdown.
+4. Respond with valid JSON only — no explanation, no markdown, no code fences.
 
 SCORE CALIBRATION ANCHORS:
 • Top Indian store (Mamaearth/Nykaa-tier): checkout_flow≈78, payment_options≈85, trust_signals≈75, product_pages≈80
@@ -122,6 +122,7 @@ Score each parameter using only evidence from the labelled page sections above:
 
 NOTE: The HOME PAGE section may contain [PURCHASE_SIGNALS], [TRUST_SIGNALS], and [CONTENT_SIGNALS] lines — use them as confirmed hardware evidence when scoring the relevant parameters.
 NOTE: PRODUCT PAGE may include HTML from multiple product pages (up to 5) concatenated — score reviews, schema, and UGC across all products shown.
+NOTE: If HOME PAGE contains [PLATFORM_CONTEXT] platform=booking_rental, this is a booking/hospitality site (villas, hotels, tours). Interpret parameters contextually: checkout_flow=booking_reservation_UX, product_pages=property_detail_pages, category_pages=listings_browse_with_filters, cart_recovery=booking_abandonment. Score COD prominence lower (less relevant for hospitality) and trust/reviews higher.
 
 PURCHASE FLOW — draw evidence from CART PAGE and [PURCHASE_SIGNALS]
 - checkout_flow      [CART PAGE]: Steps to complete purchase, progress bar, guest checkout option, form length
