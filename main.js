@@ -416,10 +416,18 @@ function runScoreAnalysis() {
   document.getElementById('scanStatusPanel').style.display = 'block';
   document.getElementById('screenshotUrl').textContent = url;
 
-  // Keep overlay hidden during scan — thumbnails are visible instead
+  // Show spinner overlay during scan; thumbStrip below shows page thumbnails
   const scanOvEl = document.getElementById('scanOverlay');
-  scanOvEl.style.display = 'none';
-  scanOvEl.innerHTML = '';
+  scanOvEl.style.background = 'rgba(5,10,20,.93)';
+  scanOvEl.style.backdropFilter = '';
+  scanOvEl.style.display = 'flex';
+  if (!document.getElementById('scanStatusText')) {
+    scanOvEl.innerHTML = '<div style="width:36px;height:36px;border:3px solid rgba(255,79,46,.3);border-top-color:var(--coral);border-radius:50%;animation:spin .8s linear infinite"></div><div style="font-size:.76rem;color:var(--coral);font-weight:700" id="scanStatusText">Fetching screenshot…</div>';
+  }
+
+  // Show thumb strip — skeleton placeholders visible while thum.io images load
+  const thumbStripEl = document.getElementById('thumbStrip');
+  if (thumbStripEl) thumbStripEl.style.display = 'block';
 
   // Build param scan UI upfront so refs are ready for scanNext closure
   const scanList = document.getElementById('paramScanWrap');
@@ -483,6 +491,8 @@ function runScoreAnalysis() {
     const p = SCAN_PARAMS[paramIdx];
     document.getElementById('currentParamLabel').textContent = 'Analysing: ' + p.name;
     ctrEl.textContent = `Parameter ${paramIdx + 1} of ${SCAN_PARAMS.length}`;
+    const stEl = document.getElementById('scanStatusText');
+    if (stEl) stEl.textContent = 'Scanning ' + p.name + '…';
 
     iconEl.textContent = p.icon;
     nameEl.textContent = p.name;
@@ -524,6 +534,12 @@ function runScoreAnalysis() {
   // adding visual credibility. CDN challenge pages look fine at thumbnail size.
   // Always screenshot the homepage origin even if user pasted a product URL.
   const screenshotBase = new URL(url).origin;
+  // Load full-size homepage screenshot — shown behind score badge when scan completes
+  const screenshotImg = document.getElementById('scanScreenshot');
+  if (screenshotImg) {
+    screenshotImg.style.display = 'none';
+    screenshotImg.src = 'https://image.thum.io/get/width/800/crop/500/' + screenshotBase;
+  }
   const thumbPages = [
     { id: 0, path: '' },                  // 🏠 Landing — immediately
     { id: 1, path: '/collections' },      // 🗂️ Browse  — after 6s
@@ -532,21 +548,14 @@ function runScoreAnalysis() {
   ];
 
   function revealThumb(idx) {
-    const cell = document.getElementById('thumb-' + idx);
     const img  = document.getElementById('thumbImg-' + idx);
-    if (!cell || !img) return;
-    // Remove shimmer once image settles (load or error)
-    const done = () => {
-      const shimmer = cell.querySelector('.thumb-shimmer');
-      if (shimmer) shimmer.style.animation = 'none';
-      cell.classList.add('revealed');
+    const skel = document.getElementById('thumbSkel-' + idx);
+    if (!img) return;
+    img.onload = img.onerror = () => {
+      if (skel) skel.style.display = 'none';
+      img.style.opacity = '1';
     };
-    img.onload  = done;
-    img.onerror = done;
-    img.src = 'https://image.thum.io/get/width/400/crop/300/'
-            + screenshotBase + thumbPages[idx].path;
-    // Reveal cell immediately so shimmer is visible while image loads
-    cell.classList.add('revealed');
+    img.src = 'https://image.thum.io/get/width/400/crop/300/' + screenshotBase + thumbPages[idx].path;
   }
 
   revealThumb(0);
@@ -559,6 +568,8 @@ function runScoreAnalysis() {
   function beginScan() {
     if (scanStarted) return;
     scanStarted = true;
+    const stEl = document.getElementById('scanStatusText');
+    if (stEl) stEl.textContent = 'Connecting…';
     setTimeout(scanNext, 400);
   }
 
@@ -620,7 +631,11 @@ async function showScoreResults() {
   resetBtn.style.alignItems = 'center';
   resetBtn.style.justifyContent = 'center';
 
-  // Repurpose scan overlay: show score badge over the thumbnail grid
+  // Reveal homepage screenshot behind score badge
+  const ssImg = document.getElementById('scanScreenshot');
+  if (ssImg) ssImg.style.display = 'block';
+
+  // Show score badge over screenshot — thumbStrip stays visible below
   const scanOvEl = document.getElementById('scanOverlay');
   scanOvEl.style.background = 'rgba(5,10,20,.72)';
   scanOvEl.style.backdropFilter = 'blur(2px)';
@@ -845,6 +860,15 @@ function resetScan() {
   if (gateErrEl)   gateErrEl.style.display = 'none';
   if (gateBtn)     { gateBtn.disabled = true; gateBtn.textContent = 'Send Me the Full Report →'; }
   window._lastScanToken = '';
+  // Hide and clear thumb strip for next scan
+  const thumbStripEl = document.getElementById('thumbStrip');
+  if (thumbStripEl) thumbStripEl.style.display = 'none';
+  for (let i = 0; i < 4; i++) {
+    const img = document.getElementById('thumbImg-' + i);
+    const skel = document.getElementById('thumbSkel-' + i);
+    if (img) { img.src = ''; img.style.opacity = '0'; }
+    if (skel) skel.style.display = 'block';
+  }
   // Focus URL input for quick re-entry
   document.getElementById('scoreUrl').focus();
 }

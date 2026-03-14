@@ -433,32 +433,13 @@
                 </div>
               </div>
               <div class="browser-body">
-                <!-- Thumbnail grid: 4 pages revealed progressively as scan runs -->
-                <div id="thumbGrid">
-                  <div class="thumb-cell" id="thumb-0">
-                    <div class="thumb-shimmer"></div>
-                    <img class="thumb-img" id="thumbImg-0" src="" alt="">
-                    <div class="thumb-label">🏠 Landing</div>
-                  </div>
-                  <div class="thumb-cell" id="thumb-1">
-                    <div class="thumb-shimmer"></div>
-                    <img class="thumb-img" id="thumbImg-1" src="" alt="">
-                    <div class="thumb-label">🗂️ Browse</div>
-                  </div>
-                  <div class="thumb-cell" id="thumb-2">
-                    <div class="thumb-shimmer"></div>
-                    <img class="thumb-img" id="thumbImg-2" src="" alt="">
-                    <div class="thumb-label">📦 Product</div>
-                  </div>
-                  <div class="thumb-cell" id="thumb-3">
-                    <div class="thumb-shimmer"></div>
-                    <img class="thumb-img" id="thumbImg-3" src="" alt="">
-                    <div class="thumb-label">🛒 Cart</div>
-                  </div>
-                </div>
-                <!-- Overlay: hidden during scan; repurposed as score badge after results -->
+                <img id="scanScreenshot" src="" alt=""
+                  style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:top center;display:none">
+                <!-- Overlay: spinner during scan → score badge after results -->
                 <div id="scanOverlay"
-                  style="position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:8px">
+                  style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;background:rgba(5,10,20,.93)">
+                  <div style="width:36px;height:36px;border:3px solid rgba(255,79,46,.3);border-top-color:var(--coral);border-radius:50%;animation:spin .8s linear infinite"></div>
+                  <div style="font-size:.76rem;color:var(--coral);font-weight:700" id="scanStatusText">Fetching screenshot…</div>
                 </div>
               </div>
             </div>
@@ -468,6 +449,33 @@
 
         </div>
 
+      </div>
+
+      <!-- Thumbnail strip — 4 page screenshots, shown during and after scan -->
+      <div id="thumbStrip" style="display:none;margin-top:16px">
+        <div style="font-size:.68rem;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px">Pages Scanned</div>
+        <div class="thumb-strip-grid">
+          <div class="thumb-card" id="thumb-0">
+            <div class="thumb-skel" id="thumbSkel-0"></div>
+            <img class="thumb-img" id="thumbImg-0" src="" alt="" style="opacity:0">
+            <div class="thumb-label">🏠 Landing</div>
+          </div>
+          <div class="thumb-card" id="thumb-1">
+            <div class="thumb-skel" id="thumbSkel-1"></div>
+            <img class="thumb-img" id="thumbImg-1" src="" alt="" style="opacity:0">
+            <div class="thumb-label">🗂️ Browse</div>
+          </div>
+          <div class="thumb-card" id="thumb-2">
+            <div class="thumb-skel" id="thumbSkel-2"></div>
+            <img class="thumb-img" id="thumbImg-2" src="" alt="" style="opacity:0">
+            <div class="thumb-label">📦 Product</div>
+          </div>
+          <div class="thumb-card" id="thumb-3">
+            <div class="thumb-skel" id="thumbSkel-3"></div>
+            <img class="thumb-img" id="thumbImg-3" src="" alt="" style="opacity:0">
+            <div class="thumb-label">🛒 Cart</div>
+          </div>
+        </div>
       </div>
 
       <!-- Full-width scan status — centered below both columns -->
