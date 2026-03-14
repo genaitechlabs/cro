@@ -116,6 +116,7 @@ Signals used to confirm a URL is an ecommerce store before scoring:
 - **Search page**: `/search?q=*&type=product` (Shopify), `/search?q=*` (generic)
 - **Blog page**: Scanned from homepage `<a href>` links matching `/blog|news|articles?|learn|tips` patterns; fallback `/blogs/news` (Shopify) or `/blog` (generic)
 - **Up to 5 product pages**: Shopify via `/products.json?limit=5` API; WooCommerce via `/?orderby=popularity`; generic via regex on homepage links
+- **CTA-follow fallback** (`extractCtaLinks()`): When URL patterns find nothing, follows homepage `<a>` tags with buy-signal text (`buy now`, `shop now`, `order now`, `add to cart`, etc.) to discover product/category pages. Applied after Shopify products.json (if JSON returns nothing) and after generic pattern scan. Handles custom-platform stores (kapiva-type) and custom checkout URL stores.
 
 ### Purchase Flow Signal Detection (`detectPurchaseFlowSignals()` in `api/analyse.php`)
 
@@ -129,7 +130,9 @@ Converts previously estimated (~est.) Purchase Flow params into signal-verified 
 | `upi_available=true` | GPay/PhonePe/Paytm/UPI text | `payment_options` → 70+, `express_checkout` → 60+ |
 | `bnpl_available=true` | Simpl/LazyPay/ZestMoney/Snapmint/BNPL text | `payment_options` → 78+ |
 | `payment_gateway=detected` | Razorpay/Cashfree/PayU/CCAvenue | `payment_options` → 65+ |
-| `express_checkout_signal=true` | Magic Checkout / Shopify dynamic-checkout | `express_checkout` → 72+ |
+| `express_checkout_signal=true` | GoKwik / Juspay / Razorpay hosted checkout / Cashfree Smart Checkout / PhonePe express / Magic Checkout / Shopify dynamic-checkout — **detected by script, not URL** | `express_checkout` → 72+ |
+| `guest_checkout=true` | "guest checkout" / "checkout as guest" / "continue as guest" text in cart or product page | `express_checkout` → 68+ |
+| `forced_login_checkout=true` | "login to checkout" / "sign in to continue" in cart/product page with no guest option | `express_checkout` → MAX 42 |
 | `push_capture=true` | OneSignal/iZooto/PushOwl/Omnisend | `email_capture` → 62+ |
 | `sticky_atc_signal=true` | sticky/fixed CSS near add-to-cart in product HTML | `sticky_atc` → 68+ |
 | `wishlist_feature=true` | "add to wishlist", "save for later", Swym/Growave scripts, or `/wishlist` href | `cross_sell` → 60+ |

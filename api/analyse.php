@@ -431,6 +431,53 @@ function detectPlatform(string $html): string
 }
 
 /**
+ * Extract product/category URLs by following homepage CTA buttons.
+ * Parses <a href> tags whose anchor text contains buy/shop signal words.
+ * Used as a fallback layer for stores where URL patterns don't match standard paths
+ * (e.g. kapiva-type custom Shopify, booking platforms, custom PHP stores).
+ *
+ * Returns ['product' => url, 'category' => url] — only keys that are found.
+ */
+function extractCtaLinks(string $html, string $base, string $host): array
+{
+    $found = [];
+    $ctaWords = [
+        'buy now', 'shop now', 'order now', 'add to cart', 'buy online',
+        'shop all', 'explore range', 'shop the collection', 'view products',
+        'shop the range', 'explore now', 'buy today', 'shop products',
+        'explore products', 'shop here', 'get started',
+    ];
+
+    // Extract all <a href="...">text</a> pairs from homepage
+    preg_match_all('/<a\s[^>]*href=["\']([^"\'#?]{5,})["\'][^>]*>(.*?)<\/a>/is', $html, $ctaM);
+    foreach ($ctaM[1] as $ci => $href) {
+        $text = strtolower(strip_tags($ctaM[2][$ci] ?? ''));
+        $isCtaSig = false;
+        foreach ($ctaWords as $cw) {
+            if (strpos($text, $cw) !== false) { $isCtaSig = true; break; }
+        }
+        if (!$isCtaSig) continue;
+
+        // Resolve to absolute URL
+        $abs = preg_match('/^https?:\/\//i', $href)
+            ? $href
+            : $base . '/' . ltrim($href, '/');
+        if (strpos($abs, $host) === false) continue;
+
+        // Prefer longer paths as product pages (slug = product), shorter = category
+        $pathDepth = substr_count(rtrim(parse_url($abs, PHP_URL_PATH) ?? '', '/'), '/');
+        if (!isset($found['product']) && $pathDepth >= 2) {
+            $found['product'] = $abs;
+        } elseif (!isset($found['category'])) {
+            $found['category'] = $abs;
+        }
+
+        if (isset($found['product'], $found['category'])) break;
+    }
+    return $found;
+}
+
+/**
  * Discover product, category, and cart URLs based on platform.
  * Shopify: uses /products.json and /collections.json (no auth required).
  * WooCommerce/generic: parses homepage links.
@@ -464,6 +511,15 @@ function discoverPageUrls(string $base, string $html, string $platform): array
 
         $urls['cart']    = $base . '/cart';
         $urls['returns'] = $base . '/policies/refund-policy';
+
+        // ── CTA fallback: if products.json returned nothing, follow buy buttons ─
+        // Handles Shopify stores with custom checkout (kapiva-type) or
+        // stores where the JSON API is restricted / returns empty.
+        if (!isset($urls['product']) || !isset($urls['category'])) {
+            $ctaFallback = extractCtaLinks($html, $base, $host);
+            if (!isset($urls['product'])  && isset($ctaFallback['product']))  $urls['product']  = $ctaFallback['product'];
+            if (!isset($urls['category']) && isset($ctaFallback['category'])) $urls['category'] = $ctaFallback['category'];
+        }
 
         // ── Search ─────────────────────────────────────────────────────────────
         $urls['search'] = $base . '/search?q=*&type=product';
@@ -566,6 +622,16 @@ function discoverPageUrls(string $base, string $html, string $platform): array
         if (!isset($urls['search'])) $urls['search'] = $base . '/search?q=*';
         // Blog fallback
         if (!isset($urls['blog']))   $urls['blog']   = $base . '/blog';
+
+        // ── CTA-follow fallback: follow buy-button hrefs when URL patterns miss ─
+        // Catches custom-platform stores (kapiva-type) where product/category URLs
+        // don't match standard patterns. Homepage CTAs ("Buy Now", "Shop Now") always
+        // link to the store's most important pages — follow them directly.
+        if (!isset($urls['product']) || !isset($urls['category'])) {
+            $ctaFallback = extractCtaLinks($html, $base, $host);
+            if (!isset($urls['product'])  && isset($ctaFallback['product']))  $urls['product']  = $ctaFallback['product'];
+            if (!isset($urls['category']) && isset($ctaFallback['category'])) $urls['category'] = $ctaFallback['category'];
+        }
 
         // ── Probe-based listing discovery for JS-heavy / custom platforms ─────
         // Link scraping above works for server-rendered HTML (WooCommerce, custom PHP).
@@ -1004,11 +1070,39 @@ function detectPurchaseFlowSignals(array $pages): string
     }
 
     // ── Express Checkout ───────────────────────────────────────────────────────
-    // PhonePe express, Razorpay Magic Checkout, Shopify accelerated/dynamic checkout
-    if (strpos($html, 'magic checkout')      !== false ||
-        strpos($html, 'dynamic-checkout')    !== false ||
-        strpos($html, 'shopify-payment-button') !== false) {
+    // Detect by script/widget presence — NOT by URL pattern.
+    // Covers custom checkout URLs (kapiva-type /checkout-custom/) where the standard
+    // /checkout path doesn't exist but an express checkout solution IS integrated.
+    if (strpos($html, 'magic checkout')           !== false ||  // Razorpay Magic Checkout
+        strpos($html, 'dynamic-checkout')         !== false ||  // Shopify accelerated checkout
+        strpos($html, 'shopify-payment-button')   !== false ||  // Shopify payment button widget
+        strpos($html, 'gokwik')                   !== false ||  // GoKwik (Indian express checkout)
+        strpos($html, 'juspay')                   !== false ||  // Juspay Hyper Checkout
+        strpos($html, 'checkout.razorpay.com')    !== false ||  // Razorpay hosted checkout
+        strpos($html, 'cashfree.com/checkout')    !== false ||  // Cashfree Smart Checkout
+        strpos($html, 'phonepe.com/checkout')     !== false) {  // PhonePe express checkout
         $signals[] = 'express_checkout_signal=true';
+    }
+
+    // ── Guest Checkout / Pre-login Flow ────────────────────────────────────────
+    // Check if the purchase flow requires login BEFORE checkout (high friction) or
+    // allows guest/express checkout without forced login (frictionless = good UX).
+    // Uses cart + product pages — both already fetched, zero extra latency.
+    $cartHtml    = strtolower($pages['cart'] ?? '');
+    $checkHtml   = $cartHtml . strtolower($pages['product'] ?? '');
+    if ($checkHtml) {
+        if (strpos($checkHtml, 'guest checkout')       !== false ||
+            strpos($checkHtml, 'checkout as guest')    !== false ||
+            strpos($checkHtml, 'continue as guest')    !== false ||
+            strpos($checkHtml, 'skip login')           !== false) {
+            $signals[] = 'guest_checkout=true';
+        } elseif ((strpos($checkHtml, 'login to checkout')    !== false ||
+                   strpos($checkHtml, 'sign in to continue')  !== false ||
+                   strpos($checkHtml, 'login to continue')    !== false ||
+                   strpos($checkHtml, 'please login')         !== false) &&
+                  strpos($checkHtml, 'guest') === false) {
+            $signals[] = 'forced_login_checkout=true';
+        }
     }
 
     // ── Email / Push Capture Tools ─────────────────────────────────────────────
