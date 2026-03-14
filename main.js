@@ -411,16 +411,15 @@ function runScoreAnalysis() {
   document.getElementById('scoreResults').classList.remove('show');
   document.getElementById('scoreResults').style.display = 'none';
 
-  // Show scan frame (mockup only) + full-width status panel below
+  // Show scan frame + full-width status panel below
   document.getElementById('scanFrame').style.display = 'block';
   document.getElementById('scanStatusPanel').style.display = 'block';
   document.getElementById('screenshotUrl').textContent = url;
 
-  // Overlay starts opaque with "Fetching screenshot…" while img loads
+  // Keep overlay hidden during scan — thumbnails are visible instead
   const scanOvEl = document.getElementById('scanOverlay');
-  scanOvEl.style.background = 'rgba(5,10,20,.93)';
-  scanOvEl.style.backdropFilter = '';
-  scanOvEl.innerHTML = '<div style="width:36px;height:36px;border:3px solid rgba(255,79,46,.3);border-top-color:var(--coral);border-radius:50%;animation:spin .8s linear infinite"></div><div style="font-size:.76rem;color:var(--coral);font-weight:700" id="scanStatusText">Fetching screenshot…</div>';
+  scanOvEl.style.display = 'none';
+  scanOvEl.innerHTML = '';
 
   // Build param scan UI upfront so refs are ready for scanNext closure
   const scanList = document.getElementById('paramScanWrap');
@@ -482,7 +481,6 @@ function runScoreAnalysis() {
     }
 
     const p = SCAN_PARAMS[paramIdx];
-    document.getElementById('scanStatusText').textContent = 'Scanning ' + p.name + '…';
     document.getElementById('currentParamLabel').textContent = 'Analysing: ' + p.name;
     ctrEl.textContent = `Parameter ${paramIdx + 1} of ${SCAN_PARAMS.length}`;
 
@@ -521,32 +519,49 @@ function runScoreAnalysis() {
     }, 44);
   }
 
-  // Begin scan — overlay stays fully dark during scanning so CDN interstitial
-  // pages (Cloudflare challenges, etc.) never show through the semi-transparent overlay.
-  // Screenshot loads in background; it will appear only after results are rendered.
+  // ── Thumbnail grid: load 4 page screenshots progressively during scan ──────
+  // Uses thum.io (free, no key). Thumbnails appear one-by-one as scan progresses,
+  // adding visual credibility. CDN challenge pages look fine at thumbnail size.
+  // Always screenshot the homepage origin even if user pasted a product URL.
+  const screenshotBase = new URL(url).origin;
+  const thumbPages = [
+    { id: 0, path: '' },                  // 🏠 Landing — immediately
+    { id: 1, path: '/collections' },      // 🗂️ Browse  — after 6s
+    { id: 2, path: '/products' },         // 📦 Product  — after 13s
+    { id: 3, path: '/cart' },             // 🛒 Cart     — after 20s
+  ];
+
+  function revealThumb(idx) {
+    const cell = document.getElementById('thumb-' + idx);
+    const img  = document.getElementById('thumbImg-' + idx);
+    if (!cell || !img) return;
+    // Remove shimmer once image settles (load or error)
+    const done = () => {
+      const shimmer = cell.querySelector('.thumb-shimmer');
+      if (shimmer) shimmer.style.animation = 'none';
+      cell.classList.add('revealed');
+    };
+    img.onload  = done;
+    img.onerror = done;
+    img.src = 'https://image.thum.io/get/width/400/crop/300/'
+            + screenshotBase + thumbPages[idx].path;
+    // Reveal cell immediately so shimmer is visible while image loads
+    cell.classList.add('revealed');
+  }
+
+  revealThumb(0);
+  setTimeout(() => revealThumb(1),  6000);
+  setTimeout(() => revealThumb(2), 13000);
+  setTimeout(() => revealThumb(3), 20000);
+
+  // ── Begin scan animation ─────────────────────────────────────────────────
   let scanStarted = false;
   function beginScan() {
     if (scanStarted) return;
     scanStarted = true;
-    // Keep overlay opaque during scan — screenshot reveals only once results are shown
-    scanOvEl.style.background = 'rgba(5,10,20,.93)';
-    scanOvEl.style.backdropFilter = '';
-    scanOvEl.innerHTML = '<div style="width:36px;height:36px;border:3px solid rgba(255,79,46,.3);border-top-color:var(--coral);border-radius:50%;animation:spin .8s linear infinite"></div><div style="font-size:.76rem;color:var(--coral);font-weight:700" id="scanStatusText">Connecting…</div>';
     setTimeout(scanNext, 400);
   }
 
-  // Fetch store screenshot via thum.io (free, no API key).
-  // Loads in background — scan starts immediately, no dead wait.
-  // Screenshot is kept hidden during scan to avoid showing CDN interstitial pages.
-  // Only displayed once results overlay is rendered (at 0.72 opacity).
-  const screenshotImg = document.getElementById('scanScreenshot');
-  screenshotImg.style.display = 'none';
-  screenshotImg.onload = () => { screenshotImg.style.display = 'block'; };
-  screenshotImg.onerror = () => {};
-  // Always screenshot the homepage (origin) even if user pasted a product/category URL
-  const screenshotBase = new URL(url).origin;
-  screenshotImg.src = 'https://image.thum.io/get/width/800/crop/500/' + screenshotBase;
-  // Start scan immediately — no wait for screenshot
   beginScan();
 }
 
@@ -570,6 +585,7 @@ async function showScoreResults() {
     const scanOvEl = document.getElementById('scanOverlay');
     scanOvEl.style.background = 'rgba(5,10,20,.88)';
     scanOvEl.style.backdropFilter = 'blur(4px)';
+    scanOvEl.style.display = 'flex';
     scanOvEl.innerHTML =
       '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:24px">' +
       '<div style="font-size:2rem">🦉</div>' +
@@ -604,10 +620,11 @@ async function showScoreResults() {
   resetBtn.style.alignItems = 'center';
   resetBtn.style.justifyContent = 'center';
 
-  // Repurpose scan overlay: show score badge over the store screenshot
+  // Repurpose scan overlay: show score badge over the thumbnail grid
   const scanOvEl = document.getElementById('scanOverlay');
   scanOvEl.style.background = 'rgba(5,10,20,.72)';
   scanOvEl.style.backdropFilter = 'blur(2px)';
+  scanOvEl.style.display = 'flex';
   scanOvEl.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:4px">' +
     (verifiedCount !== null ? '<div style="font-size:.65rem;color:rgba(248,249,255,.45);font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:-2px">Estimated</div>' : '') +
     '<div class="score-number" id="scoreNumber" style="font-family:\'Roboto\',sans-serif;font-size:4rem;font-weight:900;line-height:1">0</div>' +
