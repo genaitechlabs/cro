@@ -406,7 +406,7 @@ function runScoreAnalysis() {
   _scoresPromise.then(d => { _resolvedApiData = d; });
 
   document.getElementById('scoreBtn').disabled = true;
-  document.getElementById('scoreUrl').readOnly = true;
+  document.getElementById('scoreUrl').disabled = true;
   document.getElementById('screenshotPlaceholder').style.display = 'none';
   document.getElementById('scoreResults').classList.remove('show');
   document.getElementById('scoreResults').style.display = 'none';
@@ -550,10 +550,15 @@ function runScoreAnalysis() {
   function revealThumb(idx) {
     const img  = document.getElementById('thumbImg-' + idx);
     const skel = document.getElementById('thumbSkel-' + idx);
+    const card = document.getElementById('thumb-' + idx);
     if (!img) return;
-    img.onload = img.onerror = () => {
+    img.onload = () => {
       if (skel) skel.style.display = 'none';
       img.style.opacity = '1';
+    };
+    img.onerror = () => {
+      // Image unavailable — stop shimmer, show static dim card (still visible)
+      if (card) card.classList.add('unavailable');
     };
     img.src = 'https://image.thum.io/get/width/400/crop/300/' + screenshotBase + thumbPages[idx].path;
   }
@@ -818,7 +823,7 @@ async function showScoreResults() {
 function resetScan() {
   // Clear input; restore editability; button disabled since input is now empty
   document.getElementById('scoreUrl').value = '';
-  document.getElementById('scoreUrl').readOnly = false;
+  document.getElementById('scoreUrl').disabled = false;
   document.getElementById('scoreBtn').disabled = true;
   document.getElementById('urlError').style.display = 'none';
   // Reset right panel to empty state
@@ -1099,6 +1104,9 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal()
   const emailInp = document.getElementById('gateEmail');
   const btn = document.getElementById('reportSubmitBtn');
   function checkGate() { btn.disabled = !nameInp.value.trim() || !emailInp.value.trim(); }
-  nameInp.addEventListener('input', checkGate);
-  emailInp.addEventListener('input', checkGate);
+  // 'input' covers manual typing; 'change' covers Safari autofill/paste
+  nameInp.addEventListener('input',  checkGate);
+  nameInp.addEventListener('change', checkGate);
+  emailInp.addEventListener('input',  checkGate);
+  emailInp.addEventListener('change', checkGate);
 })();

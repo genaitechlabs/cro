@@ -202,7 +202,10 @@ if (isset($result['scores']) && defined('DB_NAME') && DB_NAME) {
             }
         }
     } catch (Exception $e) {
-        error_log('[OwlEye] Scan save failed: ' . $e->getMessage());
+        error_log('[OwlEye] Scan save failed for ' . ($urlNorm ?? '?')
+            . ' score=' . ($result['owleye_score'] ?? '?')
+            . ' code=' . $e->getCode()
+            . ' — ' . $e->getMessage());
     }
 }
 
