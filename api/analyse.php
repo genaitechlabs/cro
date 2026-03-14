@@ -169,28 +169,37 @@ if (isset($result['scores']) && defined('DB_NAME') && DB_NAME) {
         // Use JSON_UNESCAPED_UNICODE + JSON_INVALID_UTF8_SUBSTITUTE so Hindi/multilingual
         // content from crawled pages never causes json_encode() to return false and
         // silently break the INSERT (which would leave scan_token missing from the response).
-        $flags = JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE;
-        $stmt->execute([
-            $token,
-            $url,
-            $urlNorm,
-            $ip,
-            $result['owleye_score'] ?? 0,
-            json_encode($result['pillar_scores'] ?? [], $flags),
-            json_encode($result['scores'],              $flags),
-        ]);
-        $result['scan_token'] = $token;
+        $flags      = JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE;
+        $pillarJson = json_encode($result['pillar_scores'] ?? [], $flags);
+        $scoresJson = json_encode($result['scores'],              $flags);
 
-        // Previous score — most recent other scan of the same host
-        $prev = getDB()->prepare(
-            'SELECT owleye_score FROM owleye_scans
-             WHERE url_normalized = ? AND scan_token != ?
-             ORDER BY created_at DESC LIMIT 1'
-        );
-        $prev->execute([$urlNorm, $token]);
-        $prevScore = $prev->fetchColumn();
-        if ($prevScore !== false) {
-            $result['previous_score'] = (int) $prevScore;
+        if ($pillarJson === false || $scoresJson === false) {
+            // json_encode failure — log with detail so it's diagnosable
+            error_log('[OwlEye] DB json_encode failed for ' . $url
+                . ' — last_error: ' . json_last_error_msg());
+        } else {
+            $stmt->execute([
+                $token,
+                $url,
+                $urlNorm,
+                $ip,
+                $result['owleye_score'] ?? 0,
+                $pillarJson,
+                $scoresJson,
+            ]);
+            $result['scan_token'] = $token;
+
+            // Previous score — most recent other scan of the same host
+            $prev = getDB()->prepare(
+                'SELECT owleye_score FROM owleye_scans
+                 WHERE url_normalized = ? AND scan_token != ?
+                 ORDER BY created_at DESC LIMIT 1'
+            );
+            $prev->execute([$urlNorm, $token]);
+            $prevScore = $prev->fetchColumn();
+            if ($prevScore !== false) {
+                $result['previous_score'] = (int) $prevScore;
+            }
         }
     } catch (Exception $e) {
         error_log('[OwlEye] Scan save failed: ' . $e->getMessage());
@@ -300,6 +309,26 @@ function discoverAndFetchPages(string $url): array
     // Discover page URLs
     $urlsToFetch = discoverPageUrls($base, $homeHtml, $platform);
     if (empty($urlsToFetch)) return $pages;
+
+    // ── Pre-populate submitted URL if it's a product/category deep-link ────────
+    // When a user pastes a product URL (e.g. domain.com/products/item), always
+    // include it as the primary product page even if products.json discovery finds
+    // a different product. This is critical for JS-heavy Shopify stores where the
+    // homepage has thin server-rendered HTML — the submitted product URL has rich
+    // content (reviews, images, ATC button) that drives accurate AI scoring.
+    if ($url !== $base) {
+        $submittedPath = strtolower(parse_url($url, PHP_URL_PATH) ?? '');
+        if (preg_match('/\/(products?|item|items?|pd?)\//i', $submittedPath)) {
+            // Shift any already-discovered product to product1 so we don't lose it
+            if (isset($urlsToFetch['product']) && $urlsToFetch['product'] !== $url) {
+                $urlsToFetch['product1'] = $urlsToFetch['product'];
+            }
+            $urlsToFetch['product'] = $url;
+        } elseif (preg_match('/\/(collections?|categor|browse)\//i', $submittedPath)
+               && !isset($urlsToFetch['category'])) {
+            $urlsToFetch['category'] = $url;
+        }
+    }
 
     // Fetch discovered pages in parallel
     $fetched = fetchPagesParallel($urlsToFetch);
@@ -508,7 +537,9 @@ function discoverPageUrls(string $base, string $html, string $platform): array
         }
         // Custom platform fallbacks — health/pharma stores (e.g. myupchar uses /home/refund_policy)
         // which rarely appear as plain <a href> in server-rendered HTML (JS footer).
-        // Probe common paths before falling back to a generic guess.
+        // Use HEAD requests (3s timeout) to find the right path quickly, then let
+        // fetchPagesParallel fetch the full content — avoids double-fetch and prevents
+        // the worst-case 56s delay (7 paths × 8s) that caused PHP timeout failures.
         if (!isset($urls['returns'])) {
             $customReturnPaths = [
                 '/home/refund_policy',
@@ -520,8 +551,7 @@ function discoverPageUrls(string $base, string $html, string $platform): array
                 '/pages/returns',
             ];
             foreach ($customReturnPaths as $path) {
-                $probe = fetchSinglePage($base . $path);
-                if (strlen($probe) > 500) {
+                if (headCheckUrl($base . $path)) {
                     $urls['returns'] = $base . $path;
                     break;
                 }
@@ -657,6 +687,30 @@ function probeEndpoint(string $url): string
     $body = curl_exec($ch);
     curl_close($ch);
     return $body ?: '';
+}
+
+/**
+ * Lightweight URL existence check — HEAD request, 3s timeout, follows redirects.
+ * Returns true if the URL responds with HTTP 200–399.
+ * Used by customReturnPaths probing to find the right returns policy path without
+ * fetching full page content (avoids double-fetch and serial 8s-per-path delay).
+ */
+function headCheckUrl(string $url): bool
+{
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_NOBODY         => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS      => 2,
+        CURLOPT_TIMEOUT        => 3,
+        CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; OwlEye-Scanner/1.0; +https://genaitechlabs.com)',
+        CURLOPT_SSL_VERIFYPEER => true,
+    ]);
+    curl_exec($ch);
+    $code = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    return $code >= 200 && $code < 400;
 }
 
 function detectAgenticSignals(string $rawHtml, string $base = ''): string

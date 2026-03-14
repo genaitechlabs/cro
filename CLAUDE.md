@@ -160,8 +160,8 @@ Blog page is fetched, signals extracted, then **discarded** (not sent to AI — 
 ---
 
 ### Scan pipeline (3 steps)
-1. **Fetch homepage** — screenshot (thum.io, background) + raw HTML
-2. **Expanded URL Discovery** — scan homepage links; crawl up to 5 product pages, search page, category/cart/returns/blog pages
+1. **Fetch homepage** — 4 thumbnail screenshots via thum.io (landing, browse, product, cart) progressively revealed during scan animation
+2. **Expanded URL Discovery** — scan homepage links; crawl up to 5 product pages, search page, category/cart/returns/blog pages; submitted product URL pre-populated as primary product page
 3. **Signal Check (`isEcommerceStore()`)** — run against all collected HTML:
    - JSON-LD `@type:Product` present
    - `add to cart` / `buy now` in HTML
@@ -172,8 +172,20 @@ Blog page is fetched, signals extracted, then **discarded** (not sent to AI — 
 
 ---
 
+## Submitted URL Pre-population (`discoverAndFetchPages()` in `api/analyse.php`)
+When user submits a product/category URL (not the homepage), it is **pre-populated as the primary product/category page** in `$urlsToFetch` before platform discovery runs. The products.json-discovered product is shifted to `product1`. This ensures JS-heavy Shopify stores (gonoise.com-type) get rich product content even when the homepage has thin server-rendered HTML.
+
+**Pattern**: if `$url !== $base` and path matches `/products?/`, submitted URL → `product` (primary); existing discovery result → `product1`.
+
+## Returns Policy Discovery — HEAD probe (`headCheckUrl()` in `api/analyse.php`)
+Custom platform fallback paths for returns policy now use `headCheckUrl()` (HEAD request, 3s timeout, follows redirects) instead of `fetchSinglePage()` (8s, full download).
+- **Before**: 7 paths × 8s each = up to 56s serial latency + double-fetch (full page downloaded for probe AND again in fetchPagesParallel)
+- **After**: 7 paths × 3s max = up to 21s; `fetchPagesParallel` fetches the full content in one pass
+
 ## Scan DB Persistence (`analyse.php`)
 - JSON encoded with `JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE` — prevents silent INSERT failures when crawled HTML contains Hindi/multilingual content
+- `json_encode` return value now validated before INSERT; failure logged with `json_last_error_msg()` detail
+- Previous score query moved inside the `else` block so it only runs after a successful INSERT
 - `social_proof` verification type: `home_or_product` — verified if either home OR product page crawled
 - `search_ux` verification type: `search_or_category` — verified if search OR category page crawled
 
