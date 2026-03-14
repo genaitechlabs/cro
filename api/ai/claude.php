@@ -16,7 +16,7 @@ class ClaudeProvider
     private static string $version  = '2023-06-01';
 
     // Must match OWLEYE_PILLARS flatMap order in owleye-ai.js AND PARAM_ORDER in main.js
-    // Order: Page Experience → Engagement & Retention → Trust & Conversion →
+    // Order: User Experience → Engagement & Retention → Trust & Conversion →
     //        Purchase Flow → Agentic Commerce → Technical Foundation
     private static array $PARAMS = [
         'landing_page', 'product_pages', 'search_ux',          // User Experience
@@ -66,7 +66,7 @@ CRITICAL RULES:
 1. Score exactly 40 for any parameter marked [UNVERIFIABLE] or whose required page was not provided or is empty.
 2. Indian ecommerce standards apply: COD is an expected feature (not a bonus), UPI is the dominant payment method, WhatsApp marketing is standard practice for Indian D2C.
 3. Benchmark against Indian D2C stores — not Western ecommerce platforms.
-4. Respond with valid JSON only — no explanation, no markdown.
+4. Respond with valid JSON only — no explanation, no markdown, no code fences.
 
 SCORE CALIBRATION ANCHORS:
 • Top Indian store (Mamaearth/Nykaa-tier): checkout_flow≈78, payment_options≈85, trust_signals≈75, product_pages≈80
