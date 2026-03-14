@@ -135,7 +135,9 @@ PURCHASE FLOW — draw evidence from CART PAGE and [PURCHASE_SIGNALS]
 - cart_recovery      [PURCHASE_SIGNALS] email_crm={tool} → CRM/email automation confirmed → infer abandoned cart flows exist → score 62+
                      No signal → score 40 (cannot verify from crawl)
 - express_checkout   [CART PAGE]: One-click buy, Google Pay express, PhonePe instant checkout option
-                     [PURCHASE_SIGNALS] express_checkout_signal=true → Magic Checkout / dynamic-checkout confirmed → score 72+
+                     [PURCHASE_SIGNALS] express_checkout_signal=true → GoKwik/Juspay/Magic Checkout/Razorpay hosted/Cashfree express confirmed → score 72+
+                     [PURCHASE_SIGNALS] guest_checkout=true → explicit guest checkout path detected → frictionless flow confirmed → score 68+
+                     [PURCHASE_SIGNALS] forced_login_checkout=true → login wall before checkout detected → high friction → score MAX 42
                      [PURCHASE_SIGNALS] upi_available=true → PhonePe/GPay present → likely express capable → score 60+
                      No signals → score 40
 - cod_prominence     [CART PAGE]: COD badge/label visibility, position in payment method hierarchy
