@@ -8,7 +8,16 @@
 function getDB(): PDO
 {
     static $pdo = null;
-    if ($pdo !== null) return $pdo;
+
+    // Ping existing connection — reconnects if MySQL went away (e.g. after a long AI call)
+    if ($pdo !== null) {
+        try {
+            $pdo->query('SELECT 1');
+            return $pdo;
+        } catch (\PDOException $e) {
+            $pdo = null; // Stale — fall through to reconnect
+        }
+    }
 
     $dsn = 'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4';
     $pdo = new PDO($dsn, DB_USER, DB_PASS, [

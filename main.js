@@ -550,10 +550,15 @@ function runScoreAnalysis() {
   function revealThumb(idx) {
     const img  = document.getElementById('thumbImg-' + idx);
     const skel = document.getElementById('thumbSkel-' + idx);
+    const card = document.getElementById('thumb-' + idx);
     if (!img) return;
-    img.onload = img.onerror = () => {
+    img.onload = () => {
       if (skel) skel.style.display = 'none';
       img.style.opacity = '1';
+    };
+    img.onerror = () => {
+      // Image unavailable — stop shimmer, show static dim card (still visible)
+      if (card) card.classList.add('unavailable');
     };
     img.src = 'https://image.thum.io/get/width/400/crop/300/' + screenshotBase + thumbPages[idx].path;
   }
