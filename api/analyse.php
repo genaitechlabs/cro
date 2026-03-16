@@ -1348,12 +1348,27 @@ function detectJsRendered(string $rawHtml): bool
  */
 function isBotBlocked(string $rawHtml): bool
 {
+    $lower = strtolower($rawHtml);
+
     // Hard block: too thin to be a real homepage (challenge pages are ~1-3KB)
     $visibleText = trim(preg_replace('/\s+/', ' ', strip_tags($rawHtml)));
     if (strlen($visibleText) < 300) return true;
 
+    // Thin ecommerce content: page has some text but no product signals at all.
+    // A real ecommerce homepage always has at least one of these in raw HTML.
+    // If none are present, curl got a bot-protection or redirect stub.
+    if (strlen($visibleText) < 2000) {
+        $hasProductSignal = strpos($lower, 'add to cart')    !== false
+                         || strpos($lower, 'add-to-cart')    !== false
+                         || strpos($lower, '/products/')     !== false
+                         || strpos($lower, '/collections/')  !== false
+                         || strpos($lower, 'buy now')        !== false
+                         || strpos($lower, 'shop now')       !== false
+                         || substr_count($lower, '₹') >= 2;
+        if (!$hasProductSignal) return true;
+    }
+
     // Known bot-protection fingerprints in page text / HTML attributes
-    $lower = strtolower($rawHtml);
     foreach ([
         'cf-browser-verification',   // Cloudflare classic challenge
         'cf_chl_opt',                // Cloudflare managed challenge
