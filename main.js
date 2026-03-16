@@ -608,8 +608,7 @@ async function showScoreResults() {
       '<div style="font-size:2rem">🦉</div>' +
       '<div style="font-size:.88rem;font-weight:700;color:var(--coral)">Scan could not complete</div>' +
       '<div style="font-size:.75rem;color:rgba(248,249,255,.6);max-width:260px;line-height:1.65">' + apiData.apiError + '</div>' +
-      '<a href="https://topmate.io/productmentor/1026755" target="_blank" rel="noopener" ' +
-      'style="margin-top:4px;padding:8px 18px;background:var(--coral);color:#fff;border-radius:100px;font-size:.75rem;font-weight:700;text-decoration:none">Book Audit Call →</a>' +
+      '<div style="font-size:.72rem;color:rgba(248,249,255,.4);max-width:260px;line-height:1.5">Try again in a moment or <a href="https://topmate.io/productmentor/1026755" target="_blank" rel="noopener" style="color:var(--coral);text-decoration:none;font-weight:600">book a manual audit →</a></div>' +
       '</div>';
     return;
   }

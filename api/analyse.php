@@ -320,24 +320,24 @@ function discoverAndFetchPages(string $url): array
     // Always fetch the BASE (homepage), not the submitted URL.
     // Users often paste product/category URLs — using the domain root ensures
     // correct platform detection, homepage signal analysis, and link discovery.
-    $homeHtml       = fetchSinglePage($base);
+    $homeHtml         = fetchSinglePage($base);
     $renderedFallback = false;
 
-    // Empty response = site unreachable, down, or blocking — signal to caller
-    if (!$homeHtml) return ['_unreachable' => true];
-
-    // ── Bot-block fallback: re-fetch via Jina if Cloudflare/bot wall detected ──
-    // Some stores (liveorganic-type) block server-side curl but are accessible
-    // from real browsers. Jina renders the page via headless browser and returns
-    // the full HTML — all existing signal detection works unchanged on its output.
-    if (isBotBlocked($homeHtml)) {
+    // ── Bot-block / empty response → try Jina fallback before declaring unreachable ──
+    // liveorganic-type stores return an empty body (hard 403) OR a Cloudflare challenge
+    // page to server-side curl. In both cases, Jina (headless browser) can fetch the
+    // real HTML. Only declare unreachable if BOTH curl and Jina return nothing.
+    if (!$homeHtml || isBotBlocked($homeHtml)) {
         $jinaHtml = RendererAdapter::fetch($base);
         if ($jinaHtml) {
             $homeHtml         = $jinaHtml;
             $renderedFallback = true;
-            error_log('[OwlEye] Bot-block detected for ' . $base . ' — using Jina fallback');
+            error_log('[OwlEye] Bot-block/empty detected for ' . $base . ' — using Jina fallback');
+        } elseif (!$homeHtml) {
+            // curl empty + Jina empty = truly unreachable
+            return ['_unreachable' => true];
         }
-        // If Jina also fails, continue with whatever curl returned (thin HTML)
+        // curl returned thin challenge page but Jina failed → continue with thin HTML
     }
 
     // Detect agentic signals (WhatsApp, chat widgets, FAQ, UCP endpoint, Shopify MCP)
