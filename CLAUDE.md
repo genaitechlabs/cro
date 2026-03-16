@@ -207,6 +207,33 @@ Custom platform fallback paths for returns policy now use `headCheckUrl()` (HEAD
 ### Multi-product merge strategy
 Up to 5 products fetched (keys `product`, `product1`–`product4`). Each extra product cleaned at 3,000 chars, then concatenated with `--- PRODUCT N ---` separator into `pages['product']`, capped at 24,000 chars total. Extra keys deleted before AI call.
 
+## Headless Rendering Fallback (`api/renderer/` in `api/analyse.php`)
+
+### When it triggers
+Primary fetch is always curl. Jina fires only when `isBotBlocked()` returns true:
+- Visible text after stripping tags < 300 chars
+- Page contains Cloudflare fingerprints: `cf-browser-verification`, `cf_chl_opt`, `just a moment`, `checking your browser`, `enable javascript and cookies`, `ddos-guard`, `_perimeterx`, `incapsula`
+
+### Architecture
+```
+api/renderer/
+├── RendererAdapter.php  — factory, reads RENDERER_PROVIDER constant
+└── JinaRenderer.php     — Jina AI Reader implementation
+```
+To switch provider: change `RENDERER_PROVIDER` in `config.php`. Add a new `{Provider}Renderer.php` file implementing `RendererInterface::fetch(string $url): string`.
+
+### Jina configuration
+- Endpoint: `GET https://r.jina.ai/{url}`
+- Headers: `Authorization: Bearer {JINA_API_KEY}`, `X-Return-Format: html`, `X-Token-Budget: 70000`, `X-With-Links-Summary: true`
+- Returns real HTML (not markdown) — all signal detection works unchanged
+- Token budget 70k: covers all signals (appear within first ~14k tokens on largest stores)
+
+### API response flag
+`rendered_fallback: true` in JSON response when Jina was used. Frontend shows amber disclaimer banner.
+
+### Frontend disclaimer
+`#renderedFallbackBanner` in `index.html` — shown when `rendered_fallback=true`. Hidden on reset. Suppresses the JS-rendered banner (one disclaimer at a time).
+
 ## Returns Policy Discovery (`discoverPageUrls()` in `api/analyse.php`)
 After homepage `<a href>` regex scan, probes these custom platform paths before generic fallback:
 `/home/refund_policy`, `/home/return-policy`, `/help/refund`, `/help/returns`, `/support/refund-policy`, `/pages/return-policy`, `/pages/returns`

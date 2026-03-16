@@ -34,6 +34,14 @@ define('DB_NAME', '');                     // ← your Hostinger DB name
 define('DB_USER', '');                     // ← your Hostinger DB user
 define('DB_PASS', '');                     // ← your Hostinger DB password
 
+// ── Renderer (Headless Fallback for Bot-Protected Sites) ──────
+// Used when curl returns a Cloudflare/bot-block page instead of real HTML.
+// To switch provider: change RENDERER_PROVIDER + add the corresponding key.
+// Current options: 'jina' (free tier, 1M tokens/month)
+// Future options:  'scrapingbee' | 'scraperapi' | 'zenrows'
+define('RENDERER_PROVIDER', 'jina');
+define('JINA_API_KEY',      '');     // ← from jina.ai — free, no credit card
+
 // ── Rate Limiting ─────────────────────────────────────────────────
 // Scans allowed per IP address per rolling hour window.
 // Set to 0 to disable rate limiting entirely.

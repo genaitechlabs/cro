@@ -283,8 +283,9 @@ async function fetchRealScores(url) {
       verifiedCount:    typeof data.verified_count === 'number'  ? data.verified_count  : null,
       unverifiedParams: Array.isArray(data.unverified_params)    ? data.unverified_params : [],
       pagesScanned:     typeof data.pages_scanned  === 'number'  ? data.pages_scanned   : null,
-      jsRendered:       !!data.js_rendered,
-      isNonEnglish:     !!data.is_non_english,
+      jsRendered:        !!data.js_rendered,
+      renderedFallback:  !!data.rendered_fallback,
+      isNonEnglish:      !!data.is_non_english,
       scanToken:        typeof data.scan_token === 'string'       ? data.scan_token       : null,
     };
   } catch (err) {
@@ -618,8 +619,9 @@ async function showScoreResults() {
   const verifiedCount   = apiData.verifiedCount;
   const unverifiedParams = apiData.unverifiedParams || [];
   const pagesScanned    = apiData.pagesScanned;
-  const jsRendered      = apiData.jsRendered || false;
-  const isNonEnglish    = apiData.isNonEnglish || false;
+  const jsRendered        = apiData.jsRendered || false;
+  const renderedFallback  = apiData.renderedFallback || false;
+  const isNonEnglish      = apiData.isNonEnglish || false;
   // Store scan token so the gate form can attach it to the lead
   window._lastScanToken = apiData.scanToken || '';
   const total = calcOwleyeTotal(scores);
@@ -688,10 +690,14 @@ async function showScoreResults() {
     vbEl.style.display = 'flex';
   }
 
+  // Bot-protection (Cloudflare) disclaimer — Jina fallback was used
+  const rfBanner = document.getElementById('renderedFallbackBanner');
+  if (rfBanner) rfBanner.style.display = renderedFallback ? 'block' : 'none';
+
   // JS-rendered site disclaimer
   const existingJsBanner = document.getElementById('jsRenderedBanner');
   if (existingJsBanner) existingJsBanner.remove();
-  if (jsRendered) {
+  if (jsRendered && !renderedFallback) {
     const jsBanner = document.createElement('div');
     jsBanner.id = 'jsRenderedBanner';
     jsBanner.style.cssText = 'display:flex;align-items:flex-start;gap:8px;background:rgba(255,79,46,.07);border:1px solid rgba(255,79,46,.2);border-radius:10px;padding:10px 14px;font-size:.78rem;color:rgba(248,249,255,.65);line-height:1.6;margin-top:10px';
@@ -845,6 +851,9 @@ function resetScan() {
   }
   // Hide refresh button until next scan completes
   document.getElementById('resetScanBtn').style.display = 'none';
+  // Hide bot-protection disclaimer
+  const rfBannerReset = document.getElementById('renderedFallbackBanner');
+  if (rfBannerReset) rfBannerReset.style.display = 'none';
   // Clear score change notice
   const noticeEl = document.getElementById('scoreChangeNotice');
   if (noticeEl) noticeEl.style.display = 'none';
