@@ -34,6 +34,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/screenshot/ScreenshotAdapter.php';
 require_once __DIR__ . '/ai/AiAdapter.php';
+require_once __DIR__ . '/renderer/RendererAdapter.php';
 
 // ── 1. Validate URL ──────────────────────────────────────────────
 $raw   = file_get_contents('php://input');
@@ -86,9 +87,10 @@ if (!empty($pages['_unreachable'])) {
     exit;
 }
 
-// ── 3c. Extract JS-rendered flag before passing pages to AI ──────
-$jsRendered = !empty($pages['_js_rendered']);
-unset($pages['_js_rendered']);
+// ── 3c. Extract internal flags before passing pages to AI ────────
+$jsRendered       = !empty($pages['_js_rendered']);
+$renderedFallback = !empty($pages['_rendered_fallback']);
+unset($pages['_js_rendered'], $pages['_rendered_fallback']);
 
 // ── 3c.5. Detect non-English (Hindi-primary) store ───────────────
 // If homepage contains Hindi ecommerce text, flag for UI disclaimer
@@ -209,8 +211,9 @@ if (isset($result['scores']) && defined('DB_NAME') && DB_NAME) {
     }
 }
 
-$result['js_rendered']   = $jsRendered;
-$result['is_non_english'] = $isNonEnglish;
+$result['js_rendered']        = $jsRendered;
+$result['rendered_fallback']  = $renderedFallback;
+$result['is_non_english']     = $isNonEnglish;
 echo json_encode($result);
 
 
@@ -317,13 +320,30 @@ function discoverAndFetchPages(string $url): array
     // Always fetch the BASE (homepage), not the submitted URL.
     // Users often paste product/category URLs — using the domain root ensures
     // correct platform detection, homepage signal analysis, and link discovery.
-    $homeHtml = fetchSinglePage($base);
+    $homeHtml       = fetchSinglePage($base);
+    $renderedFallback = false;
+
     // Empty response = site unreachable, down, or blocking — signal to caller
     if (!$homeHtml) return ['_unreachable' => true];
+
+    // ── Bot-block fallback: re-fetch via Jina if Cloudflare/bot wall detected ──
+    // Some stores (liveorganic-type) block server-side curl but are accessible
+    // from real browsers. Jina renders the page via headless browser and returns
+    // the full HTML — all existing signal detection works unchanged on its output.
+    if (isBotBlocked($homeHtml)) {
+        $jinaHtml = RendererAdapter::fetch($base);
+        if ($jinaHtml) {
+            $homeHtml         = $jinaHtml;
+            $renderedFallback = true;
+            error_log('[OwlEye] Bot-block detected for ' . $base . ' — using Jina fallback');
+        }
+        // If Jina also fails, continue with whatever curl returned (thin HTML)
+    }
 
     // Detect agentic signals (WhatsApp, chat widgets, FAQ, UCP endpoint, Shopify MCP)
     $agenticHint = detectAgenticSignals($homeHtml, $base);
     $pages = ['home' => cleanHtml($homeHtml, 'home') . $agenticHint];
+    if ($renderedFallback) $pages['_rendered_fallback'] = true;
     if (detectJsRendered($homeHtml)) $pages['_js_rendered'] = true;
 
     // Detect platform
@@ -1319,6 +1339,39 @@ function detectJsRendered(string $rawHtml): bool
     return strlen(trim(preg_replace('/\s+/', ' ', strip_tags($rawHtml)))) < 500;
 }
 
+
+/**
+ * Detect whether a homepage HTML response is a bot-protection wall
+ * (Cloudflare, Imperva, Akamai, etc.) rather than real store content.
+ *
+ * Returns true if the page should be re-fetched via the rendering fallback.
+ */
+function isBotBlocked(string $rawHtml): bool
+{
+    // Hard block: too thin to be a real homepage (challenge pages are ~1-3KB)
+    $visibleText = trim(preg_replace('/\s+/', ' ', strip_tags($rawHtml)));
+    if (strlen($visibleText) < 300) return true;
+
+    // Known bot-protection fingerprints in page text / HTML attributes
+    $lower = strtolower($rawHtml);
+    foreach ([
+        'cf-browser-verification',   // Cloudflare classic challenge
+        'cf_chl_opt',                // Cloudflare managed challenge
+        'just a moment',             // Cloudflare waiting room
+        'checking your browser',     // Cloudflare / generic
+        'enable javascript and cookies', // Cloudflare
+        'please enable cookies',     // Cloudflare
+        'ddos-guard',                // DDoS-Guard
+        'human verification',        // Generic captcha wall
+        '_perimeterx',               // PerimeterX
+        'px-captcha',                // PerimeterX CAPTCHA
+        'incapsula',                 // Imperva Incapsula
+    ] as $fingerprint) {
+        if (strpos($lower, $fingerprint) !== false) return true;
+    }
+
+    return false;
+}
 
 // ════════════════════════════════════════════════════════════════
 // Scoring helpers
