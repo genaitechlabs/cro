@@ -328,12 +328,14 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;bac
 .faq-a{max-height:0;overflow:hidden;transition:max-height .38s ease,padding .35s ease;font-size:.86rem;color:var(--muted);padding:0 24px;line-height:1.75}
 .faq-item.open .faq-a{max-height:200px;padding:0 24px 20px}
 
-/* ════ CTA BANNER ════ */
-#cta-banner{padding:0 5% 80px;background:var(--ink)}
-.cta-inner{background:linear-gradient(135deg,#1a0d08 0%,#1a1008 50%,#081018 100%);border:1.5px solid rgba(255,79,46,.25);border-radius:22px;padding:64px 56px;display:flex;align-items:center;justify-content:space-between;gap:40px;flex-wrap:wrap;position:relative;overflow:hidden;max-width:1100px;margin:0 auto}
-.cta-inner::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(255,79,46,.15) 0%,transparent 70%)}
-.cta-inner h2{font-size:clamp(1.6rem,3vw,2.4rem);margin-bottom:8px}
-.cta-inner p{font-size:.9rem;color:var(--muted)}
+/* ════ BOOK AUDIT SECTION ════ */
+#book-audit{padding:80px 5%;background:var(--ink)}
+.book-audit-grid{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;max-width:1100px;margin:0 auto}
+.book-audit-copy h2{font-size:clamp(1.5rem,2.6vw,2.2rem);margin-bottom:16px;line-height:1.25}
+.book-trust-pills{display:flex;flex-direction:column;gap:10px}
+.book-trust-pills span{font-size:.84rem;color:var(--muted)}
+.book-audit-form-wrap{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px}
+@media(max-width:760px){.book-audit-grid{grid-template-columns:1fr;gap:36px}}
 
 /* ════ CALENDLY SECTION ════ */
 #book-call{background:var(--ink2);padding:80px 5%}
