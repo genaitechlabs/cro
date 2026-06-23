@@ -24,9 +24,10 @@ header('Access-Control-Allow-Headers: Content-Type');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
 if ($_SERVER['REQUEST_METHOD'] !== 'POST')    { http_response_code(405); echo json_encode(['error' => 'Method not allowed']); exit; }
 
-// ── 1. Content-Type must be application/json ─────────────────────
+// ── 1. Content-Type check — only reject if explicitly non-JSON ───
+// (empty means unknown/stripped by proxy — allow through)
 $ct = $_SERVER['HTTP_CONTENT_TYPE'] ?? $_SERVER['CONTENT_TYPE'] ?? '';
-if (strpos($ct, 'application/json') === false) {
+if ($ct && strpos($ct, 'json') === false) {
     http_response_code(415);
     echo json_encode(['error' => 'Unsupported media type']);
     exit;

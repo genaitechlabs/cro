@@ -712,7 +712,6 @@
         <!-- Right: form -->
         <div class="book-audit-form-wrap">
           <div id="ibFormWrap">
-            <div id="ibFormErr" style="display:none;color:#FF4F2E;font-size:.8rem;margin-bottom:12px;padding:8px 12px;background:rgba(255,79,46,.08);border-radius:6px;border-left:3px solid var(--coral)"></div>
             <div class="form-row">
               <div class="form-group"><label>First name</label><input id="ibFirstName" type="text" placeholder="Priya" autocomplete="given-name"></div>
               <div class="form-group"><label>Last name</label><input id="ibLastName" type="text" placeholder="Sharma" autocomplete="family-name"></div>
@@ -753,6 +752,7 @@
               </select>
             </div>
             <input type="text" id="ibHp" class="hp-trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <div id="ibFormErr" style="display:none;color:#FF4F2E;font-size:.85rem;margin-bottom:12px;padding:10px 14px;background:rgba(255,79,46,.1);border-radius:8px;border-left:3px solid #FF4F2E;font-weight:500"></div>
             <button id="ibSubmitBtn" class="btn btn-coral" style="width:100%;justify-content:center;font-size:.95rem;padding:14px 20px" onclick="submitInlineBookingLead()">Schedule My Free Call →</button>
           </div>
           <div id="ibSuccess" style="display:none;text-align:center;padding:40px 20px">
@@ -810,7 +810,6 @@
         </div>
         <h3 style="margin-bottom:6px">Book your free CRO audit</h3>
         <p style="font-size:.84rem;margin-bottom:24px">Tell us about your store — takes 60 seconds.</p>
-        <div id="bookingFormErr" style="display:none;color:#FF4F2E;font-size:.8rem;margin-bottom:10px"></div>
         <div class="form-row">
           <div class="form-group"><label>First name</label><input id="bkFirstName" type="text" placeholder="Priya" autocomplete="given-name"></div>
           <div class="form-group"><label>Last name</label><input id="bkLastName" type="text" placeholder="Sharma" autocomplete="family-name"></div>
@@ -851,6 +850,7 @@
           </select>
         </div>
         <input type="text" id="bkHp" class="hp-trap" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div id="bookingFormErr" style="display:none;color:#FF4F2E;font-size:.85rem;margin-bottom:12px;padding:10px 14px;background:rgba(255,79,46,.1);border-radius:8px;border-left:3px solid #FF4F2E;font-weight:500"></div>
         <button id="bkContinueBtn" class="btn btn-coral" style="width:100%;justify-content:center" onclick="submitBookingLead()">Continue → Pick a Time</button>
       </div>
       <div class="modal-step" id="mstep2">
