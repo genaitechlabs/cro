@@ -757,16 +757,17 @@
         </div>
         <h3 style="margin-bottom:6px">Book your free CRO audit</h3>
         <p style="font-size:.84rem;margin-bottom:24px">Tell us about your store — takes 60 seconds.</p>
+        <div id="bookingFormErr" style="display:none;color:#FF4F2E;font-size:.8rem;margin-bottom:10px"></div>
         <div class="form-row">
-          <div class="form-group"><label>First name</label><input type="text" placeholder="Priya"></div>
-          <div class="form-group"><label>Last name</label><input type="text" placeholder="Sharma"></div>
+          <div class="form-group"><label>First name</label><input id="bkFirstName" type="text" placeholder="Priya" autocomplete="given-name"></div>
+          <div class="form-group"><label>Last name</label><input id="bkLastName" type="text" placeholder="Sharma" autocomplete="family-name"></div>
         </div>
-        <div class="form-group"><label>Work email</label><input type="email" placeholder="priya@brand.com"></div>
-        <div class="form-group"><label>Store URL</label><input type="url" placeholder="https://yourstore.com"></div>
+        <div class="form-group"><label>Work email</label><input id="bkEmail" type="email" placeholder="priya@brand.com" autocomplete="email"></div>
+        <div class="form-group"><label>Store URL</label><input id="bkUrl" type="url" placeholder="https://yourstore.com" autocomplete="url"></div>
         <div class="form-row">
           <div class="form-group">
             <label>Monthly revenue</label>
-            <select>
+            <select id="bkRevenue">
               <option value="">Select range</option>
               <option>Under ₹5L</option>
               <option>₹5L – ₹15L</option>
@@ -777,7 +778,7 @@
           </div>
           <div class="form-group">
             <label>Monthly visitors</label>
-            <select>
+            <select id="bkVisitors">
               <option value="">Select range</option>
               <option>Under 5K</option>
               <option>5K – 20K</option>
@@ -788,7 +789,7 @@
         </div>
         <div class="form-group">
           <label>Platform</label>
-          <select>
+          <select id="bkPlatform">
             <option value="">Select platform</option>
             <option>Shopify</option>
             <option>Shopify Plus</option>
@@ -796,8 +797,7 @@
             <option>Custom</option>
           </select>
         </div>
-        <button class="btn btn-coral" style="width:100%;justify-content:center" onclick="goStep(2)">Continue → Pick a
-          Time</button>
+        <button id="bkContinueBtn" class="btn btn-coral" style="width:100%;justify-content:center" onclick="submitBookingLead()">Continue → Pick a Time</button>
       </div>
       <div class="modal-step" id="mstep2">
         <div class="step-progress">
