@@ -1118,7 +1118,7 @@ function submitInlineBookingLead() {
   fetch('api/save-booking-lead.php', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ first_name: firstName, last_name: lastName, email, url: normUrl, revenue, visitors, platform }),
+    body:    JSON.stringify({ first_name: firstName, last_name: lastName, email, url: normUrl, revenue, visitors, platform, hp: document.getElementById('ibHp')?.value || '' }),
   })
     .then(r => r.json())
     .then(data => {
@@ -1178,7 +1178,7 @@ function submitBookingLead() {
   fetch('api/save-booking-lead.php', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ first_name: firstName, last_name: lastName, email, url: normUrl, revenue, visitors, platform }),
+    body:    JSON.stringify({ first_name: firstName, last_name: lastName, email, url: normUrl, revenue, visitors, platform, hp: document.getElementById('bkHp')?.value || '' }),
   })
     .then(r => r.json())
     .then(data => {
