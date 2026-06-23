@@ -1085,6 +1085,58 @@ document.querySelectorAll('.faq-q').forEach(q => {
 // ─────────────────────────────────────────
 // MODAL
 // ─────────────────────────────────────────
+function submitInlineBookingLead() {
+  const firstName = document.getElementById('ibFirstName').value.trim();
+  const lastName  = document.getElementById('ibLastName').value.trim();
+  const email     = document.getElementById('ibEmail').value.trim();
+  const url       = document.getElementById('ibUrl').value.trim();
+  const revenue   = document.getElementById('ibRevenue').value;
+  const visitors  = document.getElementById('ibVisitors').value;
+  const platform  = document.getElementById('ibPlatform').value;
+  const errEl     = document.getElementById('ibFormErr');
+  const btn       = document.getElementById('ibSubmitBtn');
+
+  function showErr(msg) { errEl.textContent = msg; errEl.style.display = 'block'; errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  errEl.style.display = 'none';
+
+  if (firstName.length < 2)  return showErr('Please enter your first name.');
+  if (lastName.length < 2)   return showErr('Please enter your last name.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErr('Please enter a valid work email.');
+  const personalDoms = ['gmail.com','yahoo.com','yahoo.in','hotmail.com','outlook.com','icloud.com','rediffmail.com','protonmail.com'];
+  if (personalDoms.includes(email.split('@')[1])) return showErr('Please use your work email, not a personal address.');
+  let normUrl = url;
+  if (normUrl && !/^https?:\/\//i.test(normUrl)) normUrl = 'https://' + normUrl;
+  if (!normUrl || !/^https?:\/\/.+\..+/i.test(normUrl)) return showErr('Please enter your store URL (e.g. www.yourstore.com).');
+  document.getElementById('ibUrl').value = normUrl;
+  if (!revenue)  return showErr('Please select your monthly revenue range.');
+  if (!visitors) return showErr('Please select your monthly visitors range.');
+  if (!platform) return showErr('Please select your platform.');
+
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  fetch('api/save-booking-lead.php', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ first_name: firstName, last_name: lastName, email, url: normUrl, revenue, visitors, platform }),
+  })
+    .then(r => r.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.textContent = 'Schedule My Free Call →';
+      if (data.error) return showErr(data.error);
+      document.getElementById('ibFormWrap').style.display = 'none';
+      document.getElementById('ibSuccess').style.display = 'block';
+    })
+    .catch(() => {
+      btn.disabled = false;
+      btn.textContent = 'Schedule My Free Call →';
+      // On network failure still show success — don't block the user
+      document.getElementById('ibFormWrap').style.display = 'none';
+      document.getElementById('ibSuccess').style.display = 'block';
+    });
+}
+
 function openModal() { document.getElementById('modal').classList.add('active'); document.body.style.overflow = 'hidden'; }
 function closeModal() { document.getElementById('modal').classList.remove('active'); document.body.style.overflow = ''; }
 function goStep(n) {
@@ -1103,7 +1155,7 @@ function submitBookingLead() {
   const errEl     = document.getElementById('bookingFormErr');
   const btn       = document.getElementById('bkContinueBtn');
 
-  function showErr(msg) { errEl.textContent = msg; errEl.style.display = 'block'; }
+  function showErr(msg) { errEl.textContent = msg; errEl.style.display = 'block'; errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
   errEl.style.display = 'none';
 
   if (firstName.length < 2)  return showErr('Please enter your first name.');
@@ -1111,7 +1163,11 @@ function submitBookingLead() {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErr('Please enter a valid work email.');
   const personalDoms = ['gmail.com','yahoo.com','yahoo.in','hotmail.com','outlook.com','icloud.com','rediffmail.com','protonmail.com'];
   if (personalDoms.includes(email.split('@')[1])) return showErr('Please use your work email, not a personal address.');
-  if (!url || !/^https?:\/\/.+\..+/i.test(url)) return showErr('Please enter your store URL (https://yourstore.com).');
+  // Auto-prepend https:// if user typed www. or bare domain
+  let normUrl = url;
+  if (normUrl && !/^https?:\/\//i.test(normUrl)) normUrl = 'https://' + normUrl;
+  if (!normUrl || !/^https?:\/\/.+\..+/i.test(normUrl)) return showErr('Please enter your store URL (e.g. www.yourstore.com).');
+  document.getElementById('bkUrl').value = normUrl;
   if (!revenue)  return showErr('Please select your monthly revenue range.');
   if (!visitors) return showErr('Please select your monthly visitors range.');
   if (!platform) return showErr('Please select your platform.');
@@ -1122,7 +1178,7 @@ function submitBookingLead() {
   fetch('api/save-booking-lead.php', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ first_name: firstName, last_name: lastName, email, url, revenue, visitors, platform }),
+    body:    JSON.stringify({ first_name: firstName, last_name: lastName, email, url: normUrl, revenue, visitors, platform }),
   })
     .then(r => r.json())
     .then(data => {

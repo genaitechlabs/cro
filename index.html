@@ -412,7 +412,7 @@
           </div>
           <p id="urlError" style="display:none;margin-top:8px;font-size:.8rem;color:var(--coral)">A valid url will help you optimize your revenue.</p>
           <p style="margin-top:10px;font-size:.72rem;color:rgba(248,249,255,.35);line-height:1.5">*OwlEye Score is in
-            beta and may not show accurate results. We recommend <a href="#" onclick="openModal();return false"
+            beta and may not show accurate results. We recommend <a href="#" onclick="document.getElementById('book-audit').scrollIntoView({behavior:'smooth'});return false"
               style="color:rgba(255,79,46,.7);text-decoration:underline;text-decoration-style:dotted">booking a full
               audit</a> for comprehensive analysis and recommendations.</p>
         </div>
@@ -464,7 +464,7 @@
 
       <!-- Bot-protection disclaimer — shown when Jina fallback was used -->
       <div id="renderedFallbackBanner" style="display:none;margin-top:16px;padding:12px 16px;background:rgba(255,167,38,.08);border:1px solid rgba(255,167,38,.28);border-radius:10px;font-size:.78rem;color:rgba(248,249,255,.82);line-height:1.5">
-        ⚠️ <strong style="color:#FFA726">Bot protection detected.</strong> This store uses Cloudflare or a similar service. OwlEye scanned with limited access — results are estimated and may be less accurate. <a href="#bookingModal" style="color:#FF4F2E;font-weight:600;text-decoration:none" onclick="openBookingModal()">Book a full audit →</a>
+        ⚠️ <strong style="color:#FFA726">Bot protection detected.</strong> This store uses Cloudflare or a similar service. OwlEye scanned with limited access — results are estimated and may be less accurate. <a href="#book-audit" style="color:#FF4F2E;font-weight:600;text-decoration:none" onclick="document.getElementById('book-audit').scrollIntoView({behavior:'smooth'});return false">Book a full audit →</a>
       </div>
 
       <!-- Thumbnail strip — 4 page screenshots, shown during and after scan -->
@@ -643,7 +643,7 @@
         <p style="margin-bottom:16px;font-size:.88rem">Ready to claim this revenue? Book your free audit and we'll show
           you exactly how to get there.</p>
         <a href="#" class="btn btn-coral" style="font-size:.95rem;padding:15px 32px"
-          onclick="openModal();return false">Claim This Revenue →</a>
+          onclick="document.getElementById('book-audit').scrollIntoView({behavior:'smooth'});return false">Claim This Revenue →</a>
       </div>
     </div>
   </section>
@@ -692,17 +692,79 @@
     </div>
   </section>
 
-  <!-- ════ CTA BANNER ════ -->
-  <div id="cta-banner">
-    <div class="cta-inner reveal">
-      <div>
-        <div class="section-label" style="margin-bottom:10px">📅 Book a CRO Audit Call</div>
-        <h2>Ready to accelerate your CRO Journey?</h2>
-        <p>Schedule your free Revenue Incremental call. We'll diagnose your store before the call so every minute is useful. Let's find out exactly where your funnel is leaking and how much revenue loss it's costing you.</p>
+  <!-- ════ BOOK AUDIT ════ -->
+  <section id="book-audit">
+    <div class="container">
+      <div class="book-audit-grid reveal">
+
+        <!-- Left: copy -->
+        <div class="book-audit-copy">
+          <div class="section-label">📅 Book a CRO Audit Call</div>
+          <h2>Ready to find out exactly where your store is leaking revenue?</h2>
+          <p style="color:var(--muted);line-height:1.7;margin-bottom:28px">We'll review your store before the call — so every minute goes toward fixes, not discovery. No pitch. Just a diagnosis and a clear action plan.</p>
+          <div class="book-trust-pills">
+            <span>✓ 30-min focused call</span>
+            <span>✓ We prep before we meet</span>
+            <span>✓ No commitment</span>
+          </div>
+        </div>
+
+        <!-- Right: form -->
+        <div class="book-audit-form-wrap">
+          <div id="ibFormWrap">
+            <div id="ibFormErr" style="display:none;color:#FF4F2E;font-size:.8rem;margin-bottom:12px;padding:8px 12px;background:rgba(255,79,46,.08);border-radius:6px;border-left:3px solid var(--coral)"></div>
+            <div class="form-row">
+              <div class="form-group"><label>First name</label><input id="ibFirstName" type="text" placeholder="Priya" autocomplete="given-name"></div>
+              <div class="form-group"><label>Last name</label><input id="ibLastName" type="text" placeholder="Sharma" autocomplete="family-name"></div>
+            </div>
+            <div class="form-group"><label>Work email</label><input id="ibEmail" type="email" placeholder="priya@brand.com" autocomplete="email"></div>
+            <div class="form-group"><label>Store URL</label><input id="ibUrl" type="url" placeholder="https://yourstore.com" autocomplete="url"></div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Monthly revenue</label>
+                <select id="ibRevenue">
+                  <option value="">Select range</option>
+                  <option>Under ₹5L</option>
+                  <option>₹5L – ₹15L</option>
+                  <option>₹15L – ₹50L</option>
+                  <option>₹50L – ₹1Cr</option>
+                  <option>₹1Cr+</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Monthly visitors</label>
+                <select id="ibVisitors">
+                  <option value="">Select range</option>
+                  <option>Under 5K</option>
+                  <option>5K – 20K</option>
+                  <option>20K – 100K</option>
+                  <option>100K+</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Platform</label>
+              <select id="ibPlatform">
+                <option value="">Select platform</option>
+                <option>Shopify</option>
+                <option>Shopify Plus</option>
+                <option>WooCommerce</option>
+                <option>Custom</option>
+              </select>
+            </div>
+            <button id="ibSubmitBtn" class="btn btn-coral" style="width:100%;justify-content:center;font-size:.95rem;padding:14px 20px" onclick="submitInlineBookingLead()">Schedule My Free Call →</button>
+          </div>
+          <div id="ibSuccess" style="display:none;text-align:center;padding:40px 20px">
+            <div style="font-size:2.8rem;margin-bottom:14px">✅</div>
+            <h3 style="margin-bottom:8px">You're on the list!</h3>
+            <p style="color:var(--muted);font-size:.88rem;margin-bottom:24px">We'll review your store before the call. Check your email for confirmation.</p>
+            <a href="https://topmate.io/productmentor/1026755" target="_blank" rel="noopener" class="btn btn-coral" style="font-size:.88rem">Pick a Time on Topmate →</a>
+          </div>
+        </div>
+
       </div>
-      <a href="https://topmate.io/productmentor/1026755" target="_blank" rel="noopener" class="btn btn-coral" style="font-size:.95rem;padding:15px 30px;flex-shrink:0">Book Free Audit Call →</a>
     </div>
-  </div>
+  </section>
 
   <!-- ════ FOOTER ════ -->
   <footer>
@@ -723,7 +785,7 @@
             style="font-size:.6em;font-weight:700;background:rgba(255,79,46,.18);color:var(--coral);border-radius:4px;padding:1px 5px;font-style:normal;font-family:'Roboto',sans-serif">Beta</sup></a>
         <a href="#calculator">Calculator</a>
         <a href="#faq">FAQ</a>
-        <a href="https://topmate.io/productmentor/1026755" target="_blank" rel="noopener">Book a Call</a>
+        <a href="#book-audit" onclick="document.getElementById('book-audit').scrollIntoView({behavior:'smooth'});return false">Book a Call</a>
       </div>
     </div>
     <div class="footer-bottom">
