@@ -20,8 +20,8 @@
 
 html{scroll-behavior:smooth}
 body{font-family:'Roboto',sans-serif;background:var(--ink);color:var(--white);line-height:1.6;overflow-x:hidden}
-/* Honeypot — visually hidden from humans, visible to bots filling forms */
-.hp-trap{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none}
+/* Honeypot — must be invisible to real users; bots filling form fields will fill it */
+.hp-trap{display:none!important}
 
 /* Note: OwlEye Score™ headings override font to italic serif intentionally */
 h1,h2,h3,h4{font-family:'Roboto',sans-serif;line-height:1.1;letter-spacing:-.02em}
