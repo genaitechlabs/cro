@@ -1091,6 +1091,52 @@ function goStep(n) {
   document.querySelectorAll('.modal-step').forEach(s => s.classList.remove('active'));
   document.getElementById('mstep' + n).classList.add('active');
 }
+
+function submitBookingLead() {
+  const firstName = document.getElementById('bkFirstName').value.trim();
+  const lastName  = document.getElementById('bkLastName').value.trim();
+  const email     = document.getElementById('bkEmail').value.trim();
+  const url       = document.getElementById('bkUrl').value.trim();
+  const revenue   = document.getElementById('bkRevenue').value;
+  const visitors  = document.getElementById('bkVisitors').value;
+  const platform  = document.getElementById('bkPlatform').value;
+  const errEl     = document.getElementById('bookingFormErr');
+  const btn       = document.getElementById('bkContinueBtn');
+
+  function showErr(msg) { errEl.textContent = msg; errEl.style.display = 'block'; }
+  errEl.style.display = 'none';
+
+  if (firstName.length < 2)  return showErr('Please enter your first name.');
+  if (lastName.length < 2)   return showErr('Please enter your last name.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErr('Please enter a valid work email.');
+  const personalDoms = ['gmail.com','yahoo.com','yahoo.in','hotmail.com','outlook.com','icloud.com','rediffmail.com','protonmail.com'];
+  if (personalDoms.includes(email.split('@')[1])) return showErr('Please use your work email, not a personal address.');
+  if (!url || !/^https?:\/\/.+\..+/i.test(url)) return showErr('Please enter your store URL (https://yourstore.com).');
+  if (!revenue)  return showErr('Please select your monthly revenue range.');
+  if (!visitors) return showErr('Please select your monthly visitors range.');
+  if (!platform) return showErr('Please select your platform.');
+
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  fetch('api/save-booking-lead.php', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ first_name: firstName, last_name: lastName, email, url, revenue, visitors, platform }),
+  })
+    .then(r => r.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.textContent = 'Continue → Pick a Time';
+      if (data.error) return showErr(data.error);
+      goStep(2);
+    })
+    .catch(() => {
+      btn.disabled = false;
+      btn.textContent = 'Continue → Pick a Time';
+      goStep(2); // still advance — don't block user if network fails
+    });
+}
 document.getElementById('modal').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
