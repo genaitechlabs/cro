@@ -1103,7 +1103,7 @@ function submitBookingLead() {
   const errEl     = document.getElementById('bookingFormErr');
   const btn       = document.getElementById('bkContinueBtn');
 
-  function showErr(msg) { errEl.textContent = msg; errEl.style.display = 'block'; }
+  function showErr(msg) { errEl.textContent = msg; errEl.style.display = 'block'; errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
   errEl.style.display = 'none';
 
   if (firstName.length < 2)  return showErr('Please enter your first name.');
@@ -1111,7 +1111,11 @@ function submitBookingLead() {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErr('Please enter a valid work email.');
   const personalDoms = ['gmail.com','yahoo.com','yahoo.in','hotmail.com','outlook.com','icloud.com','rediffmail.com','protonmail.com'];
   if (personalDoms.includes(email.split('@')[1])) return showErr('Please use your work email, not a personal address.');
-  if (!url || !/^https?:\/\/.+\..+/i.test(url)) return showErr('Please enter your store URL (https://yourstore.com).');
+  // Auto-prepend https:// if user typed www. or bare domain
+  let normUrl = url;
+  if (normUrl && !/^https?:\/\//i.test(normUrl)) normUrl = 'https://' + normUrl;
+  if (!normUrl || !/^https?:\/\/.+\..+/i.test(normUrl)) return showErr('Please enter your store URL (e.g. www.yourstore.com).');
+  document.getElementById('bkUrl').value = normUrl;
   if (!revenue)  return showErr('Please select your monthly revenue range.');
   if (!visitors) return showErr('Please select your monthly visitors range.');
   if (!platform) return showErr('Please select your platform.');
@@ -1122,7 +1126,7 @@ function submitBookingLead() {
   fetch('api/save-booking-lead.php', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ first_name: firstName, last_name: lastName, email, url, revenue, visitors, platform }),
+    body:    JSON.stringify({ first_name: firstName, last_name: lastName, email, url: normUrl, revenue, visitors, platform }),
   })
     .then(r => r.json())
     .then(data => {
