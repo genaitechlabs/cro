@@ -1208,17 +1208,16 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal()
   const hero      = document.getElementById('hero');
   const bookAudit = document.getElementById('book-audit');
   if (!cta || !hero || !bookAudit) return;
-  let heroGone = false, auditVisible = false;
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.target === hero)      heroGone     = !e.isIntersecting;
-      if (e.target === bookAudit) auditVisible =  e.isIntersecting;
-    });
-    if (heroGone && !auditVisible) cta.classList.add('show');
-    else                           cta.classList.remove('show');
-  }, { threshold: 0.1 });
-  obs.observe(hero);
-  obs.observe(bookAudit);
+  function update() {
+    const heroBottom  = hero.getBoundingClientRect().bottom;
+    const auditTop    = bookAudit.getBoundingClientRect().top;
+    const pastHero    = heroBottom < 0;
+    const atAudit     = auditTop < window.innerHeight * 0.9;
+    if (pastHero && !atAudit) cta.classList.add('show');
+    else                      cta.classList.remove('show');
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  update();
 })();
 
 // ─────────────────────────────────────────
