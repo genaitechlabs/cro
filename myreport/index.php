@@ -119,6 +119,33 @@ require_once __DIR__ . '/../api/config.php';
 require_once __DIR__ . '/../api/db.php';
 
 $db   = getDB();
+
+// Ensure all tables exist (created on first API use; admin may load before any submissions)
+$db->exec('CREATE TABLE IF NOT EXISTS booking_leads (
+    id             INT AUTO_INCREMENT PRIMARY KEY,
+    first_name     VARCHAR(50)   NOT NULL,
+    last_name      VARCHAR(50)   NOT NULL,
+    email          VARCHAR(255)  NOT NULL,
+    url            VARCHAR(512)  DEFAULT NULL,
+    revenue_range  VARCHAR(30)   DEFAULT NULL,
+    visitors_range VARCHAR(20)   DEFAULT NULL,
+    platform       VARCHAR(30)   DEFAULT NULL,
+    ip             VARCHAR(64)   DEFAULT NULL,
+    created_at     TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_email (email), INDEX idx_ip (ip), INDEX idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+
+$db->exec('CREATE TABLE IF NOT EXISTS owleye_leads (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    name       VARCHAR(255)  NOT NULL,
+    email      VARCHAR(255)  NOT NULL,
+    url        VARCHAR(512)  DEFAULT NULL,
+    scan_token VARCHAR(64)   DEFAULT NULL,
+    ip         VARCHAR(64)   DEFAULT NULL,
+    created_at TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_email (email), INDEX idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+
 $tab  = in_array($_GET['tab'] ?? '', ['booking', 'leads', 'scans']) ? $_GET['tab'] : 'booking';
 $pg   = max(1, (int)($_GET['page'] ?? 1));
 $off  = ($pg - 1) * PER_PAGE;
