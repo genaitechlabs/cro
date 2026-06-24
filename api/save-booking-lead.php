@@ -68,6 +68,7 @@ function cleanInput(string $val): string {
 $firstName = cleanInput($input['first_name'] ?? '');
 $lastName  = cleanInput($input['last_name']  ?? '');
 $email     = strtolower(cleanInput($input['email']    ?? ''));
+$whatsapp  = cleanInput($input['whatsapp']  ?? '');
 $url       = cleanInput($input['url']       ?? '');
 $revenue   = cleanInput($input['revenue']   ?? '');
 $visitors  = cleanInput($input['visitors']  ?? '');
@@ -137,6 +138,13 @@ if (!in_array($revenue, $validRevenue, true))   { http_response_code(400); echo 
 if (!in_array($visitors, $validVisitors, true)) { http_response_code(400); echo json_encode(['error' => 'Please select your monthly visitors range.']); exit; }
 if (!in_array($platform, $validPlatform, true)) { http_response_code(400); echo json_encode(['error' => 'Please select your platform.']);               exit; }
 
+// ── 5e. Validate WhatsApp (+countrycode + digits, 8–16 chars total) ──
+if (!preg_match('/^\+\d{7,15}$/', $whatsapp)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Please enter a valid WhatsApp number.']);
+    exit;
+}
+
 // ── Skip DB if not configured (dev fallback) ─────────────────────
 if (!defined('DB_NAME') || !DB_NAME) {
     echo json_encode(['success' => true]);
@@ -152,6 +160,7 @@ try {
         first_name     VARCHAR(50)   NOT NULL,
         last_name      VARCHAR(50)   NOT NULL,
         email          VARCHAR(255)  NOT NULL,
+        whatsapp       VARCHAR(20)   DEFAULT NULL,
         url            VARCHAR(512)  DEFAULT NULL,
         revenue_range  VARCHAR(30)   DEFAULT NULL,
         visitors_range VARCHAR(20)   DEFAULT NULL,
@@ -162,6 +171,8 @@ try {
         INDEX idx_ip      (ip),
         INDEX idx_created (created_at)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+    // Migration: add whatsapp column to tables created before this field existed
+    try { $db->exec("ALTER TABLE booking_leads ADD COLUMN whatsapp VARCHAR(20) DEFAULT NULL AFTER email"); } catch (PDOException $e) { /* column exists */ }
 
     $ip = getClientIp();
 
@@ -183,13 +194,14 @@ try {
     }
 
     $stmt = $db->prepare(
-        'INSERT INTO booking_leads (first_name, last_name, email, url, revenue_range, visitors_range, platform, ip)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO booking_leads (first_name, last_name, email, whatsapp, url, revenue_range, visitors_range, platform, ip)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
     $stmt->execute([
         $firstName,
         $lastName,
         $email,
+        $whatsapp ?: null,
         $url      ?: null,
         $revenue  ?: null,
         $visitors ?: null,

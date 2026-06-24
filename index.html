@@ -716,7 +716,25 @@
               <div class="form-group"><label>First name</label><input id="ibFirstName" type="text" placeholder="Priya" autocomplete="given-name"></div>
               <div class="form-group"><label>Last name</label><input id="ibLastName" type="text" placeholder="Sharma" autocomplete="family-name"></div>
             </div>
-            <div class="form-group"><label>Work email</label><input id="ibEmail" type="email" placeholder="priya@brand.com" autocomplete="email"></div>
+            <div class="form-row">
+              <div class="form-group"><label>Work email</label><input id="ibEmail" type="email" placeholder="priya@brand.com" autocomplete="email"></div>
+              <div class="wa-field">
+                <label>WhatsApp number</label>
+                <div class="wa-input-wrap">
+                  <select id="ibWaCountry" class="wa-country-sel">
+                    <option value="+91" selected>🇮🇳 +91</option>
+                    <option value="+971">🇦🇪 +971</option>
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+65">🇸🇬 +65</option>
+                    <option value="+61">🇦🇺 +61</option>
+                    <option value="+60">🇲🇾 +60</option>
+                  </select>
+                  <input id="ibWaNumber" class="wa-number-inp" type="tel" placeholder="98XXXXXXXX" maxlength="12" autocomplete="tel-national">
+                </div>
+              </div>
+            </div>
+            <p class="wa-promise">We never spam you, Owl Promise.</p>
             <div class="form-group"><label>Store URL</label><input id="ibUrl" type="url" placeholder="https://yourstore.com" autocomplete="url"></div>
             <div class="form-row">
               <div class="form-group">
@@ -814,7 +832,25 @@
           <div class="form-group"><label>First name</label><input id="bkFirstName" type="text" placeholder="Priya" autocomplete="given-name"></div>
           <div class="form-group"><label>Last name</label><input id="bkLastName" type="text" placeholder="Sharma" autocomplete="family-name"></div>
         </div>
-        <div class="form-group"><label>Work email</label><input id="bkEmail" type="email" placeholder="priya@brand.com" autocomplete="email"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Work email</label><input id="bkEmail" type="email" placeholder="priya@brand.com" autocomplete="email"></div>
+          <div class="wa-field">
+            <label>WhatsApp number</label>
+            <div class="wa-input-wrap">
+              <select id="bkWaCountry" class="wa-country-sel">
+                <option value="+91" selected>🇮🇳 +91</option>
+                <option value="+971">🇦🇪 +971</option>
+                <option value="+1">🇺🇸 +1</option>
+                <option value="+44">🇬🇧 +44</option>
+                <option value="+65">🇸🇬 +65</option>
+                <option value="+61">🇦🇺 +61</option>
+                <option value="+60">🇲🇾 +60</option>
+              </select>
+              <input id="bkWaNumber" class="wa-number-inp" type="tel" placeholder="98XXXXXXXX" maxlength="12" autocomplete="tel-national">
+            </div>
+          </div>
+        </div>
+        <p class="wa-promise">We never spam you, Owl Promise.</p>
         <div class="form-group"><label>Store URL</label><input id="bkUrl" type="url" placeholder="https://yourstore.com" autocomplete="url"></div>
         <div class="form-row">
           <div class="form-group">
@@ -901,6 +937,11 @@
     })(window, document, "clarity", "script", "xbhn6ayslb");
   });
   </script>
+
+  <!-- Mobile sticky CTA — shown past hero, hidden at #book-audit -->
+  <div id="sticky-book-cta">
+    <button class="sticky-btn" onclick="document.getElementById('book-audit').scrollIntoView({behavior:'smooth'})">Book Free Audit Call →</button>
+  </div>
 
   <!--Start of Tawk.to Script-->
   <script type="text/javascript">

@@ -1093,6 +1093,8 @@ function submitInlineBookingLead() {
   const revenue   = document.getElementById('ibRevenue').value;
   const visitors  = document.getElementById('ibVisitors').value;
   const platform  = document.getElementById('ibPlatform').value;
+  const waCountry = document.getElementById('ibWaCountry').value;
+  const waNumber  = document.getElementById('ibWaNumber').value.trim().replace(/\D/g, '');
   const errEl     = document.getElementById('ibFormErr');
   const btn       = document.getElementById('ibSubmitBtn');
 
@@ -1104,6 +1106,8 @@ function submitInlineBookingLead() {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErr('Please enter a valid work email.');
   const personalDoms = ['gmail.com','yahoo.com','yahoo.in','hotmail.com','outlook.com','icloud.com','rediffmail.com','protonmail.com'];
   if (personalDoms.includes(email.split('@')[1])) return showErr('Please use your work email, not a personal address.');
+  if (!waNumber || !/^\d{7,12}$/.test(waNumber)) return showErr('Please enter your WhatsApp number (digits only, 7–12 digits).');
+  const whatsapp = waCountry + waNumber;
   let normUrl = url;
   if (normUrl && !/^https?:\/\//i.test(normUrl)) normUrl = 'https://' + normUrl;
   if (!normUrl || !/^https?:\/\/.+\..+/i.test(normUrl)) return showErr('Please enter your store URL (e.g. www.yourstore.com).');
@@ -1118,7 +1122,7 @@ function submitInlineBookingLead() {
   fetch('api/save-booking-lead.php', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ first_name: firstName, last_name: lastName, email, url: normUrl, revenue, visitors, platform, hp: document.getElementById('ibHp')?.value || '' }),
+    body:    JSON.stringify({ first_name: firstName, last_name: lastName, email, whatsapp, url: normUrl, revenue, visitors, platform, hp: document.getElementById('ibHp')?.value || '' }),
   })
     .then(r => r.json())
     .then(data => {
@@ -1131,9 +1135,7 @@ function submitInlineBookingLead() {
     .catch(() => {
       btn.disabled = false;
       btn.textContent = 'Schedule My Free Call →';
-      // On network failure still show success — don't block the user
-      document.getElementById('ibFormWrap').style.display = 'none';
-      document.getElementById('ibSuccess').style.display = 'block';
+      showErr('Something went wrong. Please try again or WhatsApp us at +91 99110 90091.');
     });
 }
 
@@ -1152,6 +1154,8 @@ function submitBookingLead() {
   const revenue   = document.getElementById('bkRevenue').value;
   const visitors  = document.getElementById('bkVisitors').value;
   const platform  = document.getElementById('bkPlatform').value;
+  const waCountry = document.getElementById('bkWaCountry').value;
+  const waNumber  = document.getElementById('bkWaNumber').value.trim().replace(/\D/g, '');
   const errEl     = document.getElementById('bookingFormErr');
   const btn       = document.getElementById('bkContinueBtn');
 
@@ -1163,6 +1167,8 @@ function submitBookingLead() {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErr('Please enter a valid work email.');
   const personalDoms = ['gmail.com','yahoo.com','yahoo.in','hotmail.com','outlook.com','icloud.com','rediffmail.com','protonmail.com'];
   if (personalDoms.includes(email.split('@')[1])) return showErr('Please use your work email, not a personal address.');
+  if (!waNumber || !/^\d{7,12}$/.test(waNumber)) return showErr('Please enter your WhatsApp number (digits only, 7–12 digits).');
+  const whatsapp = waCountry + waNumber;
   // Auto-prepend https:// if user typed www. or bare domain
   let normUrl = url;
   if (normUrl && !/^https?:\/\//i.test(normUrl)) normUrl = 'https://' + normUrl;
@@ -1178,7 +1184,7 @@ function submitBookingLead() {
   fetch('api/save-booking-lead.php', {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ first_name: firstName, last_name: lastName, email, url: normUrl, revenue, visitors, platform, hp: document.getElementById('bkHp')?.value || '' }),
+    body:    JSON.stringify({ first_name: firstName, last_name: lastName, email, whatsapp, url: normUrl, revenue, visitors, platform, hp: document.getElementById('bkHp')?.value || '' }),
   })
     .then(r => r.json())
     .then(data => {
@@ -1190,11 +1196,30 @@ function submitBookingLead() {
     .catch(() => {
       btn.disabled = false;
       btn.textContent = 'Continue → Pick a Time';
-      goStep(2); // still advance — don't block user if network fails
+      showErr('Something went wrong. Please try again or WhatsApp us at +91 99110 90091.');
     });
 }
 document.getElementById('modal').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// Mobile sticky CTA — appears after hero scrolls out, hides when #book-audit is in view
+(function initStickyCta() {
+  const cta       = document.getElementById('sticky-book-cta');
+  const hero      = document.getElementById('hero');
+  const bookAudit = document.getElementById('book-audit');
+  if (!cta || !hero || !bookAudit) return;
+  let heroGone = false, auditVisible = false;
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.target === hero)      heroGone     = !e.isIntersecting;
+      if (e.target === bookAudit) auditVisible =  e.isIntersecting;
+    });
+    if (heroGone && !auditVisible) cta.classList.add('show');
+    else                           cta.classList.remove('show');
+  }, { threshold: 0.1 });
+  obs.observe(hero);
+  obs.observe(bookAudit);
+})();
 
 // ─────────────────────────────────────────
 // DISABLE ANALYSE BUTTON WHEN INPUT EMPTY

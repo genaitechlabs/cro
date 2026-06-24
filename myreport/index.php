@@ -126,6 +126,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS booking_leads (
     first_name     VARCHAR(50)   NOT NULL,
     last_name      VARCHAR(50)   NOT NULL,
     email          VARCHAR(255)  NOT NULL,
+    whatsapp       VARCHAR(20)   DEFAULT NULL,
     url            VARCHAR(512)  DEFAULT NULL,
     revenue_range  VARCHAR(30)   DEFAULT NULL,
     visitors_range VARCHAR(20)   DEFAULT NULL,
@@ -134,6 +135,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS booking_leads (
     created_at     TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_email (email), INDEX idx_ip (ip), INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4');
+try { $db->exec("ALTER TABLE booking_leads ADD COLUMN whatsapp VARCHAR(20) DEFAULT NULL AFTER email"); } catch (PDOException $e) { /* column exists */ }
 
 $db->exec('CREATE TABLE IF NOT EXISTS owleye_leads (
     id         INT AUTO_INCREMENT PRIMARY KEY,
@@ -160,7 +162,7 @@ foreach (['booking' => 'booking_leads', 'leads' => 'owleye_leads', 'scans' => 'o
 try {
     if ($tab === 'booking') {
         $total = getCount($db, 'booking_leads');
-        $stmt  = $db->prepare('SELECT id, first_name, last_name, email, url, revenue_range, visitors_range, platform, ip, created_at FROM booking_leads ORDER BY created_at DESC LIMIT ? OFFSET ?');
+        $stmt  = $db->prepare('SELECT id, first_name, last_name, email, whatsapp, url, revenue_range, visitors_range, platform, ip, created_at FROM booking_leads ORDER BY created_at DESC LIMIT ? OFFSET ?');
     } elseif ($tab === 'leads') {
         $total = getCount($db, 'owleye_leads');
         $stmt  = $db->prepare('SELECT id, name, email, url, scan_token, ip, created_at FROM owleye_leads ORDER BY created_at DESC LIMIT ? OFFSET ?');
@@ -291,7 +293,7 @@ tr:hover td{background:rgba(255,255,255,.022)}
       <div class="tbl-wrap">
       <table>
         <thead><tr>
-          <th>#</th><th>Name</th><th>Work Email</th><th>Store URL</th>
+          <th>#</th><th>Name</th><th>Work Email</th><th>WhatsApp</th><th>Store URL</th>
           <th>Revenue</th><th>Visitors</th><th>Platform</th><th>IP</th><th>Submitted</th>
         </tr></thead>
         <tbody>
@@ -300,6 +302,7 @@ tr:hover td{background:rgba(255,255,255,.022)}
           <td class="muted"><?= (int)$r['id'] ?></td>
           <td><?= h($r['first_name'] . ' ' . $r['last_name']) ?></td>
           <td><?= h($r['email']) ?></td>
+          <td><?= h($r['whatsapp'] ?? '—') ?></td>
           <td class="url"><a href="<?= h($r['url'] ?? '') ?>" target="_blank" rel="noopener"><?= h(trunc($r['url'] ?? '', 36)) ?></a></td>
           <td><span class="pill"><?= h($r['revenue_range'] ?? '—') ?></span></td>
           <td><span class="pill"><?= h($r['visitors_range'] ?? '—') ?></span></td>
@@ -345,13 +348,13 @@ tr:hover td{background:rgba(255,255,255,.022)}
         </tr></thead>
         <tbody>
         <?php foreach ($rows as $r):
-            $ps = json_decode($r['pillar_scores'] ?? '{}', true) ?: [];
+            $ps = json_decode($r['pillar_scores'] ?? '[]', true) ?: [];
         ?>
         <tr>
           <td class="muted"><?= (int)$r['id'] ?></td>
           <td class="url"><a href="<?= h($r['url']) ?>" target="_blank" rel="noopener"><?= h(trunc($r['url'], 38)) ?></a></td>
           <td><span class="score" style="color:<?= scoreColor((int)$r['owleye_score']) ?>"><?= (int)$r['owleye_score'] ?></span></td>
-          <?php foreach (array_keys($PILLARS) as $key): $v = $ps[$key] ?? null; ?>
+          <?php foreach (array_keys($PILLARS) as $i => $key): $v = $ps[$i] ?? null; ?>
           <td><?php if ($v !== null): ?>
             <span class="muted" style="color:<?= scoreColor((int)$v) ?>;font-weight:600"><?= (int)$v ?></span>
           <?php else: ?><span class="muted">—</span><?php endif; ?></td>

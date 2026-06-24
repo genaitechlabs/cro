@@ -276,6 +276,26 @@ Fixes health/pharma stores (myupchar) where footer is JS-rendered and refund lin
 - Scan starts immediately; screenshot appears when thum.io responds
 - Unreachable error format: `"The target site (hostname) is not reachable. OwlEye scan can't perform the evaluation at this time. Please retry."` — identical in PHP and JS (AbortError)
 
+### Booking form — WhatsApp field
+- Both inline (`#book-audit`) and modal forms have a country-code dropdown + 10-digit number input in a combined `.wa-input-wrap` control
+- Element IDs: `ibWaCountry` / `ibWaNumber` (inline), `bkWaCountry` / `bkWaNumber` (modal)
+- Country dropdown defaults to 🇮🇳 +91; options: UAE +971, US +1, UK +44, SG +65, AU +61, MY +60
+- "We never spam you, Owl Promise." sits immediately below as `.wa-promise` text
+- JS validation: strips non-digits, requires 7–12 digit number; combined as `countryCode + digits` before send
+- PHP: validates `preg_match('/^\+\d{7,15}$/', $whatsapp)` in `api/save-booking-lead.php`
+- DB: `whatsapp VARCHAR(20) DEFAULT NULL` column in `booking_leads` table; `ALTER TABLE IF` migration added to both `save-booking-lead.php` and `myreport/index.php`
+
+### Mobile sticky CTA
+- `#sticky-book-cta` fixed to bottom of viewport on mobile (≤768px)
+- Slides up (`translateY(0)`) when hero scrolls out of view; slides back down when `#book-audit` section enters view
+- Logic: `IntersectionObserver` on `#hero` and `#book-audit` in `initStickyCta()` in `main.js`
+- Hidden on desktop via `display:none` (media query sets `display:block` on mobile)
+- Button text: "Book Free Audit Call →" — scrolls to `#book-audit`
+
+### `--muted` color
+- `--muted: rgba(248,249,255,.82)` — opacity bumped from .46 for readability
+- `p { font-size: 13.5px }` — explicit pixel size so it renders consistently regardless of browser base font
+
 ---
 
 ## Tech Stack
