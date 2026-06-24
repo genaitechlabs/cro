@@ -177,13 +177,13 @@ h1.hero-h1{font-family:'Roboto',sans-serif;font-size:clamp(2.2rem,4.5vw,3.8rem);
 /* ════ OWLEYE SCORE TOOL ════ */
 #score-tool{background:var(--card)}
 .score-layout{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:stretch;margin-top:48px}
-.score-input-panel{background:var(--ink2);border:1.5px solid var(--border);border-radius:var(--radius);padding:32px;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;box-sizing:border-box}
+.score-input-panel{background:var(--ink2);border:1.5px solid rgba(255,79,46,.3);border-radius:var(--radius);padding:32px;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;box-sizing:border-box}
 .score-input-panel h3{font-size:1.5rem;margin-bottom:10px}
 .score-input-panel .url-input-wrap{width:100%}
 .url-input-wrap{display:flex;gap:10px;margin-bottom:16px}
-.url-input-wrap input{flex:1;background:rgba(255,255,255,.05);border:1.5px solid var(--border);border-radius:9px;padding:13px 16px;color:var(--white);font-family:'Roboto',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s}
-.url-input-wrap input:focus{border-color:rgba(255,79,46,.5)}
-.url-input-wrap input::placeholder{color:rgba(255,255,255,.25)}
+.url-input-wrap input{flex:1;background:rgba(255,255,255,.09);border:1.5px solid rgba(255,255,255,.28);border-radius:9px;padding:13px 16px;color:var(--white);font-family:'Roboto',sans-serif;font-size:.9rem;outline:none;transition:border-color .2s}
+.url-input-wrap input:focus{border-color:var(--coral)}
+.url-input-wrap input::placeholder{color:rgba(255,255,255,.42)}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* Browser mockup chrome */
@@ -377,18 +377,17 @@ footer{background:var(--ink2);border-top:1px solid var(--border);padding:40px 5%
 .step-dot{height:3px;flex:1;border-radius:4px;background:rgba(255,255,255,.1);transition:background .4s}
 .step-dot.done{background:var(--coral)}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-.form-group{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-.form-group label{font-size:.78rem;font-weight:700;color:rgba(248,249,255,.55)}
+.form-group{display:flex;flex-direction:column;gap:0;margin-bottom:12px}
+.form-group label{font-size:.78rem;font-weight:700;color:rgba(248,249,255,.55);margin-bottom:5px}
 .form-group input,.form-group select{background:rgba(255,255,255,.05);border:1.5px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--white);font-family:'Roboto',sans-serif;font-size:.88rem;outline:none;transition:border-color .2s;width:100%}
 .form-group input:focus,.form-group select:focus{border-color:rgba(255,79,46,.5)}
 .form-group select option{background:var(--ink2)}
 /* WhatsApp composite field */
-.wa-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-.wa-field label{font-size:.78rem;font-weight:700;color:rgba(248,249,255,.55)}
-.wa-input-wrap{display:flex;background:rgba(255,255,255,.05);border:1.5px solid var(--border);border-radius:9px;overflow:hidden;transition:border-color .2s}
+.wa-field{display:flex;flex-direction:column;gap:0;margin-bottom:14px}
+.wa-input-wrap{display:flex;border:1.5px solid var(--border);border-radius:9px;overflow:hidden;transition:border-color .2s}
 .wa-input-wrap:focus-within{border-color:rgba(255,79,46,.5)}
-.wa-country-sel{background:#141E2E;border:none;border-right:1.5px solid var(--border);padding:0 8px;color:var(--white);font-family:'Roboto',sans-serif;font-size:.8rem;cursor:pointer;outline:none;flex-shrink:0}
-.wa-number-inp{background:transparent;border:none;padding:11px 12px;color:var(--white);font-family:'Roboto',sans-serif;font-size:.88rem;flex:1;outline:none;min-width:0;width:100%}
+.wa-country-sel{background:rgba(255,255,255,.08);border:none;border-right:1.5px solid var(--border);padding:0 10px;color:var(--white);font-family:'Roboto',sans-serif;font-size:.8rem;cursor:pointer;outline:none;flex-shrink:0;-webkit-appearance:none;appearance:none}
+.wa-number-inp{background:rgba(255,255,255,.05);border:none;padding:11px 12px;color:var(--white);font-family:'Roboto',sans-serif;font-size:.88rem;flex:1;outline:none;min-width:0;width:100%;-webkit-appearance:none;appearance:none}
 .wa-number-inp::placeholder{color:rgba(248,249,255,.3)}
 .wa-promise{font-size:.76rem;color:rgba(248,249,255,.42);margin-top:-8px;margin-bottom:14px;font-style:italic}
 /* Mobile sticky CTA */
