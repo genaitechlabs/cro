@@ -1131,9 +1131,7 @@ function submitInlineBookingLead() {
     .catch(() => {
       btn.disabled = false;
       btn.textContent = 'Schedule My Free Call →';
-      // On network failure still show success — don't block the user
-      document.getElementById('ibFormWrap').style.display = 'none';
-      document.getElementById('ibSuccess').style.display = 'block';
+      showErr('Something went wrong. Please try again or WhatsApp us at +91 99110 90091.');
     });
 }
 
@@ -1190,7 +1188,7 @@ function submitBookingLead() {
     .catch(() => {
       btn.disabled = false;
       btn.textContent = 'Continue → Pick a Time';
-      goStep(2); // still advance — don't block user if network fails
+      showErr('Something went wrong. Please try again or WhatsApp us at +91 99110 90091.');
     });
 }
 document.getElementById('modal').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
