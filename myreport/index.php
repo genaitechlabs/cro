@@ -348,13 +348,13 @@ tr:hover td{background:rgba(255,255,255,.022)}
         </tr></thead>
         <tbody>
         <?php foreach ($rows as $r):
-            $ps = json_decode($r['pillar_scores'] ?? '{}', true) ?: [];
+            $ps = json_decode($r['pillar_scores'] ?? '[]', true) ?: [];
         ?>
         <tr>
           <td class="muted"><?= (int)$r['id'] ?></td>
           <td class="url"><a href="<?= h($r['url']) ?>" target="_blank" rel="noopener"><?= h(trunc($r['url'], 38)) ?></a></td>
           <td><span class="score" style="color:<?= scoreColor((int)$r['owleye_score']) ?>"><?= (int)$r['owleye_score'] ?></span></td>
-          <?php foreach (array_keys($PILLARS) as $key): $v = $ps[$key] ?? null; ?>
+          <?php foreach (array_keys($PILLARS) as $i => $key): $v = $ps[$i] ?? null; ?>
           <td><?php if ($v !== null): ?>
             <span class="muted" style="color:<?= scoreColor((int)$v) ?>;font-weight:600"><?= (int)$v ?></span>
           <?php else: ?><span class="muted">—</span><?php endif; ?></td>
